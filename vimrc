@@ -87,9 +87,7 @@ call plug#begin('~/.vim/plugged')
   Plug 'vim-scripts/Lucius'
   Plug 'mrkn/mrkn256.vim'
   Plug 'vim-scripts/wombat256.vim'
-  Plug 'tomasr/molokai'
   Plug 'chriskempson/vim-tomorrow-theme'
-  Plug 'w0ng/vim-hybrid'
   Plug 'jnurmine/Zenburn'
   " }}}
 call plug#end()
@@ -114,7 +112,7 @@ set foldmethod=marker
 set cursorline
 set t_Co=256
 set background=dark
-colorscheme hybrid
+colorscheme molokai
 set clipboard=unnamedplus,unnamed
 set concealcursor=
 set completeopt=menu,menuone
