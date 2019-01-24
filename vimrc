@@ -15,7 +15,6 @@ endif
 call plug#begin('~/.vim/plugged')
   " {{{
   Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
-  Plug 'banyan/recognize_charcode.vim'
   Plug 'Shougo/neocomplete.vim'
   Plug 'airblade/vim-gitgutter'
   Plug 'tpope/vim-fugitive'
@@ -83,7 +82,7 @@ call plug#begin('~/.vim/plugged')
   endif
   " colorscheme
   Plug 'jnurmine/Zenburn'
-  Plug 'tomasr/molokai'
+  Plug 'fatih/molokai'
   Plug 'vim-scripts/Lucius'
   Plug 'mrkn/mrkn256.vim'
   Plug 'vim-scripts/wombat256.vim'
