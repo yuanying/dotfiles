@@ -15,7 +15,6 @@ endif
 call plug#begin('~/.vim/plugged')
   " {{{
   Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
-  Plug 'Shougo/neocomplete.vim'
   Plug 'airblade/vim-gitgutter'
   Plug 'tpope/vim-fugitive'
   Plug 'itchyny/lightline.vim'
@@ -261,35 +260,6 @@ autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm
 
 " Specify default shelltype to 'bash'
 let g:is_bash = 1
-
-" Plugins
-" Shougo/neocomplete.vim {{{
-let g:neocomplete#enable_at_startup = 1
-let g:neocomplete#enable_smart_case = 1
-let g:neocomplete#enable_camel_case_completion = 1
-let g:neocomplete#enable_underbar_completion = 1
-let g:neocomplete#enable_quick_match = 1
-let g:neocomplete#sources#syntax#min_keyword_length = 3
-" let g:neocomplete#max_list = 30
-let g:neocomplete#force_overwrite_completefunc = 1
-" Enable omni completion
-autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-autocmd FileType javascript setlocal omnifunc=nodejscomplete#CompleteJS
-autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-" Enable heavy omni completion.
-if !exists('g:neocomplete#sources#omni#input_patterns')
-  let g:neocomplete#sources#omni#input_patterns = {}
-endif
-let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)\w*'
-let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\w*\|\h\w*::\w*'
-let g:neocomplete#sources#omni#input_patterns.javascript = '[^. *\t]\.\w*\|\h\w*::'
-let g:neocomplete#sources#omni#input_patterns.markdown = '\(^\| \):'
-let g:neocomplete#sources#omni#input_patterns.gitcommit = '\(^\| \):'
-let g:neocomplete#sources#omni#input_patterns.ruby = '[^. *\t]\.\w*\|\h\w*::'
-let g:neocomplete#sources#omni#input_patterns.go = '\h\w*'
-" }}}
-
 " itchyny/lightline.vim {{{
 let g:lightline = {
   \ 'colorscheme': 'jellybeans',
