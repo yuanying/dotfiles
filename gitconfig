@@ -1,0 +1,25 @@
+[gitthub]
+	user = yuanying
+[user]
+	name = OTSUKA, Yuanying
+	email = mototsuk@zlab.co.jp
+[push]
+	default = matching
+[http]
+	sslVerify = true
+
+[credential]
+
+[hub]
+protocol = https
+[gitreview]
+	username = yuanying
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[url "git@github.com:"]
+    pushInsteadOf = git://github.com/
+    pushInsteadOf = https://github.com/
