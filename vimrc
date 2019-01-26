@@ -30,7 +30,7 @@ call plug#begin('~/.vim/plugged')
   Plug 'Shougo/neomru.vim'
   Plug 'editorconfig/editorconfig-vim'
   Plug 'yegappan/grep'
-  Plug 'Shougo/neoinclude.vim'
+"  Plug 'Shougo/neoinclude.vim'
   Plug 'Shougo/context_filetype.vim'
   Plug 'pix/vim-align'
   Plug 'vim-scripts/ViewOutput'
