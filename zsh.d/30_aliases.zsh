@@ -27,6 +27,8 @@ alias ka='kubectl apply'
 alias kl='kubectl logs'
 alias ke='kubectl exec'
 alias vi='vim'
+alias delete-ds-store='find . -name ".DS_Store" -print -exec rm -r {} ";"'
+alias delete-pyc='find . -name "*.pyc" -print -exec rm -r {} ";"'
 
 if [ "$(uname)" = "Linux" ]; then
     alias pbcopy='xsel --clipboard --input'
