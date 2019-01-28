@@ -129,6 +129,12 @@ set shiftwidth=4
 set expandtab
 set shiftround
 
+augroup fileTypeIndent
+    autocmd!
+    autocmd FileType yaml      setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    autocmd FileType ruby      setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
 """ Indent
 set autoindent
 set backspace=indent,eol,start
