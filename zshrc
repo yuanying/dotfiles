@@ -25,6 +25,11 @@ if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
 
+## .zsh_private
+if [[ -f ~/.zsh_private ]]; then
+    source ~/.zsh_private
+fi
+
 # brew info zsh-completions
 fpath=(/usr/local/share/zsh-completions $fpath)
 
