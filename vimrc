@@ -43,6 +43,8 @@ call plug#begin('~/.vim/plugged')
   Plug 'osyo-manga/shabadou.vim'
   Plug 'cohama/vim-hier'
   Plug 'dannyob/quickfixstatus'
+  Plug 'ctrlpvim/ctrlp.vim'
+  Plug 'mattn/ctrlp-ghq'
   Plug 'osyo-manga/vim-watchdogs'
   Plug 'majutsushi/tagbar', { 'tag': '*' }
   Plug 'mattn/gist-vim', { 'on': ['Gist'] }
@@ -80,13 +82,7 @@ call plug#begin('~/.vim/plugged')
     Plug 'zerowidth/vim-copy-as-rtf'
   endif
   " colorscheme
-  Plug 'jnurmine/Zenburn'
   Plug 'fatih/molokai'
-  Plug 'vim-scripts/Lucius'
-  Plug 'mrkn/mrkn256.vim'
-  Plug 'vim-scripts/wombat256.vim'
-  Plug 'chriskempson/vim-tomorrow-theme'
-  Plug 'jnurmine/Zenburn'
   " }}}
 call plug#end()
 
@@ -357,6 +353,20 @@ function! LightLineGo()
   endif
   return winwidth('.') > 70 ? go#statusline#Show() : ''
 endfunction
+" }}}
+
+" ctrlpvim/ctrlp.vim {{{
+" TODO: Setting here
+" }}}
+
+" mattn/ctrp-ghq {{{
+" ctrlp-ghq https://github.com/mattn/ctrlp-ghq
+"let ctrlp_ghq_default_action = 'e'
+let g:ctrlp_ghq_cache_enabled = 0
+let g:ctrlp_ghq_actions = [
+      \ {"label": "Open", "action": "e", "path": 1},
+      \ {"label": "Look", "action": "!ghq look", "path": 0},
+      \]
 " }}}
 
 " mrtazz/simplenote.vim {{{
