@@ -361,7 +361,8 @@ endfunction
 
 " mattn/ctrp-ghq {{{
 " ctrlp-ghq https://github.com/mattn/ctrlp-ghq
-"let ctrlp_ghq_default_action = 'e'
+noremap <leader>g :<c-u>CtrlPGhq<cr>
+let ctrlp_ghq_default_action = 'e'
 let g:ctrlp_ghq_cache_enabled = 0
 let g:ctrlp_ghq_actions = [
       \ {"label": "Open", "action": "e", "path": 1},
