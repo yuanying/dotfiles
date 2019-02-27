@@ -56,7 +56,6 @@ call plug#begin('~/.vim/plugged')
   Plug 'fatih/vim-go', { 'for': ['go'] }
   Plug 'google/vim-ft-go', { 'for': ['go'] }
   Plug 'vim-ruby/vim-ruby', { 'for': ['ruby'] }
-  Plug 'tpope/vim-rails', { 'for': ['ruby'] }
   Plug 'junegunn/vim-emoji', { 'for': ['markdown', 'gitcommit'] }
   Plug 'godlygeek/tabular', { 'for': ['markdown'] }
   Plug 'plasticboy/vim-markdown', { 'for': ['markdown'] }
@@ -65,15 +64,11 @@ call plug#begin('~/.vim/plugged')
   Plug 'mxw/vim-jsx', { 'for': ['javascript'] }
   Plug 'moll/vim-node', { 'for': ['javascript'] }
   Plug 'myhere/vim-nodejs-complete', { 'for': ['javascript'] }
-  Plug 'tpope/vim-haml', { 'for': ['haml'] }
-  Plug 'vim-scripts/jade.vim', { 'for': ['jade'] }
   Plug 'ekalinin/Dockerfile.vim', { 'for': ['Dockerfile'] }
-  Plug 'chakrit/upstart.vim', { 'for': ['upstart'] }
   Plug 'hail2u/vim-css3-syntax', { 'for': ['css'] }
   Plug 'elzr/vim-json', { 'for': ['json'] }
   Plug 'justmao945/vim-clang', { 'for': ['c', 'cpp'] }
   Plug 'cespare/vim-toml', { 'for': ['toml'] }
-  Plug 'google/vim-jsonnet', { 'for': ['jsonnet', 'libsonnet'] }
   Plug 'miyakogi/seiya.vim'
   Plug 'tyru/open-browser.vim'
   Plug 'rafi/vim-unite-issue'
