@@ -1,10 +1,12 @@
 # Load zsh extentions
 export PATH=/usr/local/bin:$PATH
+export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
 
 # Load all of zsh config files
 for config_file ($ZSH/*.zsh) source $config_file
 
 # rbenv
+export RBENV_ROOT="/home/dev/.rbenv"
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
 # nvm
