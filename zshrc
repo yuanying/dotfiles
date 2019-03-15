@@ -33,7 +33,7 @@ if [[ -f ~/.zsh_private ]]; then
 fi
 
 # brew info zsh-completions
-fpath=(/usr/local/share/zsh-completions $fpath)
+fpath=(/home/$USER/.zsh/zsh-completions $fpath)
 
 # uniq path
 typeset -U path
