@@ -6,7 +6,7 @@ autoload -U colors && colors
 if `which rbenv >/dev/null 2>&1` && [ -z "$RBENV_ROOT" ]; then
     export RBENV_ROOT=`rbenv root`
 fi
-export PAHT=${RBENV_ROOT}/shims:${PATH}
+export PATH=${RBENV_ROOT}/shims:${PATH}
 
 rbenv_version() {
     if [ -x "`which rbenv 2>/dev/null`" ]; then

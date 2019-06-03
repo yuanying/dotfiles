@@ -6,7 +6,7 @@ export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PAT
 for config_file ($ZSH/*.zsh) source $config_file
 
 # rbenv
-export RBENV_ROOT="/home/dev/.rbenv"
+export RBENV_ROOT="${HOME}/.rbenv"
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
 # nvm
@@ -33,7 +33,7 @@ if [[ -f ~/.zsh_private ]]; then
 fi
 
 # brew info zsh-completions
-fpath=(/home/$USER/.zsh/zsh-completions $fpath)
+fpath=(${HOME}/.zsh/zsh-completions $fpath)
 
 # uniq path
 typeset -U path
