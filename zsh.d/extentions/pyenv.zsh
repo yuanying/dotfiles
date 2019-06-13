@@ -1,5 +1,6 @@
 if which pyenv-virtualenv-init > /dev/null; then
-    eval "$(pyenv virtualenv-init -)"
-    export PATH=/home/dev/.pyenv/shims:${PATH}
+    export PYENV_ROOT="${HOME}/.pyenv"
+    eval "$(pyenv init -)"
+    export PATH=${HOME}/.pyenv/shims:${PATH}
 fi
 
