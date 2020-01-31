@@ -42,6 +42,7 @@ set concealcursor=
 set completeopt=menu,menuone
 try
     colorscheme gruvbox
+    set background=dark
 catch /^Vim\%((\a\+)\)\=:E185/
     colorscheme default
     set background=dark
