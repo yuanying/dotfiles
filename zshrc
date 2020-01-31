@@ -1,5 +1,5 @@
 # Load zsh extentions
-export PATH=/usr/local/bin:$PATH
+export PATH=/usr/local/go/bin:/usr/local/bin:$PATH
 export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
 
 # Load all of zsh config files
