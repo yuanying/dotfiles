@@ -13,11 +13,9 @@ if has('vim_starting')
 endif
 
 call plug#begin('~/.vim/plugged')
-  " {{{
-  Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
+Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
-  Plug 'fatih/molokai'
-  " }}}
+Plug 'https://github.com/morhetz/gruvbox.git'
 call plug#end()
 
 """ Encoding
@@ -39,8 +37,7 @@ set hlsearch
 set foldmethod=marker
 set cursorline
 set t_Co=256
-set background=dark
-colorscheme molokai
+colorscheme gruvbox
 set clipboard=unnamedplus,unnamed
 set concealcursor=
 set completeopt=menu,menuone
