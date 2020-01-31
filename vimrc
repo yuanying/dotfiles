@@ -37,10 +37,15 @@ set hlsearch
 set foldmethod=marker
 set cursorline
 set t_Co=256
-colorscheme gruvbox
 set clipboard=unnamedplus,unnamed
 set concealcursor=
 set completeopt=menu,menuone
+try
+    colorscheme gruvbox
+catch /^Vim\%((\a\+)\)\=:E185/
+    colorscheme default
+    set background=dark
+endtry
 
 """ Backup
 set backup
