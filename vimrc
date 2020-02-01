@@ -99,4 +99,31 @@ set modelines=5
 """ FileType
 filetype plugin indent on
 
+""" KeyMap
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
+
+" emacs like keys
+cnoremap <C-B> <Left>
+cnoremap <C-F> <Right>
+cnoremap <C-A> <Home>
+cnoremap <C-E> <End>
+cnoremap <A-b> <S-Left>
+cnoremap <A-f> <S-Right>
+
+inoremap <C-A> <Home>
+inoremap <C-B> <Left>
+inoremap <C-D> <Del>
+inoremap <C-E> <End>
+inoremap <C-F> <Right>
+inoremap <A-n> <Down>
+inoremap <A-p> <Up>
+inoremap <A-b> <S-Left>
+inoremap <A-f> <S-Right>
+
+" Operate buffer
+nnoremap <silent> bb :b#<CR>
+nnoremap <silent> bp :bp<CR>
+nnoremap <silent> bn :bn<CR>
+nnoremap <silent> bd :Bclose<CR>
 
