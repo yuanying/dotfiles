@@ -15,6 +15,7 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
+Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/morhetz/gruvbox.git'
 call plug#end()
 
@@ -127,3 +128,6 @@ nnoremap <silent> bp :bp<CR>
 nnoremap <silent> bn :bn<CR>
 nnoremap <silent> bd :Bclose<CR>
 
+" nerdtree
+let NERDTreeShowHidden=1
+noremap <silent><C-e> :NERDTreeToggle<CR>
