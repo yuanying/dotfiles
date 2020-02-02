@@ -6,15 +6,8 @@ export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PAT
 for config_file ($ZSH/*.zsh) source $config_file
 
 # rbenv
-export RBENV_ROOT="${HOME}/.rbenv"
+#export RBENV_ROOT="${HOME}/.rbenv"
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
-
-# nvm
-if which brew >/dev/null 2>&1 &&  ! (brew info nvm | grep "Not installed" >/dev/null 2>&1); then
-    source $(brew --prefix nvm)/nvm.sh
-elif [[ -s ~/.nvm/nvm.sh ]]; then
-    source ~/.nvm/nvm.sh
-fi
 
 # golang
 if [ -x "`which go 2>/dev/null`" ]; then
