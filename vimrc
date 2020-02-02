@@ -16,6 +16,7 @@ call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
 Plug 'https://github.com/scrooloose/nerdtree.git'
+Plug 'https://github.com/tpope/vim-endwise.git'
 Plug 'https://github.com/morhetz/gruvbox.git'
 call plug#end()
 
@@ -77,7 +78,7 @@ set smartindent
 """ File
 set autoread
 set hidden
-set autochdir
+"set autochdir
 
 """ Search
 set ignorecase
@@ -123,11 +124,10 @@ inoremap <A-b> <S-Left>
 inoremap <A-f> <S-Right>
 
 " Operate buffer
-nnoremap <silent> bb :b#<CR>
 nnoremap <silent> bp :bp<CR>
 nnoremap <silent> bn :bn<CR>
-nnoremap <silent> bd :Bclose<CR>
 
 " nerdtree
 let NERDTreeShowHidden=1
 noremap <silent><C-e> :NERDTreeToggle<CR>
+
