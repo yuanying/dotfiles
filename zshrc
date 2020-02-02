@@ -15,6 +15,11 @@ if [ -x "`which go 2>/dev/null`" ]; then
     export GO111MODULE=on
 fi
 
+## Ruby in Container
+if [[ -f /opt/ruby/bin/ruby ]]; then
+    export PATH=/opt/ruby/bin:$PATH
+fi
+
 ## .zshrc.local
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
