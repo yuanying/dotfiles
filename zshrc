@@ -20,6 +20,11 @@ if [[ -f /opt/ruby/bin/ruby ]]; then
     export PATH=/opt/ruby/bin:$PATH
 fi
 
+## vim in Container
+if [[ -f /opt/vim/bin/vim ]]; then
+    export PATH=/opt/vim/bin:$PATH
+fi
+
 ## .zshrc.local
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
