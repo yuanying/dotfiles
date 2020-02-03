@@ -15,9 +15,16 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
-Plug 'https://github.com/scrooloose/nerdtree.git'
-Plug 'https://github.com/tpope/vim-endwise.git'
 Plug 'https://github.com/morhetz/gruvbox.git'
+Plug 'https://github.com/scrooloose/nerdtree.git'
+Plug 'https://github.com/tpope/vim-bundler.git'
+Plug 'https://github.com/tpope/vim-endwise.git'
+
+" vim-lsp
+Plug 'https://github.com/prabirshrestha/asyncomplete.vim.git'
+Plug 'https://github.com/prabirshrestha/async.vim.git'
+Plug 'https://github.com/prabirshrestha/vim-lsp.git'
+Plug 'https://github.com/prabirshrestha/asyncomplete-lsp.vim.git'
 call plug#end()
 
 """ Encoding
@@ -102,6 +109,7 @@ set modelines=5
 filetype plugin indent on
 
 """ KeyMap
+let mapleader = "\<Space>"
 cnoremap <C-p> <Up>
 cnoremap <C-n> <Down>
 
@@ -130,4 +138,39 @@ nnoremap <silent> bn :bn<CR>
 " nerdtree
 let NERDTreeShowHidden=1
 noremap <silent><C-e> :NERDTreeToggle<CR>
+
+" vim-lsp
+let g:asyncomplete_auto_popup = 1
+let g:lsp_async_completion = 1
+let g:lsp_log_verbose = 0
+nmap <silent> <Leader>ld <plug>(lsp-peek-definition)
+nmap <silent> <Leader>lD <plug>(lsp-definition)
+nmap <silent> <Leader>lt <plug>(lsp-peek-type-definition)
+nmap <silent> <Leader>lT <plug>(lsp-type-definition)
+nmap <silent> <Leader>lr <plug>(lsp-references)
+nmap <silent> <Leader>lR <plug>(lsp-rename)
+nmap <silent> <Leader>lh <plug>(lsp-hover)
+nmap <silent> <Leader>lf <plug>(lsp-document-format)
+
+" vim-lsp golang
+if executable('gopls')
+  augroup LspGo
+    au!
+    autocmd User lsp_setup call lsp#register_server({
+        \ 'name': 'go-lang',
+        \ 'cmd': {server_info->['gopls']},
+        \ 'whitelist': ['go'],
+        \ 'workspace_config': {'gopls': {
+        \     'staticcheck': v:true,
+        \     'completeUnimported': v:true,
+        \     'caseSensitiveCompletion': v:true,
+        \     'usePlaceholders': v:true,
+        \     'completionDocumentation': v:true,
+        \     'watchFileChanges': v:true,
+        \     'hoverKind': 'SingleLine',
+        \   }},
+        \ })
+    autocmd FileType go setlocal omnifunc=lsp#complete
+  augroup END
+endif
 
