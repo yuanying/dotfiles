@@ -15,19 +15,20 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
-Plug 'https://github.com/morhetz/gruvbox.git'
-Plug 'https://github.com/scrooloose/nerdtree.git'
-Plug 'https://github.com/tpope/vim-bundler.git'
-Plug 'https://github.com/tpope/vim-endwise.git'
-Plug 'https://github.com/tpope/vim-fugitive.git'
-Plug 'https://github.com/vim-airline/vim-airline.git'
-Plug 'https://github.com/vim-airline/vim-airline-themes.git'
+Plug 'edkolev/tmuxline.vim'
+Plug 'morhetz/gruvbox'
+Plug 'scrooloose/nerdtree'
+Plug 'tpope/vim-bundler'
+Plug 'tpope/vim-endwise'
+Plug 'tpope/vim-fugitive'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 
 " vim-lsp
-Plug 'https://github.com/prabirshrestha/asyncomplete.vim.git'
-Plug 'https://github.com/prabirshrestha/async.vim.git'
-Plug 'https://github.com/prabirshrestha/vim-lsp.git'
-Plug 'https://github.com/prabirshrestha/asyncomplete-lsp.vim.git'
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/async.vim'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
 call plug#end()
 
 """ Encoding
