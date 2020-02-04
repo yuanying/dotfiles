@@ -1,18 +1,25 @@
-alias ls='ls --color'
-alias ll='ls -lhF --color'
-alias la='ls -ahF --color'
+case "${OSTYPE}" in
+darwin*)
+  alias ls="ls -G"
+  alias ll="ls -lhFG"
+  alias la="ls -lahFG"
+  ;;
+linux*)
+  alias ls='ls --color'
+  alias ll='ls -lhF --color'
+  alias la='ls -lahF --color'
+  ;;
+esac
 alias cp='cp -i'
 alias rm='rm -i'
 alias mv='mv -i'
 alias svim='sudo vim'
-alias r='rails'
 alias b='bundle'
 alias bi='bundle install'
 alias bu='bundle update'
 alias bl='bundle list'
 alias be='bundle exec'
 alias bc='bundle console'
-alias nb='nodebrew'
 if [ -x "`which hub 2>/dev/null`" ]; then
     alias git='hub'
 fi
