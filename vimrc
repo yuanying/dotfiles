@@ -19,6 +19,9 @@ Plug 'https://github.com/morhetz/gruvbox.git'
 Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/tpope/vim-bundler.git'
 Plug 'https://github.com/tpope/vim-endwise.git'
+Plug 'https://github.com/tpope/vim-fugitive.git'
+Plug 'https://github.com/vim-airline/vim-airline.git'
+Plug 'https://github.com/vim-airline/vim-airline-themes.git'
 
 " vim-lsp
 Plug 'https://github.com/prabirshrestha/asyncomplete.vim.git'
@@ -45,13 +48,17 @@ syntax on
 set hlsearch
 set foldmethod=marker
 set cursorline
-set t_Co=256
+"set t_Co=256
 set clipboard=unnamedplus,unnamed
 set concealcursor=
 set completeopt=menu,menuone
 try
     colorscheme gruvbox
     set background=dark
+    let g:gruvbox_contrast_dark="hard"
+    "let g:airline_statusline_ontop=1
+    let g:airline_theme='gruvbox'
+    let g:airline_powerline_fonts = 1
 catch /^Vim\%((\a\+)\)\=:E185/
     colorscheme default
     set background=dark
@@ -143,6 +150,7 @@ noremap <silent><C-e> :NERDTreeToggle<CR>
 let g:asyncomplete_auto_popup = 1
 let g:lsp_async_completion = 1
 let g:lsp_log_verbose = 0
+let g:lsp_preview_keep_focus = 0
 let g:lsp_signs_error = {'text': '✗'}
 let g:lsp_signs_warning = {'text': '‼'}
 nmap <silent> <Leader>ld <plug>(lsp-peek-definition)
@@ -163,7 +171,6 @@ if executable('gopls')
         \ 'cmd': {server_info->['gopls']},
         \ 'whitelist': ['go'],
         \ 'workspace_config': {'gopls': {
-        \     'staticcheck': v:true,
         \     'completeUnimported': v:true,
         \     'caseSensitiveCompletion': v:true,
         \     'usePlaceholders': v:true,
