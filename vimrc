@@ -16,6 +16,7 @@ call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
 Plug 'edkolev/tmuxline.vim'
+Plug 'kana/vim-tabpagecd'
 Plug 'morhetz/gruvbox'
 Plug 'scrooloose/nerdtree'
 Plug 'tpope/vim-bundler'
@@ -100,6 +101,7 @@ set ignorecase
 set smartcase
 set wrapscan
 set incsearch
+set path=$PWD/**
 
 """ History
 set history=100
