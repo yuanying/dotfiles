@@ -17,6 +17,7 @@ Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
 Plug 'edkolev/tmuxline.vim'
 Plug 'kana/vim-tabpagecd'
+Plug 'mileszs/ack.vim'
 Plug 'morhetz/gruvbox'
 Plug 'scrooloose/nerdtree'
 Plug 'tpope/vim-bundler'
@@ -144,6 +145,13 @@ inoremap <A-f> <S-Right>
 " Operate buffer
 nnoremap <silent> bp :bp<CR>
 nnoremap <silent> bn :bn<CR>
+
+" ag / ack
+if executable('ag')
+    let g:ackprg = 'ag --nogroup --nocolor --column'
+    cnoreabbrev Ack Ack!
+    nnoremap <Leader>a :Ack!<Space>
+endif
 
 " nerdtree
 let NERDTreeShowHidden=1
