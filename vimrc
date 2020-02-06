@@ -15,6 +15,7 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
+Plug 'airblade/vim-gitgutter'
 Plug 'edkolev/tmuxline.vim'
 Plug 'kana/vim-tabpagecd'
 Plug 'lambdalisue/fern-renderer-devicons.vim'
@@ -154,6 +155,10 @@ if executable('ag')
     cnoreabbrev Ack Ack!
     nnoremap <Leader>a :Ack!<Space>
 endif
+
+" gitgutter
+nmap ]h <Plug>(GitGutterNextHunk)
+nmap [h <Plug>(GitGutterPrevHunk)
 
 " nerdtree
 "let NERDTreeShowHidden=1
