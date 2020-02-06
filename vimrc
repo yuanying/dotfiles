@@ -17,9 +17,11 @@ Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
 Plug 'edkolev/tmuxline.vim'
 Plug 'kana/vim-tabpagecd'
+Plug 'lambdalisue/fern-renderer-devicons.vim'
+Plug 'lambdalisue/fern.vim'
 Plug 'mileszs/ack.vim'
 Plug 'morhetz/gruvbox'
-Plug 'scrooloose/nerdtree'
+Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-endwise'
 Plug 'tpope/vim-fugitive'
@@ -154,8 +156,20 @@ if executable('ag')
 endif
 
 " nerdtree
-let NERDTreeShowHidden=1
-noremap <silent><C-e> :NERDTreeToggle<CR>
+"let NERDTreeShowHidden=1
+"noremap <silent><C-e> :NERDTreeToggle<CR>
+noremap <silent><C-e> :Fern . -drawer -toggle<CR>
+let g:fern#renderer = "devicons"
+function! s:init_fern() abort
+  set nonumber
+  set noruler
+endfunction
+
+augroup fern-custom
+  autocmd! *
+  autocmd FileType fern call s:init_fern()
+augroup END
+
 
 " vim-lsp
 let g:asyncomplete_auto_popup = 1
