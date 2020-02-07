@@ -23,7 +23,6 @@ Plug 'kana/vim-tabpagecd'
 Plug 'lambdalisue/fern-mapping-project-top.vim'
 Plug 'lambdalisue/fern-renderer-devicons.vim'
 Plug 'lambdalisue/fern.vim'
-Plug 'mileszs/ack.vim'
 Plug 'morhetz/gruvbox'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
@@ -153,17 +152,20 @@ inoremap <A-f> <S-Right>
 nnoremap <silent> bp :bp<CR>
 nnoremap <silent> bn :bn<CR>
 
-" ag / ack
-if executable('ag')
-    let g:ackprg = 'ag --nogroup --nocolor --column'
-    cnoreabbrev Ack Ack!
-    nnoremap <Leader>a :Ack!<Space>
-endif
-
-" fzf
+" fzf and ag
 nmap <Leader>b :Buffers<CR>
 nmap <Leader>t :Files<CR>
 nmap <Leader>r :Tags<CR>
+command! -bang -nargs=* Ag
+\ call fzf#vim#grep(
+\   'ag --nogroup --column --color '.shellescape(<q-args>), 1,
+\   fzf#vim#with_preview(),
+\   <bang>0)
+nnoremap <Leader>a :Ag<Space>
+command! -bang -nargs=? -complete=dir Files
+  \ call fzf#vim#files(<q-args>, fzf#vim#with_preview(), <bang>0)
+" command! -bar -bang -nargs=? -complete=buffer buffers
+"  \ call fzf#vim#buffers(<q-args>, fzf#vim#with_preview(), <bang>0)
 
 " gitgutter
 nmap ]h <Plug>(GitGutterNextHunk)
