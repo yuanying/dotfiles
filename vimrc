@@ -17,6 +17,8 @@ Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
 Plug 'airblade/vim-gitgutter'
 Plug 'edkolev/tmuxline.vim'
+Plug 'junegunn/fzf', { 'do': './install --bin' }
+Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
 Plug 'lambdalisue/fern-renderer-devicons.vim'
 Plug 'lambdalisue/fern.vim'
@@ -156,6 +158,11 @@ if executable('ag')
     cnoreabbrev Ack Ack!
     nnoremap <Leader>a :Ack!<Space>
 endif
+
+" fzf
+nmap <Leader>b :Buffers<CR>
+nmap <Leader>t :Files<CR>
+nmap <Leader>r :Tags<CR>
 
 " gitgutter
 nmap ]h <Plug>(GitGutterNextHunk)
