@@ -20,6 +20,7 @@ Plug 'edkolev/tmuxline.vim'
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
+Plug 'lambdalisue/fern-mapping-project-top.vim'
 Plug 'lambdalisue/fern-renderer-devicons.vim'
 Plug 'lambdalisue/fern.vim'
 Plug 'mileszs/ack.vim'
