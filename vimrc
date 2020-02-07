@@ -176,6 +176,8 @@ let g:fern#renderer = "devicons"
 function! s:init_fern() abort
   set nonumber
   set noruler
+  nmap <buffer> <Enter> <Plug>(fern-open-or-expand)
+  nmap <buffer> l <Plug>(fern-action-open)<C-w><C-p>
 endfunction
 
 augroup fern-custom
