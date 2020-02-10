@@ -1,6 +1,9 @@
 # Load zsh extentions
 export PATH=/usr/local/go/bin:/usr/local/bin:$PATH
 
+# brew info zsh-completions
+fpath=(${HOME}/.zsh/zsh-completions $fpath)
+
 # Load all of zsh config files
 for config_file ($ZSH/*.zsh) source $config_file
 
@@ -34,9 +37,6 @@ fi
 if [[ -f ~/.zsh_private ]]; then
     source ~/.zsh_private
 fi
-
-# brew info zsh-completions
-fpath=(${HOME}/.zsh/zsh-completions $fpath)
 
 # uniq path
 typeset -U path
