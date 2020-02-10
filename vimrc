@@ -167,6 +167,10 @@ command! -bang -nargs=? -complete=dir Files
 " command! -bar -bang -nargs=? -complete=buffer buffers
 "  \ call fzf#vim#buffers(<q-args>, fzf#vim#with_preview(), <bang>0)
 
+" caw
+nmap <C-_> <Plug>(caw:hatpos:toggle)
+vmap <C-_> <Plug>(caw:hatpos:toggle)
+
 " gitgutter
 nmap ]h <Plug>(GitGutterNextHunk)
 nmap [h <Plug>(GitGutterPrevHunk)
