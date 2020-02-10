@@ -168,8 +168,8 @@ command! -bang -nargs=? -complete=dir Files
 "  \ call fzf#vim#buffers(<q-args>, fzf#vim#with_preview(), <bang>0)
 
 " caw
-nmap <C-_> <Plug>(caw:hatpos:toggle)
-vmap <C-_> <Plug>(caw:hatpos:toggle)
+nmap <C-\> <Plug>(caw:hatpos:toggle)
+vmap <C-\> <Plug>(caw:hatpos:toggle)
 
 " gitgutter
 nmap ]h <Plug>(GitGutterNextHunk)
