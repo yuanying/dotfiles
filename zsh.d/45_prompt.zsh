@@ -20,7 +20,7 @@ SPACESHIP_KUBECTL_VERSION_SHOW=false
 SPACESHIP_KUBECONTEXT_COLOR_GROUPS=(
   # red if namespace is "kube-system"
   red    '\(.+-system)$'
-  yellow '^zlab.+$'
+  yellow '\(zlab.+)$'
   green '.+'
 )
 SPACESHIP_DOCKER_SHOW=false
