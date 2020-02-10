@@ -12,6 +12,8 @@ autoload -Uz colors && colors
 autoload -U promptinit; promptinit
 prompt spaceship
 
+SPACESHIP_HOST_SHOW=false
+SPACESHIP_USER_SHOW=needed
 SPACESHIP_GOLANG_SHOW=false
 SPACESHIP_KUBECTL_SHOW=true
 SPACESHIP_KUBECTL_VERSION_SHOW=false
@@ -21,3 +23,4 @@ SPACESHIP_KUBECONTEXT_COLOR_GROUPS=(
   yellow '^zlab.+$'
   green '.+'
 )
+SPACESHIP_DOCKER_SHOW=false
