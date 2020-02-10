@@ -235,3 +235,17 @@ if executable('gopls')
   augroup END
 endif
 
+" Strip space
+function! Rstrip()
+  let s:tmppos = getpos(".")
+  if &filetype == "markdown"
+    %s/\v(\s{2})?(\s+)?$/\1/e
+    match Underlined /\s\{2}$/
+  else
+    %s/\v\s+$//e
+  endif
+  call setpos(".", s:tmppos)
+endfunction
+
+autocmd BufWritePre * :call Rstrip()
+
