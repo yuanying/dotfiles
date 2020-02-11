@@ -15,15 +15,18 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
+" Plug 'fatih/molokai'
+" Plug 'morhetz/gruvbox'
+" Plug 'sjl/badwolf'
 Plug 'airblade/vim-gitgutter'
 Plug 'edkolev/tmuxline.vim'
+Plug 'jacoborus/tender.vim'
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
 Plug 'lambdalisue/fern-mapping-project-top.vim'
 Plug 'lambdalisue/fern-renderer-devicons.vim'
 Plug 'lambdalisue/fern.vim'
-Plug 'morhetz/gruvbox'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-endwise'
@@ -57,17 +60,28 @@ syntax on
 set hlsearch
 set foldmethod=marker
 set cursorline
-"set t_Co=256
+set t_Co=256
 set clipboard=unnamedplus,unnamed
 set concealcursor=
 set completeopt=menu,menuone
+" if (has("termguicolors"))
+"   set termguicolors
+" endif
+
 try
-    colorscheme gruvbox
-    set background=dark
-    let g:gruvbox_contrast_dark="hard"
-    "let g:airline_statusline_ontop=1
-    let g:airline_theme='gruvbox'
+    " colorscheme gruvbox
+    " set background=dark
+    " let g:gruvbox_contrast_dark="hard"
+    " "let g:airline_statusline_ontop=1
+    " let g:airline_theme='gruvbox'
     let g:airline_powerline_fonts = 1
+    " colorscheme goodwolf
+    " colorscheme badwolf
+    let g:airline_theme='badwolf'
+    " colorscheme molokai
+    " let g:airline_theme='molokai'
+    colorscheme tender
+    " let g:airline_theme='tender'
 catch /^Vim\%((\a\+)\)\=:E185/
     colorscheme default
     set background=dark
