@@ -217,10 +217,12 @@ augroup END
 let g:asyncomplete_auto_popup = 1
 let g:lsp_async_completion = 1
 let g:lsp_log_verbose = 0
+let g:lsp_log_file = ""
 let g:lsp_preview_keep_focus = 0
 let g:lsp_signs_error = {'text': '✗'}
 let g:lsp_signs_warning = {'text': '‼'}
 let g:lsp_diagnostics_echo_cursor = 1
+let g:asyncomplete_popup_delay = 200
 nmap <silent> <Leader>ld <plug>(lsp-peek-definition)
 nmap <silent> <Leader>lD <plug>(lsp-definition)
 nmap <silent> <Leader>lt <plug>(lsp-peek-type-definition)
