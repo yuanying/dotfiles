@@ -21,6 +21,7 @@ Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 Plug 'airblade/vim-gitgutter'
 Plug 'edkolev/tmuxline.vim'
 Plug 'jacoborus/tender.vim'
+" Plug 'cocopon/iceberg.vim'
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
@@ -63,30 +64,28 @@ set foldmethod=marker
 set cursorline
 set t_Co=256
 set clipboard=unnamedplus,unnamed
-set concealcursor=
+" set concealcursor=
 set completeopt=menu,menuone
-" if (has("termguicolors"))
-"   set termguicolors
-" endif
+if (has("termguicolors"))
+  set termguicolors
+  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+endif
 
-try
-    " colorscheme gruvbox
-    " set background=dark
-    " let g:gruvbox_contrast_dark="hard"
-    " "let g:airline_statusline_ontop=1
-    " let g:airline_theme='gruvbox'
-    let g:airline_powerline_fonts = 1
-    " colorscheme goodwolf
-    " colorscheme badwolf
-    let g:airline_theme='badwolf'
-    " colorscheme molokai
-    " let g:airline_theme='molokai'
-    colorscheme tender
-    " let g:airline_theme='tender'
-catch /^Vim\%((\a\+)\)\=:E185/
-    colorscheme default
-    set background=dark
-endtry
+" colorscheme gruvbox
+" set background=dark
+" let g:gruvbox_contrast_dark="hard"
+" "let g:airline_statusline_ontop=1
+" let g:airline_theme='gruvbox'
+let g:airline_powerline_fonts = 1
+" colorscheme goodwolf
+" colorscheme badwolf
+let g:airline_theme='badwolf'
+" colorscheme molokai
+" let g:airline_theme='molokai'
+colorscheme tender
+" colorscheme iceberg
+" let g:airline_theme='tender'
 
 """ Backup
 set backup
