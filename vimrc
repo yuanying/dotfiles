@@ -15,13 +15,14 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
+" Plug 'cocopon/iceberg.vim'
 " Plug 'fatih/molokai'
 " Plug 'morhetz/gruvbox'
 " Plug 'sjl/badwolf'
 Plug 'airblade/vim-gitgutter'
+Plug 'cohama/lexima.vim'
 Plug 'edkolev/tmuxline.vim'
 Plug 'jacoborus/tender.vim'
-" Plug 'cocopon/iceberg.vim'
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
@@ -219,6 +220,7 @@ let g:lsp_log_verbose = 0
 let g:lsp_preview_keep_focus = 0
 let g:lsp_signs_error = {'text': '✗'}
 let g:lsp_signs_warning = {'text': '‼'}
+let g:lsp_diagnostics_echo_cursor = 1
 nmap <silent> <Leader>ld <plug>(lsp-peek-definition)
 nmap <silent> <Leader>lD <plug>(lsp-definition)
 nmap <silent> <Leader>lt <plug>(lsp-peek-type-definition)
