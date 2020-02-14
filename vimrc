@@ -81,12 +81,12 @@ endif
 let g:airline_powerline_fonts = 1
 " colorscheme goodwolf
 " colorscheme badwolf
-let g:airline_theme='badwolf'
+" let g:airline_theme='badwolf'
 " colorscheme molokai
 " let g:airline_theme='molokai'
 colorscheme tender
 " colorscheme iceberg
-" let g:airline_theme='tender'
+let g:airline_theme='tender'
 
 """ Backup
 set backup
