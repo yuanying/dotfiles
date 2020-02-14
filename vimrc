@@ -22,7 +22,7 @@ Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 Plug 'airblade/vim-gitgutter'
 Plug 'cohama/lexima.vim'
 Plug 'edkolev/tmuxline.vim'
-Plug 'yuanying/tender.vim'
+Plug 'yuanying/tender.vim', { 'branch': 'dev' }
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
