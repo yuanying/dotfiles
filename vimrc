@@ -19,17 +19,16 @@ Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 " Plug 'fatih/molokai'
 " Plug 'morhetz/gruvbox'
 " Plug 'sjl/badwolf'
+" Plug 'mattn/vim-goimports'
 Plug 'airblade/vim-gitgutter'
 Plug 'cohama/lexima.vim'
 Plug 'edkolev/tmuxline.vim'
-Plug 'yuanying/tender.vim', { 'branch': 'dev' }
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
 Plug 'lambdalisue/fern-mapping-project-top.vim'
 Plug 'lambdalisue/fern-renderer-devicons.vim'
 Plug 'lambdalisue/fern.vim'
-Plug 'mattn/vim-goimports'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-endwise'
@@ -37,6 +36,7 @@ Plug 'tpope/vim-fugitive'
 Plug 'tyru/caw.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
+Plug 'yuanying/tender.vim', { 'branch': 'dev' }
 
 " vim-lsp
 Plug 'prabirshrestha/asyncomplete.vim'
@@ -241,7 +241,6 @@ if executable('gopls')
         \ 'cmd': {server_info->['gopls']},
         \ 'whitelist': ['go'],
         \ 'workspace_config': {'gopls': {
-        \     'completeUnimported': v:true,
         \     'caseSensitiveCompletion': v:true,
         \     'usePlaceholders': v:true,
         \     'completionDocumentation': v:true,
@@ -252,6 +251,18 @@ if executable('gopls')
     autocmd FileType go setlocal omnifunc=lsp#complete
   augroup END
 endif
+
+function! s:install_lsp_format()
+  augroup lsp_autoformat
+    au! * <buffer>
+    autocmd BufWritePre <buffer> LspDocumentFormatSync
+  augroup END
+endfunction
+
+augroup lsp_format_install
+  au!
+  autocmd FileType go call s:install_lsp_format()
+augroup END
 
 " Strip space
 function! Rstrip()
