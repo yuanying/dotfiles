@@ -42,3 +42,23 @@ if [ "$(uname)" = "Linux" ]; then
     alias pbpaste='xsel --clipboard --output'
     alias open='xdg-open'
 fi
+
+function cdd() {
+  local -a tmpparent; tmpparent=""
+  local -a filename; filename="${1}"
+  local -a file
+  local -a num; num=0
+  while [ $num -le 10 ]; do
+    tmpparent="${tmpparent}../"
+    file="${tmpparent}${filename}"
+    if [ -d "${file}" ] ; then
+      cd ${tmpparent}
+      break
+    fi
+    num=$(($num + 1))
+  done
+}
+
+function cdg() {
+  cdd ".git"
+}
