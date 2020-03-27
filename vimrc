@@ -231,6 +231,7 @@ nmap <silent> <Leader>lr <plug>(lsp-references)
 nmap <silent> <Leader>lR <plug>(lsp-rename)
 nmap <silent> <Leader>lh <plug>(lsp-hover)
 nmap <silent> <Leader>lf <plug>(lsp-document-format)
+nmap <silent> <Leader>le <plug>(lsp-next-error)
 
 " vim-lsp golang
 if executable('gopls')
