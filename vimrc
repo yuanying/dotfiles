@@ -86,7 +86,12 @@ let g:airline_powerline_fonts = 1
 " let g:airline_theme='molokai'
 colorscheme tender
 " colorscheme iceberg
-let g:airline_theme='tender'
+let hostname = substitute(system('hostname'), '\n', '', '')
+if hostname == "router"
+    let g:airline_theme='badwolf'
+else
+    let g:airline_theme='tender'
+endif
 
 """ Backup
 set backup
