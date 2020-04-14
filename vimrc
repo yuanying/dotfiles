@@ -89,6 +89,8 @@ colorscheme tender
 let hostname = substitute(system('hostname'), '\n', '', '')
 if hostname == "router"
     let g:airline_theme='badwolf'
+elseif hostname =~ "Z\-MAC"
+    let g:airline_theme='molokai'
 else
     let g:airline_theme='tender'
 endif
