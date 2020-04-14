@@ -91,6 +91,8 @@ if hostname == "router"
     let g:airline_theme='badwolf'
 elseif hostname =~ "Z\-MAC"
     let g:airline_theme='molokai'
+elseif hostname == "tiberius"
+    let g:airline_theme='solarized'
 else
     let g:airline_theme='tender'
 endif
