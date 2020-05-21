@@ -87,10 +87,12 @@ let g:airline_powerline_fonts = 1
 colorscheme tender
 " colorscheme iceberg
 let hostname = substitute(system('hostname'), '\n', '', '')
-if hostname == "router"
+if hostname == "oeilvert"
     let g:airline_theme='badwolf'
 elseif hostname =~ "Z\-MAC"
     let g:airline_theme='molokai'
+elseif hostname == "tiberius"
+    let g:airline_theme='solarized'
 else
     let g:airline_theme='tender'
 endif
