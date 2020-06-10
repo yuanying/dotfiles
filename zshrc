@@ -1,6 +1,10 @@
 # Load zsh extentions
 export PATH=/usr/local/go/bin:/usr/local/bin:$PATH
 
+if [[ -f ${HOME}/.asdf/asdf.sh  ]]; then
+  . $HOME/.asdf/asdf.sh
+fi
+
 # brew info zsh-completions
 fpath=(${HOME}/.zsh/zsh-completions $fpath)
 
