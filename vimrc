@@ -182,7 +182,7 @@ nmap <Leader>t :Files<CR>
 nmap <Leader>r :Tags<CR>
 command! -bang -nargs=* Ag
 \ call fzf#vim#grep(
-\   'ag --nogroup --column --color '.shellescape(<q-args>), 1,
+\   'ag --nogroup --column --color --hidden --ignore .git '.shellescape(<q-args>), 1,
 \   fzf#vim#with_preview(),
 \   <bang>0)
 nnoremap <Leader>a :Ag<Space>
