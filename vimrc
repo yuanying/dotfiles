@@ -277,6 +277,9 @@ augroup lsp_format_install
   autocmd FileType go call s:install_lsp_format()
 augroup END
 
+" tagbar
+nmap <silent> <Leader>tt :TagbarToggle<CR>
+
 " gotags
 let g:tagbar_type_go = {
     \ 'ctagstype' : 'go',
