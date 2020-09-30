@@ -208,11 +208,12 @@ let g:gitgutter_sign_modified_removed = '·'
 " nerdtree
 "let NERDTreeShowHidden=1
 "noremap <silent><C-e> :NERDTreeToggle<CR>
-noremap <silent><C-e> :Fern . -drawer -toggle<CR>
+" noremap <silent><C-e> :Fern . -drawer -toggle<CR>
+noremap <silent><C-e> :Fern . -reveal=%<CR>
 let g:fern#renderer = "devicons"
 function! s:init_fern() abort
-  set nonumber
-  set noruler
+  " set nonumber
+  " set noruler
   nmap <buffer> <Enter> <Plug>(fern-open-or-expand)
   nmap <buffer> l <Plug>(fern-action-open)<C-w><C-p>
 endfunction
