@@ -98,6 +98,10 @@ else
     let g:airline_theme='tender'
 endif
 
+""" Spell check
+set spell
+set spelllang=en,cjk
+
 """ Backup
 set backup
 set backupdir=$HOME/.vim-bak/
