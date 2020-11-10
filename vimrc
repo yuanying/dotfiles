@@ -19,7 +19,6 @@ Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 " Plug 'fatih/molokai'
 " Plug 'morhetz/gruvbox'
 " Plug 'sjl/badwolf'
-" Plug 'mattn/vim-goimports'
 Plug 'airblade/vim-gitgutter'
 Plug 'cohama/lexima.vim'
 Plug 'edkolev/tmuxline.vim'
@@ -30,6 +29,7 @@ Plug 'lambdalisue/fern-mapping-project-top.vim'
 Plug 'lambdalisue/fern-renderer-devicons.vim'
 Plug 'lambdalisue/fern.vim'
 Plug 'majutsushi/tagbar'
+Plug 'mattn/vim-goimports'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-endwise'
@@ -315,18 +315,18 @@ let g:tagbar_type_go = {
 \ }
 
 " Strip space
-function! Rstrip()
-  let s:tmppos = getpos(".")
-  if &filetype == "markdown"
-    %s/\v(\s{2})?(\s+)?$/\1/e
-    match Underlined /\s\{2}$/
-  else
-    %s/\v\s+$//e
-  endif
-  call setpos(".", s:tmppos)
-endfunction
-
-autocmd BufWritePre * :call Rstrip()
+" function! Rstrip()
+"   let s:tmppos = getpos(".")
+"   if &filetype == "markdown"
+"     %s/\v(\s{2})?(\s+)?$/\1/e
+"     match Underlined /\s\{2}$/
+"   else
+"     %s/\v\s+$//e
+"   endif
+"   call setpos(".", s:tmppos)
+" endfunction
+"
+" autocmd BufWritePre * :call Rstrip()
 
 function! s:get_syn_id(transparent)
   let synid = synID(line("."), col("."), 1)
