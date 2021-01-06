@@ -30,6 +30,7 @@ Plug 'lambdalisue/fern-renderer-devicons.vim'
 Plug 'lambdalisue/fern.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mattn/vim-goimports'
+Plug 'mzlogin/vim-markdown-toc'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-endwise'
@@ -284,6 +285,12 @@ augroup END
 
 " tagbar
 nmap <silent> <Leader>tt :TagbarToggle<CR>
+
+" markdown toc
+let g:vmt_fence_text = "markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc"
+let g:vmt_fence_closing_text = "markdown-toc end"
+let g:vmt_list_item_char = "-"
+let g:vmt_include_headings_before = 1
 
 " gotags
 let g:tagbar_type_go = {
