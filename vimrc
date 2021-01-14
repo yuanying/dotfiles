@@ -265,23 +265,16 @@ if executable('gopls')
         \     'completionDocumentation': v:true,
         \     'watchFileChanges': v:true,
         \     'hoverKind': 'SingleLine',
+        \     'imports': v:true,
         \   }},
         \ })
     autocmd FileType go setlocal omnifunc=lsp#complete
   augroup END
 endif
 
-function! s:install_lsp_format()
-  augroup lsp_autoformat
-    au! * <buffer>
-    autocmd BufWritePre <buffer> LspDocumentFormatSync
-  augroup END
-endfunction
-
-augroup lsp_format_install
-  au!
-  autocmd FileType go call s:install_lsp_format()
-augroup END
+" vim-goimports
+" enable auto format when write (default)
+let g:goimports = 1
 
 " tagbar
 nmap <silent> <Leader>tt :TagbarToggle<CR>
