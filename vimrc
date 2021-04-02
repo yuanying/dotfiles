@@ -26,8 +26,9 @@ Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
 Plug 'lambdalisue/fern-mapping-project-top.vim'
-Plug 'lambdalisue/fern-renderer-devicons.vim'
+Plug 'lambdalisue/fern-renderer-nerdfont.vim'
 Plug 'lambdalisue/fern.vim'
+Plug 'lambdalisue/nerdfont.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mattn/vim-goimports'
 Plug 'mzlogin/vim-markdown-toc'
@@ -215,7 +216,7 @@ let g:gitgutter_sign_modified_removed = '·'
 "noremap <silent><C-e> :NERDTreeToggle<CR>
 " noremap <silent><C-e> :Fern . -drawer -toggle<CR>
 noremap <silent><C-e> :Fern . -reveal=%<CR>
-let g:fern#renderer = "devicons"
+let g:fern#renderer = "nerdfont"
 function! s:init_fern() abort
   " set nonumber
   " set noruler
