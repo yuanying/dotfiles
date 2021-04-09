@@ -31,6 +31,7 @@ Plug 'lambdalisue/fern.vim'
 Plug 'lambdalisue/nerdfont.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mattn/vim-goimports'
+Plug 'mattn/vim-lsp-settings'
 Plug 'mzlogin/vim-markdown-toc'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
@@ -42,10 +43,10 @@ Plug 'vim-airline/vim-airline-themes'
 Plug 'yuanying/tender.vim', { 'branch': 'dev' }
 
 " vim-lsp
-Plug 'prabirshrestha/asyncomplete.vim'
 Plug 'prabirshrestha/async.vim'
-Plug 'prabirshrestha/vim-lsp'
 Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/vim-lsp'
 call plug#end()
 
 """ Encoding
@@ -66,7 +67,7 @@ syntax on
 set hlsearch
 set foldmethod=marker
 set cursorline
-set t_Co=256
+" set t_Co=256
 set clipboard=unnamedplus,unnamed
 " set concealcursor=
 set completeopt=menu,menuone
@@ -261,12 +262,9 @@ if executable('gopls')
         \ 'cmd': {server_info->['gopls']},
         \ 'whitelist': ['go'],
         \ 'workspace_config': {'gopls': {
-        \     'caseSensitiveCompletion': v:true,
         \     'usePlaceholders': v:true,
         \     'completionDocumentation': v:true,
-        \     'watchFileChanges': v:true,
         \     'hoverKind': 'SingleLine',
-        \     'imports': v:true,
         \   }},
         \ })
     autocmd FileType go setlocal omnifunc=lsp#complete
