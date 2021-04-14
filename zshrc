@@ -32,6 +32,11 @@ if [[ -f /opt/vim/bin/vim ]]; then
     export PATH=/opt/vim/bin:$PATH
 fi
 
+## mosh in Container
+if [[ -f /opt/mosh/bin/mosh ]]; then
+    export PATH=/opt/mosh/bin:$PATH
+fi
+
 ## .zshrc.local
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
