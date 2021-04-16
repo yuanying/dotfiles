@@ -16,12 +16,12 @@ call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
 " Plug 'cocopon/iceberg.vim'
+" Plug 'edkolev/tmuxline.vim'
 " Plug 'fatih/molokai'
 " Plug 'morhetz/gruvbox'
 " Plug 'sjl/badwolf'
 Plug 'airblade/vim-gitgutter'
 Plug 'cohama/lexima.vim'
-Plug 'edkolev/tmuxline.vim'
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
@@ -41,6 +41,7 @@ Plug 'tyru/caw.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'yuanying/tender.vim', { 'branch': 'dev' }
+Plug 'yuanying/tmuxline.vim', { 'branch': 'set-status-bg' }
 
 " vim-lsp
 Plug 'prabirshrestha/async.vim'
