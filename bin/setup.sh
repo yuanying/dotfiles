@@ -11,5 +11,7 @@ ln -s ${ROOT}/../bash_aliases ~/.bash_aliases
 
 ln -s ${ROOT}/../sshconfig ~/.ssh/config
 
+ln -s ${ROOT}/tmux-popup.sh ~/bin/tmux-popup.sh
+
 bash ${ROOT}/setup-vim.sh
 bash ${ROOT}/setup-zsh.sh
