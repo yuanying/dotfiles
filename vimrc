@@ -16,19 +16,23 @@ call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-plug', {'dir': '~/.vim/plugged/vim-plug/autoload'}
 
 " Plug 'cocopon/iceberg.vim'
+" Plug 'edkolev/tmuxline.vim'
 " Plug 'fatih/molokai'
 " Plug 'morhetz/gruvbox'
 " Plug 'sjl/badwolf'
-" Plug 'mattn/vim-goimports'
 Plug 'airblade/vim-gitgutter'
 Plug 'cohama/lexima.vim'
-Plug 'edkolev/tmuxline.vim'
 Plug 'junegunn/fzf', { 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
 Plug 'kana/vim-tabpagecd'
 Plug 'lambdalisue/fern-mapping-project-top.vim'
-Plug 'lambdalisue/fern-renderer-devicons.vim'
+Plug 'lambdalisue/fern-renderer-nerdfont.vim'
 Plug 'lambdalisue/fern.vim'
+Plug 'lambdalisue/nerdfont.vim'
+Plug 'majutsushi/tagbar'
+Plug 'mattn/vim-goimports'
+Plug 'mattn/vim-lsp-settings'
+Plug 'mzlogin/vim-markdown-toc'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-endwise'
@@ -37,12 +41,13 @@ Plug 'tyru/caw.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'yuanying/tender.vim', { 'branch': 'dev' }
+Plug 'yuanying/tmuxline.vim', { 'branch': 'set-status-bg' }
 
 " vim-lsp
-Plug 'prabirshrestha/asyncomplete.vim'
 Plug 'prabirshrestha/async.vim'
-Plug 'prabirshrestha/vim-lsp'
 Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/vim-lsp'
 call plug#end()
 
 """ Encoding
@@ -63,7 +68,7 @@ syntax on
 set hlsearch
 set foldmethod=marker
 set cursorline
-set t_Co=256
+" set t_Co=256
 set clipboard=unnamedplus,unnamed
 " set concealcursor=
 set completeopt=menu,menuone
@@ -86,7 +91,20 @@ let g:airline_powerline_fonts = 1
 " let g:airline_theme='molokai'
 colorscheme tender
 " colorscheme iceberg
-let g:airline_theme='tender'
+let hostname = substitute(system('hostname'), '\n', '', '')
+if hostname == "oeilvert"
+    let g:airline_theme='badwolf'
+elseif hostname =~ "Z\-MAC"
+    let g:airline_theme='molokai'
+elseif hostname == "tiberius"
+    let g:airline_theme='solarized'
+else
+    let g:airline_theme='tender'
+endif
+
+""" Spell check
+set spell
+set spelllang=en,cjk
 
 """ Backup
 set backup
@@ -173,7 +191,7 @@ nmap <Leader>t :Files<CR>
 nmap <Leader>r :Tags<CR>
 command! -bang -nargs=* Ag
 \ call fzf#vim#grep(
-\   'ag --nogroup --column --color '.shellescape(<q-args>), 1,
+\   'ag --nogroup --column --color --hidden --ignore .git '.shellescape(<q-args>), 1,
 \   fzf#vim#with_preview(),
 \   <bang>0)
 nnoremap <Leader>a :Ag<Space>
@@ -198,11 +216,12 @@ let g:gitgutter_sign_modified_removed = '·'
 " nerdtree
 "let NERDTreeShowHidden=1
 "noremap <silent><C-e> :NERDTreeToggle<CR>
-noremap <silent><C-e> :Fern . -drawer -toggle<CR>
-let g:fern#renderer = "devicons"
+" noremap <silent><C-e> :Fern . -drawer -toggle<CR>
+noremap <silent><C-e> :Fern . -reveal=%<CR>
+let g:fern#renderer = "nerdfont"
 function! s:init_fern() abort
-  set nonumber
-  set noruler
+  " set nonumber
+  " set noruler
   nmap <buffer> <Enter> <Plug>(fern-open-or-expand)
   nmap <buffer> l <Plug>(fern-action-open)<C-w><C-p>
 endfunction
@@ -215,14 +234,16 @@ augroup END
 
 " vim-lsp
 let g:asyncomplete_auto_popup = 1
+let g:asyncomplete_popup_delay = 200
 let g:lsp_async_completion = 1
-let g:lsp_log_verbose = 0
+let g:lsp_diagnostics_echo_cursor = 1
+let g:lsp_diagnostics_echo_delay = 2000
+let g:lsp_diagnostics_float_delay = 2000
 let g:lsp_log_file = ""
+let g:lsp_log_verbose = 0
 let g:lsp_preview_keep_focus = 0
 let g:lsp_signs_error = {'text': '✗'}
 let g:lsp_signs_warning = {'text': '‼'}
-let g:lsp_diagnostics_echo_cursor = 1
-let g:asyncomplete_popup_delay = 200
 nmap <silent> <Leader>ld <plug>(lsp-peek-definition)
 nmap <silent> <Leader>lD <plug>(lsp-definition)
 nmap <silent> <Leader>lt <plug>(lsp-peek-type-definition)
@@ -231,6 +252,7 @@ nmap <silent> <Leader>lr <plug>(lsp-references)
 nmap <silent> <Leader>lR <plug>(lsp-rename)
 nmap <silent> <Leader>lh <plug>(lsp-hover)
 nmap <silent> <Leader>lf <plug>(lsp-document-format)
+nmap <silent> <Leader>le <plug>(lsp-next-error)
 
 " vim-lsp golang
 if executable('gopls')
@@ -241,10 +263,8 @@ if executable('gopls')
         \ 'cmd': {server_info->['gopls']},
         \ 'whitelist': ['go'],
         \ 'workspace_config': {'gopls': {
-        \     'caseSensitiveCompletion': v:true,
         \     'usePlaceholders': v:true,
         \     'completionDocumentation': v:true,
-        \     'watchFileChanges': v:true,
         \     'hoverKind': 'SingleLine',
         \   }},
         \ })
@@ -252,17 +272,47 @@ if executable('gopls')
   augroup END
 endif
 
-function! s:install_lsp_format()
-  augroup lsp_autoformat
-    au! * <buffer>
-    autocmd BufWritePre <buffer> LspDocumentFormatSync
-  augroup END
-endfunction
+" vim-goimports
+" enable auto format when write (default)
+let g:goimports = 1
 
-augroup lsp_format_install
-  au!
-  autocmd FileType go call s:install_lsp_format()
-augroup END
+" tagbar
+nmap <silent> <Leader>tt :TagbarToggle<CR>
+
+" markdown toc
+let g:vmt_fence_text = "markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc"
+let g:vmt_fence_closing_text = "markdown-toc end"
+let g:vmt_list_item_char = "-"
+let g:vmt_include_headings_before = 1
+
+" gotags
+let g:tagbar_type_go = {
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [
+        \ 'p:package',
+        \ 'i:imports:1',
+        \ 'c:constants',
+        \ 'v:variables',
+        \ 't:types',
+        \ 'n:interfaces',
+        \ 'w:fields',
+        \ 'e:embedded',
+        \ 'm:methods',
+        \ 'r:constructor',
+        \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+        \ 't' : 'ctype',
+        \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : {
+        \ 'ctype' : 't',
+        \ 'ntype' : 'n'
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+\ }
 
 " Strip space
 function! Rstrip()
@@ -315,4 +365,3 @@ function! s:get_syn_info()
         \ " guibg: " . linkedSyn.guibg
 endfunction
 command! SyntaxInfo call s:get_syn_info()
-

@@ -2,7 +2,7 @@ autoload -Uz colors && colors
 
 # COLOR_FG="%F{081}"
 # COLOR_FG_FAIL="%F{197}"
-# 
+#
 # local ret_status="%(?:${COLOR_FG}$ :${COLOR_FG_FAIL}$ )"
 # PROMPT='%F{228}%~%f $(vcs_info_msg)$(kube_ps1)
 # ${ret_status}%f'
@@ -24,3 +24,4 @@ SPACESHIP_KUBECONTEXT_COLOR_GROUPS=(
   green '.+'
 )
 SPACESHIP_DOCKER_SHOW=false
+SPACESHIP_GCLOUD_SHOW=false

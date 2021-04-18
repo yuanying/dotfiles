@@ -1,7 +1,6 @@
-export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
 export GOPATH="/go"
 
-export PATH="$GOPATH/bin:$PATH"
+export PATH="$GOPATH/bin:/opt/mosh/bin:$PATH"
 
 # Set default environment variables
 export EDITOR=vim
