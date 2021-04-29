@@ -6,3 +6,5 @@ if which kubectl >/dev/null 2>&1; then
   complete -o default -F __start_kubectl k
 
 fi
+
+export PATH=~/.krew/bin:$PATH
