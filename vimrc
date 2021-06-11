@@ -255,22 +255,22 @@ nmap <silent> <Leader>lf <plug>(lsp-document-format)
 nmap <silent> <Leader>le <plug>(lsp-next-error)
 
 " vim-lsp golang
-if executable('gopls')
-  augroup LspGo
-    au!
-    autocmd User lsp_setup call lsp#register_server({
-        \ 'name': 'go-lang',
-        \ 'cmd': {server_info->['gopls']},
-        \ 'whitelist': ['go'],
-        \ 'workspace_config': {'gopls': {
-        \     'usePlaceholders': v:true,
-        \     'completionDocumentation': v:true,
-        \     'hoverKind': 'SingleLine',
-        \   }},
-        \ })
-    autocmd FileType go setlocal omnifunc=lsp#complete
-  augroup END
-endif
+" if executable('gopls')
+"   augroup LspGo
+"     au!
+"     autocmd User lsp_setup call lsp#register_server({
+"        \ 'name': 'go-lang',
+"        \ 'cmd': {server_info->['gopls']},
+"        \ 'whitelist': ['go'],
+"        \ 'workspace_config': {'gopls': {
+"        \     'usePlaceholders': v:true,
+"        \     'completionDocumentation': v:true,
+"        \     'hoverKind': 'SingleLine',
+"        \   }},
+"        \ })
+"     autocmd FileType go setlocal omnifunc=lsp#complete
+"   augroup END
+" endif
 
 " vim-goimports
 " enable auto format when write (default)
