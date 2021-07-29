@@ -31,7 +31,6 @@ Plug 'lambdalisue/fern.vim'
 Plug 'lambdalisue/nerdfont.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mattn/vim-goimports'
-Plug 'mattn/vim-lsp-settings'
 Plug 'mzlogin/vim-markdown-toc'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-bundler'
@@ -44,14 +43,19 @@ Plug 'yuanying/tender.vim', { 'branch': 'dev' }
 Plug 'yuanying/tmuxline.vim', { 'branch': 'set-status-bg' }
 
 " vim-lsp
-Plug 'prabirshrestha/async.vim'
-Plug 'prabirshrestha/asyncomplete-lsp.vim'
-Plug 'prabirshrestha/asyncomplete.vim'
-Plug 'prabirshrestha/vim-lsp'
+" Plug 'prabirshrestha/async.vim'
+" Plug 'prabirshrestha/asyncomplete-lsp.vim'
+" Plug 'prabirshrestha/asyncomplete.vim'
+" Plug 'prabirshrestha/vim-lsp'
+" Plug 'mattn/vim-lsp-settings'
 
 " for nvim
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'romgrk/barbar.nvim'
+
+" for nvim-lsp
+Plug 'neovim/nvim-lspconfig'
+Plug 'nvim-lua/completion-nvim'
 call plug#end()
 
 """ Encoding
@@ -257,45 +261,78 @@ augroup fern-custom
 augroup END
 
 
-" vim-lsp
-let g:asyncomplete_auto_popup = 1
-let g:asyncomplete_popup_delay = 200
-let g:lsp_async_completion = 1
-let g:lsp_diagnostics_echo_cursor = 1
-let g:lsp_diagnostics_echo_delay = 2000
-let g:lsp_diagnostics_float_delay = 2000
-let g:lsp_log_file = ""
-let g:lsp_log_verbose = 0
-let g:lsp_preview_keep_focus = 0
-let g:lsp_signs_error = {'text': '✗'}
-let g:lsp_signs_warning = {'text': '‼'}
-nmap <silent> <Leader>ld <plug>(lsp-peek-definition)
-nmap <silent> <Leader>lD <plug>(lsp-definition)
-nmap <silent> <Leader>lt <plug>(lsp-peek-type-definition)
-nmap <silent> <Leader>lT <plug>(lsp-type-definition)
-nmap <silent> <Leader>lr <plug>(lsp-references)
-nmap <silent> <Leader>lR <plug>(lsp-rename)
-nmap <silent> <Leader>lh <plug>(lsp-hover)
-nmap <silent> <Leader>lf <plug>(lsp-document-format)
-nmap <silent> <Leader>le <plug>(lsp-next-error)
+" " vim-lsp
+" let g:asyncomplete_auto_popup = 1
+" let g:asyncomplete_popup_delay = 200
+" let g:lsp_async_completion = 1
+" let g:lsp_diagnostics_echo_cursor = 1
+" let g:lsp_diagnostics_echo_delay = 2000
+" let g:lsp_diagnostics_float_delay = 2000
+" let g:lsp_log_file = ""
+" let g:lsp_log_verbose = 0
+" let g:lsp_preview_keep_focus = 0
+" let g:lsp_signs_error = {'text': '✗'}
+" let g:lsp_signs_warning = {'text': '‼'}
+" nmap <silent> <Leader>ld <plug>(lsp-peek-definition)
+" nmap <silent> <Leader>lD <plug>(lsp-definition)
+" nmap <silent> <Leader>lt <plug>(lsp-peek-type-definition)
+" nmap <silent> <Leader>lT <plug>(lsp-type-definition)
+" nmap <silent> <Leader>lr <plug>(lsp-references)
+" nmap <silent> <Leader>lR <plug>(lsp-rename)
+" nmap <silent> <Leader>lh <plug>(lsp-hover)
+" nmap <silent> <Leader>lf <plug>(lsp-document-format)
+" nmap <silent> <Leader>le <plug>(lsp-next-error)
 
-" vim-lsp golang
-" if executable('gopls')
-"   augroup LspGo
-"     au!
-"     autocmd User lsp_setup call lsp#register_server({
-"        \ 'name': 'go-lang',
-"        \ 'cmd': {server_info->['gopls']},
-"        \ 'whitelist': ['go'],
-"        \ 'workspace_config': {'gopls': {
-"        \     'usePlaceholders': v:true,
-"        \     'completionDocumentation': v:true,
-"        \     'hoverKind': 'SingleLine',
-"        \   }},
-"        \ })
-"     autocmd FileType go setlocal omnifunc=lsp#complete
-"   augroup END
-" endif
+
+" nvim-lsp
+" https://zenn.dev/garypippi/articles/fe72e26c25563e4c44a9
+set completeopt=menuone,noinsert,noselect
+set shortmess+=c
+
+let g:vimsyn_embed='lPr'
+lua << EOF
+local nvim_lsp = require('lspconfig')
+
+-- Use an on_attach function to only map the following keys
+-- after the language server attaches to the current buffer
+local on_attach = function(client, bufnr)
+  local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+  local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+
+  --Enable completion triggered by <c-x><c-o>
+  buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+  -- Mappings.
+  local opts = { noremap=true, silent=true }
+
+  -- See `:help vim.lsp.*` for documentation on any of the below functions
+  buf_set_keymap('n', '<leader>ld', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+  buf_set_keymap('n', '<leader>lh', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
+  buf_set_keymap('n', '<leader>li', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+  buf_set_keymap('n', '<leader>lt', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+  buf_set_keymap('n', '<leader>lR', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+  buf_set_keymap('n', '<leader>lc', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+  buf_set_keymap('n', '<leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+  buf_set_keymap('n', '<leader>lD', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
+  buf_set_keymap('n', '<leader>le', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+  buf_set_keymap("n", "<leader>lf", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+
+end
+
+-- Use a loop to conveniently call 'setup' on multiple servers and
+-- map buffer local keybindings when the language server attaches
+local servers = { "gopls", "rust_analyzer", "tsserver" }
+for _, lsp in ipairs(servers) do
+  nvim_lsp[lsp].setup {
+    on_attach = on_attach,
+    flags = {
+      debounce_text_changes = 150,
+    }
+  }
+end
+EOF
+
+autocmd BufEnter * lua require'completion'.on_attach()
 
 " vim-goimports
 " enable auto format when write (default)
