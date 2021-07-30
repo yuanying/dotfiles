@@ -334,6 +334,12 @@ EOF
 
 autocmd BufEnter * lua require'completion'.on_attach()
 
+" nvim barbar.nvim
+augroup qf
+    autocmd!
+    autocmd FileType qf set nobuflisted
+augroup END
+
 " vim-goimports
 " enable auto format when write (default)
 let g:goimports = 1
