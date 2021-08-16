@@ -104,7 +104,7 @@ if hostname == "oeilvert"
     let g:airline_theme='badwolf'
 elseif hostname =~ "Z\-MAC"
     let g:airline_theme='molokai'
-elseif hostname == "tiberius"
+elseif hostname == "augustus"
     let g:airline_theme='solarized'
 else
     let g:airline_theme='tender'
