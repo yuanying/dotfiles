@@ -11,3 +11,8 @@ if which kubectl >/dev/null 2>&1; then
 fi
 
 export PATH=~/.krew/bin:$PATH
+
+TMUX_SESSION_NAME=$(tmux display-message -p '#S')
+if [[ -e ~/.kube/config.${TMUX_SESSION_NAME} ]]; then
+    export KUBECONFIG=~/.kube/config.${TMUX_SESSION_NAME}
+fi
