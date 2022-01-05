@@ -251,7 +251,7 @@ let g:fern#renderer = "nerdfont"
 function! s:init_fern() abort
   " set nonumber
   " set noruler
-  nmap <buffer> <Enter> <Plug>(fern-open-or-expand)
+  nmap <buffer> <Enter> <Plug>(fern-action-open-or-expand)
   nmap <buffer> l <Plug>(fern-action-open)<C-w><C-p>
 endfunction
 
