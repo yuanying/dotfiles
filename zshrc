@@ -1,6 +1,10 @@
 # Load zsh extentions
 export PATH=/usr/local/go/bin:/usr/local/bin:$PATH
 
+if [[ -d /opt/homebrew/bin ]]; then
+    export PATH=/opt/homebrew/bin:$PATH
+fi
+
 if [[ -f ${HOME}/.asdf/asdf.sh  ]]; then
   . $HOME/.asdf/asdf.sh
 fi
