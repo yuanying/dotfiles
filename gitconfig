@@ -26,3 +26,5 @@ protocol = https
 [ghq]
     root = "~/src"
 
+[init]
+	defaultBranch = main

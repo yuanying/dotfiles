@@ -54,4 +54,6 @@ fi
 # uniq path
 typeset -U path
 
+export PATH=${HOME}/bin:${PATH}
+
 # vim: set ft=zsh :
