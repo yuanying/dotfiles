@@ -8,6 +8,7 @@ ln -s ${ROOT}/../gitconfig ~/.gitconfig
 ln -s ${ROOT}/../tmux.conf ~/.tmux.conf
 ln -s ${ROOT}/../tmuxline.conf ~/.tmuxline.conf
 ln -s ${ROOT}/../bash_aliases ~/.bash_aliases
+ln -s ${ROOT}/../spaceshiprc.zsh ~/.spaceshiprc.zsh
 
 ln -s ${ROOT}/../sshconfig ~/.ssh/config
 

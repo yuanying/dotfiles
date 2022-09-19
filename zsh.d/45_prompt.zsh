@@ -14,17 +14,3 @@ source "${HOME}/.zsh/spaceship-prompt/spaceship.zsh"
 # autoload -U promptinit; promptinit
 # prompt spaceship
 #
-SPACESHIP_HOST_SHOW=false
-SPACESHIP_USER_SHOW=needed
-SPACESHIP_GOLANG_SHOW=false
-SPACESHIP_KUBECTL_SHOW=true
-SPACESHIP_KUBECTL_VERSION_SHOW=false
-SPACESHIP_KUBECONTEXT_COLOR_GROUPS=(
-  # red if namespace is "kube-system"
-  red    '\(.+-system)$'
-  yellow '\(zlab.+)$'
-  green '.+'
-)
-SPACESHIP_DOCKER_SHOW=false
-SPACESHIP_GCLOUD_SHOW=false
-SPACESHIP_JOBS_SHOW=true

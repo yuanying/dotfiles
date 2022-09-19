@@ -1,0 +1,15 @@
+SPACESHIP_HOST_SHOW=false
+SPACESHIP_USER_SHOW=needed
+SPACESHIP_GOLANG_SHOW=false
+SPACESHIP_KUBECTL_SHOW=true
+SPACESHIP_KUBECTL_VERSION_SHOW=false
+SPACESHIP_KUBECTL_CONTEXT_COLOR_GROUPS=(
+  # red if namespace is "kube-system"
+  red    '\(.+-system)$'
+  yellow '\(zlab.+)$'
+  green '.+'
+)
+SPACESHIP_DOCKER_SHOW=false
+SPACESHIP_GCLOUD_SHOW=false
+SPACESHIP_JOBS_SHOW=true
+
