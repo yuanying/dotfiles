@@ -9,6 +9,10 @@ if [[ -f ${HOME}/.asdf/asdf.sh  ]]; then
   . $HOME/.asdf/asdf.sh
 fi
 
+if [[ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]]; then
+  . /opt/homebrew/opt/asdf/libexec/asdf.sh
+fi
+
 # brew info zsh-completions
 fpath=(${HOME}/.zsh/zsh-completions $fpath)
 
