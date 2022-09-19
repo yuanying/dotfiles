@@ -9,9 +9,11 @@ autoload -Uz colors && colors
 # #RPROMPT='%{$fg[blue]%}($ZSH_KUBECTL_PROMPT)%{$reset_color%}'
 # setopt transient_rprompt
 
-autoload -U promptinit; promptinit
-prompt spaceship
+source "${HOME}/.zsh/spaceship-prompt/spaceship.zsh"
 
+# autoload -U promptinit; promptinit
+# prompt spaceship
+#
 SPACESHIP_HOST_SHOW=false
 SPACESHIP_USER_SHOW=needed
 SPACESHIP_GOLANG_SHOW=false
@@ -25,3 +27,4 @@ SPACESHIP_KUBECONTEXT_COLOR_GROUPS=(
 )
 SPACESHIP_DOCKER_SHOW=false
 SPACESHIP_GCLOUD_SHOW=false
+SPACESHIP_JOBS_SHOW=true
