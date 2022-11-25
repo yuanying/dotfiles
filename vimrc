@@ -131,6 +131,7 @@ set shiftround
 augroup fileTypeIndent
     autocmd!
     autocmd FileType yaml      setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    autocmd FileType json      setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd FileType ruby      setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
