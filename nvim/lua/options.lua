@@ -30,6 +30,8 @@ function M.setup()
   vim.opt.breakindent = true
   vim.opt.binary = true
   vim.opt.eol = false
+  vim.opt.clipboard:append{'unnamedplus'}
+  vim.opt.clipboard:append{'unnamed'}
 
   -- tab
   vim.opt.tabstop = 4
