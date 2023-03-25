@@ -31,6 +31,12 @@ function M.setup()
   vim.opt.binary = true
   vim.opt.eol = false
 
+  -- tab
+  vim.opt.tabstop = 4
+  vim.opt.softtabstop = 4
+  vim.opt.shiftwidth = 4
+  vim.opt.expandtab = true
+
   vim.g.netrw_fastbrowse = 0
 
   -- set t_ut=
