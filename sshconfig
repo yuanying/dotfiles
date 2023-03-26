@@ -1,3 +1,9 @@
+Host mosh.fraction.jp
+  HostName mosh.fraction.jp
+  User dev
+  Port 3222
+  StrictHostKeyChecking no
+
 Host github.com
   IdentityFile ~/.ssh/github_rsa
   IdentitiesOnly yes
