@@ -1,11 +1,32 @@
 return {
+  -- {
+  --   "nvim-lualine/lualine.nvim",
+  --   lazy = false,
+  --   dependencies = {
+  --   },
+  --   config = function()
+  --     require('lualine').setup()
+  --   end,
+  -- },
   {
-    "nvim-lualine/lualine.nvim",
-    lazy = false,
+    "vim-airline/vim-airline",
     dependencies = {
+      "vim-airline/vim-airline-themes",
     },
     config = function()
-      require('lualine').setup()
+      vim.cmd([[
+      let g:airline_powerline_fonts = 1
+      let hostname = substitute(system('hostname'), '\n', '', '')
+      if hostname == "oeilvert"
+          let g:airline_theme='badwolf'
+      elseif hostname =~ "BX\-MAC"
+          let g:airline_theme='molokai'
+      elseif hostname == "augustus"
+          let g:airline_theme='solarized'
+      else
+          let g:airline_theme='tender'
+      endif
+      ]])
     end,
   },
   {
