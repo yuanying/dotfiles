@@ -1,5 +1,6 @@
 return {
-  "jacoborus/tender.vim",
+  "yuanying/tender.vim",
+  branch = 'dev',
   lazy = false,
   priority = 1000,
   config = function()
