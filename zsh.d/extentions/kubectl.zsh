@@ -12,7 +12,7 @@ fi
 
 export PATH=~/.krew/bin:$PATH
 
-TMUX_SESSION_NAME=$(tmux display-message -p '#S')
-if [[ -e ~/.kube/config.${TMUX_SESSION_NAME} ]]; then
-    export KUBECONFIG=~/.kube/config.${TMUX_SESSION_NAME}
-fi
+# TMUX_SESSION_NAME=$(tmux display-message -p '#S')
+# if [[ -e ~/.kube/config.${TMUX_SESSION_NAME} ]]; then
+#     export KUBECONFIG=~/.kube/config.${TMUX_SESSION_NAME}
+# fi
