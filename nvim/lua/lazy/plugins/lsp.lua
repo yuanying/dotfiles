@@ -65,7 +65,7 @@ return {
       'williamboman/mason-lspconfig.nvim',
     },
     config = function()
-      -- vim.lsp.set_log_level("debug") -- for debug
+      vim.lsp.set_log_level("debug") -- for debug
       vim.api.nvim_create_autocmd("LspAttach", {
         group = lsp,
         callback = function(args)
@@ -119,6 +119,13 @@ return {
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
       local settings = {
+        python = {
+          venvPath = ".",
+          pythonPath = "./.venv/bin/python",
+          analysis = {
+            extraPaths = {"."}
+          }
+        },
         ["rust-analyzer"] = {
           cargo = { allFeatures = true },
           checkOnSave = { allFeatures = true },

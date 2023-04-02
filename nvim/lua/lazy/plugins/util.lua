@@ -3,12 +3,12 @@ return {
     "nvim-tree/nvim-web-devicons",
     lazy = true,
   },
-  -- {
-  --   "mattn/vim-goimports",
-  --   config = function()
-  -- 
-  --   end,
-  -- },
+  {
+    "mattn/vim-goimports",
+    config = function()
+      vim.g.goimports = 1
+    end,
+  },
   {
     'tyru/caw.vim',
     config = function()
