@@ -38,7 +38,10 @@ return {
     },
     config = function()
       local builtin = require('telescope.builtin')
-      local ag = require('telescope._extensions.ag')
+      local ag = require("telescope-ag")
+      ag.setup({
+        cmd = {"ag", "--ignore-dir", ".git/", "--hidden"}
+      })
       vim.keymap.set('n', '<leader>t', builtin.find_files, {})
       vim.keymap.set('n', '<leader>a', ':Ag<Space>', {})
       vim.keymap.set('n', '<leader>b', builtin.buffers, {})
