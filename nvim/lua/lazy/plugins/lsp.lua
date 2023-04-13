@@ -48,6 +48,7 @@ return {
   {
     'j-hui/fidget.nvim',
     event = "LspAttach",
+    tag = "legacy",
     config = function()
       require("fidget").setup({ window = { blend = 0 } })
       vim.cmd([[highlight! FidgetTask ctermfg=0 guifg=0]])
@@ -61,6 +62,8 @@ return {
       'hrsh7th/cmp-buffer',
       'hrsh7th/nvim-cmp',
       'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-vsnip',
+      'hrsh7th/vim-vsnip',
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
     },
@@ -92,6 +95,11 @@ return {
 
       local cmp = require("cmp")
       cmp.setup({
+        snippet = {
+          expand = function(args)
+            vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
+          end,
+        },
         window = {
           completion = cmp.config.window.bordered(),
           documentation = cmp.config.window.bordered(),
@@ -101,11 +109,11 @@ return {
           ['<C-f>'] = cmp.mapping.scroll_docs(4),
           -- ['<C-Space>'] = cmp.mapping.complete(),
           ['<C-e>'] = cmp.mapping.abort(),
-          ['<CR>'] = cmp.mapping.confirm({ select = true }),
+          ['<CR>'] = cmp.mapping.confirm({ select = false }),
+          ['<Tab>'] = cmp.mapping.confirm({ select = true }),
         }),
         sources = cmp.config.sources({
           { name = 'nvim_lsp' },
-        }, {
           { name = 'buffer' },
         })
       })

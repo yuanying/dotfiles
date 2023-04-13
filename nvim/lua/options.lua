@@ -29,9 +29,11 @@ function M.setup()
   vim.opt.showtabline = 2
   vim.opt.breakindent = true
   vim.opt.binary = true
-  vim.opt.eol = false
+  vim.opt.eol = true
   vim.opt.clipboard:append{'unnamedplus'}
   vim.opt.clipboard:append{'unnamed'}
+  vim.opt.list = true
+  vim.opt.listchars = {tab='»-', trail='-', eol='↲', extends='»', precedes='«', nbsp='%'}
 
   -- tab
   vim.opt.tabstop = 4
