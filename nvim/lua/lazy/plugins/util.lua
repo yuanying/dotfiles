@@ -4,6 +4,9 @@ return {
     lazy = true,
   },
   {
+    "github/copilot.vim",
+  },
+  {
     "mattn/vim-goimports",
     config = function()
       vim.g.goimports = 1
