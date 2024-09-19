@@ -52,17 +52,14 @@ return {
     dependencies = {
       'nvim-lua/plenary.nvim',
       'BurntSushi/ripgrep',
-      'kelly-lin/telescope-ag',
       "nvim-web-devicons",
+      'nvim-treesitter/nvim-treesitter',
     },
     config = function()
       local builtin = require('telescope.builtin')
-      local ag = require("telescope-ag")
-      ag.setup({
-        cmd = {"ag", "--ignore-dir", ".git/", "--hidden"}
-      })
       vim.keymap.set('n', '<leader>t', builtin.find_files, {})
-      vim.keymap.set('n', '<leader>a', ':Ag<Space>', {})
+      vim.keymap.set('n', '<leader>a', builtin.live_grep, {})
+      -- vim.keymap.set('n', '<leader>a', ':Ag<Space>', {})
       vim.keymap.set('n', '<leader>b', builtin.buffers, {})
       vim.keymap.set('n', '<leader>r', builtin.registers, {})
     end,
