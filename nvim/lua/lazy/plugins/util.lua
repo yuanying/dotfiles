@@ -23,12 +23,6 @@ return {
     end,
   },
   {
-    "mattn/vim-goimports",
-    config = function()
-      vim.g.goimports = 1
-    end,
-  },
-  {
     'tyru/caw.vim',
     config = function()
       vim.keymap.set('n', '<C-\\>', '<Plug>(caw:hatpos:toggle)')
@@ -56,6 +50,20 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
+      local telescope = require('telescope')
+      telescope.setup({
+        pickers = {
+          live_grep = {
+            additional_args = function(opts)
+              return {
+                "--hidden",
+                '--glob',
+                '!{**/.git/*,**/node_modules/*,**/package-lock.json,**/yarn.lock}',
+              }
+            end
+          },
+        },
+      })
       local builtin = require('telescope.builtin')
       vim.keymap.set('n', '<leader>t', builtin.find_files, {})
       vim.keymap.set('n', '<leader>a', builtin.live_grep, {})
