@@ -43,6 +43,14 @@ function M.setup()
 
   vim.g.netrw_fastbrowse = 0
 
+  vim.diagnostic.config({
+    virtual_text = false
+  })
+
+  -- Show line diagnostics automatically in hover window
+  vim.o.updatetime = 250
+  vim.cmd [[autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]]
+
   -- set t_ut=
   -- set t_8f=\<Esc>38;2;%lu;%lu;%lum
   -- set t_8b=\<Esc>48;2;%lu;%lu;%lum
