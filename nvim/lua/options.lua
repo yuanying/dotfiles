@@ -33,7 +33,7 @@ function M.setup()
   vim.opt.clipboard:append{'unnamedplus'}
   vim.opt.clipboard:append{'unnamed'}
   vim.opt.list = true
-  vim.opt.listchars = {tab='»-', trail='-', eol='↲', extends='»', precedes='«', nbsp='%'}
+  vim.opt.listchars = {tab='»-', trail='-', eol='↲', extends='»', precedes='«', nbsp='%', space='.'}
 
   -- tab
   vim.opt.tabstop = 4
