@@ -2,6 +2,7 @@ Host mosh.fraction.jp
   HostName mosh.fraction.jp
   User yuanying
   Port 3222
+  SetEnv TERM=xterm-256color
 
 Host github.com
   Hostname ssh.github.com
