@@ -90,6 +90,8 @@ return {
           vim.keymap.set('n', '<space>la', vim.lsp.buf.code_action, bufopts)
           vim.keymap.set('n', '<space>lf', function() vim.lsp.buf.format { async = true } end, bufopts)
           vim.keymap.set('n', '<space>lI', vim.lsp.buf.implementation, bufopts)
+          vim.keymap.set("n", "<space>le", vim.diagnostic.goto_next)
+          vim.keymap.set("n", "<space>lE", vim.diagnostic.goto_prev)
         end,
       })
       vim.api.nvim_create_autocmd("BufWritePre", {
