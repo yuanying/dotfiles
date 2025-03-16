@@ -9,6 +9,7 @@
 	sslVerify = true
 
 [credential]
+	helper = store
 
 [hub]
 protocol = https
