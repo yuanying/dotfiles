@@ -2,6 +2,19 @@ local lsp = vim.api.nvim_create_augroup("LSP", { clear = true })
 
 return {
   {
+    "hedyhli/outline.nvim",
+    config = function()
+      -- Example mapping to toggle outline
+      vim.keymap.set("n", "<leader>o", "<cmd>OutlineOpen<CR>",
+        { desc = "Open Outline" })
+
+      require("outline").setup {
+        -- Your setup opts here (leave empty to use defaults)
+      }
+    end,
+  },
+
+  {
     'lvimuser/lsp-inlayhints.nvim',
     event = { "BufReadPre", "BufNewFile" },
     config = function()
