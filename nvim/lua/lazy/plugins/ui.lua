@@ -41,7 +41,7 @@ return {
       let g:airline_symbols.whitespace = 'Ξ'
 
       if $AIRLINE_THEME == ""
-        let g:airline_theme = 'tender'
+        let g:airline_theme = 'zephyr'
       else
         let g:airline_theme = $AIRLINE_THEME
       endif
