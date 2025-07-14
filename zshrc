@@ -60,3 +60,7 @@ typeset -U path
 export PATH=${HOME}/bin:${PATH}
 
 # vim: set ft=zsh :
+
+fpath+=~/.zfunc; autoload -Uz compinit; compinit
+
+zstyle ':completion:*' menu select
