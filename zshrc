@@ -59,8 +59,12 @@ typeset -U path
 
 export PATH=${HOME}/bin:${PATH}
 
-# vim: set ft=zsh :
-
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
+
+if [[ -f "$HOME/.local/bin/env" ]]; then
+  . "$HOME/.local/bin/env"
+fi
+
+# vim: set ft=zsh :
