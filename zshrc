@@ -1,6 +1,10 @@
 # Load zsh extentions
 export PATH=/usr/local/go/bin:/usr/local/bin:/go/bin:$PATH
 
+if [[ -d /opt/rocm/bin ]]; then
+    export PATH=/opt/rocm/bin:$PATH
+fi
+
 if [[ -d /opt/homebrew/bin ]]; then
     export PATH=/opt/homebrew/bin:$PATH
 fi
@@ -47,6 +51,9 @@ fi
 ## .zshrc.local
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
+fi
+if [[ -f ~/.zshrc.local.sh ]]; then
+    bash ~/.zshrc.local.sh
 fi
 
 ## .zsh_private
