@@ -107,9 +107,23 @@ return {
           vim.keymap.set("n", "<space>lE", vim.diagnostic.goto_prev)
         end,
       })
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup('lsp_attach_disable_ruff_hover', { clear = true }),
+        callback = function(args)
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          if client == nil then
+            return
+          end
+          if client.name == 'ruff' then
+            -- Disable hover in favor of Pyright
+            client.server_capabilities.hoverProvider = false
+          end
+        end,
+        desc = 'LSP: Disable hover capability from Ruff',
+      })
       vim.api.nvim_create_autocmd("BufWritePre", {
         group = lsp,
-        pattern = "*.go",
+        pattern = {"*.go"},
         callback = function()
           local params = vim.lsp.util.make_range_params()
           params.context = {only = {"source.organizeImports"}}
@@ -127,6 +141,13 @@ return {
               end
             end
           end
+          vim.lsp.buf.format({async = false})
+        end,
+      })
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        group = lsp,
+        pattern = {"*.py" },
+        callback = function()
           vim.lsp.buf.format({async = false})
         end,
       })
@@ -165,6 +186,12 @@ return {
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
       local settings = {
+        ruff = {
+        },
+        pyright = {
+          -- Using Ruff's import organizer
+          disableOrganizeImports = true,
+        },
         python = {
           venvPath = ".",
           pythonPath = "./.venv/bin/python",
