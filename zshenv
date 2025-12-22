@@ -1,2 +1,5 @@
 ZSH=$HOME/.zsh.d
-. "$HOME/.cargo/env"
+
+if [[ -f "$HOME/.cargo/env" ]] ; then
+    . "$HOME/.cargo/env"
+fi
