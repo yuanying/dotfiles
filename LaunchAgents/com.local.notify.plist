@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.notify</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/yuanying/bin/notify_server.py</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NOTIFY_TOKEN</key>
+    <string>changeme</string>
+    <key>NOTIFY_LOG</key>
+    <string>/Users/yuanying/notify.log</string>
+  </dict>
+
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/notify.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/notify.stderr.log</string>
+</dict>
+</plist>
+
