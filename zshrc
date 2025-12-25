@@ -70,8 +70,16 @@ fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
 
+if [[ -d "$HOME/.local/bin" ]]; then
+    export PATH=${HOME}/.local/bin:${PATH}
+fi
+
 if [[ -f "$HOME/.local/bin/env" ]]; then
   . "$HOME/.local/bin/env"
+fi
+
+if command -v wtp >/dev/null 2>&1 ; then
+    eval "$(wtp shell-init zsh)"
 fi
 
 # vim: set ft=zsh :
