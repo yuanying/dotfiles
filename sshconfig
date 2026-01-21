@@ -4,6 +4,12 @@ Host mosh.fraction.jp
   Port 3222
   SetEnv TERM=xterm-256color
 
+Host *.oeilvert.org
+  SetEnv TERM=xterm-256color
+
+Host *.leaping.dev
+  SetEnv TERM=xterm-256color
+
 Host github.com
   Hostname ssh.github.com
   Port 443
