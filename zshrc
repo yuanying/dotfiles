@@ -9,13 +9,6 @@ if [[ -d /opt/homebrew/bin ]]; then
     export PATH=/opt/homebrew/bin:$PATH
 fi
 
-if [[ -f ${HOME}/.asdf/asdf.sh  ]]; then
-  . $HOME/.asdf/asdf.sh
-fi
-if [[ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]]; then
-  . /opt/homebrew/opt/asdf/libexec/asdf.sh
-fi
-
 # brew info zsh-completions
 fpath=(${HOME}/.zsh/zsh-completions $fpath)
 
@@ -31,11 +24,6 @@ if [ -x "`which go 2>/dev/null`" ]; then
     export GOPATH=$HOME
     export PATH=$GOPATH/bin:$PATH
     export GO111MODULE=on
-fi
-
-## Ruby in Container
-if [[ -f /opt/ruby/bin/ruby ]]; then
-    export PATH=/opt/ruby/bin:$PATH
 fi
 
 ## vim in Container
@@ -61,6 +49,11 @@ if [[ -f ~/.zsh_private ]]; then
     source ~/.zsh_private
 fi
 
+if [[ -d ~/.asdf ]]; then
+    export ASDF_DATA_DIR=~/.asdf
+    export PATH=${ASDF_DATA_DIR}/bin:${ASDF_DATA_DIR}/shims:${PATH}
+fi
+
 # uniq path
 typeset -U path
 
@@ -76,10 +69,6 @@ fi
 
 if [[ -f "$HOME/.local/bin/env" ]]; then
   . "$HOME/.local/bin/env"
-fi
-
-if command -v wtp >/dev/null 2>&1 ; then
-    eval "$(wtp shell-init zsh)"
 fi
 
 # vim: set ft=zsh :
