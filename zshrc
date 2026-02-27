@@ -27,16 +27,6 @@ fpath=(${HOME}/.zsh/zsh-completions $fpath)
 # Load all of zsh config files
 for config_file ($ZSH/*.zsh) source $config_file
 
-## vim in Container
-if [[ -f /opt/vim/bin/vim ]]; then
-    export PATH=/opt/vim/bin:$PATH
-fi
-
-## mosh in Container
-if [[ -f /opt/mosh/bin/mosh ]]; then
-    export PATH=/opt/mosh/bin:$PATH
-fi
-
 ## .zshrc.local
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
@@ -53,7 +43,7 @@ fi
 # uniq path
 typeset -U path
 
-export PATH=${HOME}/bin:${PATH}
+export PATH=${HOME}/.claude/bin:${HOME}/bin:${PATH}
 
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
