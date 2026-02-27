@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import shutil, sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 import os, subprocess, datetime, traceback
@@ -6,6 +7,7 @@ import os, subprocess, datetime, traceback
 TOKEN = os.environ.get("NOTIFY_TOKEN", "changeme")
 PORT  = int(os.environ.get("NOTIFY_PORT", "8989"))
 LOG   = os.environ.get("NOTIFY_LOG",  "/tmp/notify.log")
+TN    = os.environ.get("TERMINAL_NOTIFIER") or shutil.which("terminal-notifier") or "/opt/homebrew/bin/terminal-notifier"
 
 def log(line):
     ts = datetime.datetime.now().isoformat(timespec="seconds")
@@ -28,7 +30,7 @@ class Handler(BaseHTTPRequestHandler):
             log(f"REQ from {self.client_address} title={title!r} msg={msg!r}")
 
             cmd = [
-                "terminal-notifier",
+                TN,
                 "-title", title,
                 "-message", msg,
                 "-sound", sound,

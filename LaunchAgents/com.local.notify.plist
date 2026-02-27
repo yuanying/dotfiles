@@ -26,6 +26,9 @@
   <string>/tmp/notify.stdout.log</string>
   <key>StandardErrorPath</key>
   <string>/tmp/notify.stderr.log</string>
+
+  <key>PATH</key>
+  <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
 </dict>
 </plist>
 
