@@ -54,3 +54,6 @@ if [[ -f "$HOME/.local/bin/env" ]]; then
 fi
 
 # vim: set ft=zsh :
+
+# Added by Antigravity
+export PATH="/Users/yuanying/.antigravity/antigravity/bin:$PATH"
