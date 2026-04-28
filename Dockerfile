@@ -139,6 +139,7 @@ RUN set -x -e && \
     sudo apt-get install -y \
 	    mosh \
         bat \
+        bubblewrap \
         cmake \
         ccache \
         libcurl4-openssl-dev \
