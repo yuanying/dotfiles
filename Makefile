@@ -10,7 +10,7 @@ image:
 .PHONY: rocm
 rocm:
 		docker build \
-			--build-arg BASE_IMAGE=rocm/dev-ubuntu-24.04:7.0.2-complete \
+			--build-arg BASE_IMAGE=rocm/dev-ubuntu-24.04:7.2.2-complete \
 			--target user_base -t $(IMAGE)-rocm:user_base \
 			--target main -t $(IMAGE)-rocm .
 
