@@ -22,11 +22,9 @@ exec docker run \
     -v /usr/share/ca-certificates:/usr/share/ca-certificates \
     -v /etc/ssl/certs:/etc/ssl/certs \
     --mount type=bind,source=/home/yuanying,target=/home/yuanying,bind-propagation=slave \
+    --network v6net \
+    --ip6 2405:6581:8580:310::153 \
     -w /home/yuanying \
-    -p 8080:8080 \
-    -p 9090:9090 \
-    -p 3222:3222 \
-    -p 60000-60010:60000-60010/udp \
     --add-host braque:192.168.1.131 \
     --add-host chirico:192.168.1.83 \
     --add-host ducump:192.168.1.135 \
