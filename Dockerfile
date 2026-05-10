@@ -156,7 +156,7 @@ COPY --from=golang_builder /usr/local/go /usr/local/go
 RUN sudo chown -R $USER:staff /usr/local/go
 COPY --from=golang_builder /go/bin /go/bin
 RUN sudo chown -R $USER:staff /go/bin
-COPY --from=docker_builder /usr/local/lib/docker/cli-plugins /usr/local/lib/docker/cli-plugins/
+COPY --from=docker_builder /usr/local/libexec/docker/cli-plugins /usr/local/lib/docker/cli-plugins/
 
 # Install go tools
 ENV GOPATH="/go"
