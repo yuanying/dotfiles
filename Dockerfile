@@ -143,6 +143,7 @@ RUN set -x -e && \
         fzf \
         silversearcher-ag \
         ripgrep \
+        socat \
         fd-find \
         universal-ctags \
         # podman
