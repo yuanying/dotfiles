@@ -10,8 +10,10 @@ exec docker run \
     --gpus all \
     --hostname="$(hostname)" \
     --privileged \
+    --userns=host \
     --cap-add=SYS_PTRACE \
     --security-opt seccomp=unconfined \
+    --security-opt apparmor=unconfined \
     --ipc=host \
     --restart always \
     -it \

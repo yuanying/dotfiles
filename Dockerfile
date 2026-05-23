@@ -160,7 +160,8 @@ RUN set -x -e && \
         podman uidmap slirp4netns \
         # stable-diffusion pytorch
         libomp-dev libjpeg62 \
-        unzip
+        unzip && \
+    sudo chmod 4755 /usr/bin/bwrap
 
 # golang
 COPY --from=golang_builder /usr/local/go /usr/local/go
