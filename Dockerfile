@@ -92,11 +92,12 @@ RUN set -x -e && \
     apt-get update && \
     apt-get -y install sudo && \
     (getent group render > /dev/null || groupadd -g 110 render) && \
+    (getent group libvirt > /dev/null || groupadd -g 112 libvirt) && \
     (getent group render2 > /dev/null || groupadd -g 993 render2) && \
     (getent group docker > /dev/null || groupadd -g 988 docker) && \
     echo "yuanying:100000:65536" >> /etc/subuid && \
     echo "yuanying:100000:65536" >> /etc/subgid && \
-    useradd -G video,render,render2,docker,systemd-journal,systemd-network,systemd-timesync -g 50 -m -s /bin/zsh -u 501 "$USER" && \
+    useradd -G video,render,render2,libvirt,docker,systemd-journal,systemd-network,systemd-timesync -g 50 -m -s /bin/zsh -u 501 "$USER" && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 FROM base as user_base
@@ -146,6 +147,15 @@ RUN set -x -e && \
         socat \
         fd-find \
         universal-ctags \
+        # virt
+        virtinst \
+        libvirt-clients \
+        qemu-utils \
+        genisoimage \
+        uuid-runtime \
+        wget \
+        bzip2 \
+        kpartx \
         # podman
         podman uidmap slirp4netns \
         # stable-diffusion pytorch

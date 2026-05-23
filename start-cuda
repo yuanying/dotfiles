@@ -16,6 +16,8 @@ exec docker run \
     --restart always \
     -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /run/libvirt:/run/libvirt \
+    -v /var/lib/libvirt:/var/lib/libvirt \
     -v /lib/modules:/lib/modules \
     -v /dev:/dev \
     -v /usr/share/ca-certificates:/usr/share/ca-certificates \
