@@ -8,7 +8,7 @@ exec docker run \
     -d \
     --name devbox \
     --gpus all \
-    --hostname="$(hostname)" \
+    --hostname="boucherie" \
     --privileged \
     --userns=host \
     --cap-add=SYS_PTRACE \
