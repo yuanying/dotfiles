@@ -53,10 +53,31 @@ if [[ -f "$HOME/.local/bin/env" ]]; then
   . "$HOME/.local/bin/env"
 fi
 
-# vim: set ft=zsh :
+# bun
+if [[ -d "${HOME}/.bun" ]]; then
+    export BUN_INSTALL="${HOME}/.bun"
+    if [[ -d "${BUN_INSTALL}/bin" ]]; then
+        export PATH=${BUN_INSTALL}/bin:${PATH}
+    fi
+    # bun completions
+    if [[ -s "${BUN_INSTALL}/_bun" ]]; then
+        source "${BUN_INSTALL}/_bun"
+    fi
+fi
 
-# Added by Antigravity
-[[ -d "$HOME/.antigravity/antigravity/bin" ]] && export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
+# hipfire
+if [[ -d "${HOME}/.hipfire/bin" ]]; then
+    export PATH=${HOME}/.hipfire/bin:${PATH}
+fi
 
 # opencode
-[[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
+if [[ -d "${HOME}/.opencode/bin" ]]; then
+    export PATH=${HOME}/.opencode/bin:${PATH}
+fi
+
+# antigravity
+if [[ -d "${HOME}/.antigravity/antigravity/bin" ]]; then
+    export PATH=${HOME}/.antigravity/antigravity/bin:${PATH}
+fi
+
+# vim: set ft=zsh :
