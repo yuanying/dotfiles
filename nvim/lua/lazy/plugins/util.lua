@@ -45,7 +45,6 @@ return {
     'nvim-telescope/telescope.nvim',
     dependencies = {
       'nvim-lua/plenary.nvim',
-      'BurntSushi/ripgrep',
       "nvim-web-devicons",
       'nvim-treesitter/nvim-treesitter',
     },
