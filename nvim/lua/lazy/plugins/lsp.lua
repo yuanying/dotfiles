@@ -177,10 +177,8 @@ return {
         })
       })
 
-      local handlers = {
-        ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = 'rounded' }),
-        ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = 'rounded' }),
-      }
+      -- vim.lsp.with is deprecated; winborder applies to all floating windows
+      vim.o.winborder = "rounded"
 
       -- local capabilities = vim.lsp.protocol.make_client_capabilities()
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
@@ -229,17 +227,15 @@ return {
         },
       }
 
-      local function setup_handler(server_name)
-        require("lspconfig")[server_name].setup({
-          handlers = handlers,
-          capabilities = capabilities,
-          settings = settings,
-        })
-      end
+      -- mason-lspconfig v2: setup_handlers was removed. Servers installed via
+      -- mason are enabled automatically; shared config goes through vim.lsp.config.
+      vim.lsp.config('*', {
+        capabilities = capabilities,
+        settings = settings,
+      })
 
       require("mason").setup({ ui = { border = "rounded" } })
       require("mason-lspconfig").setup()
-      require("mason-lspconfig").setup_handlers({ setup_handler })
     end
   }
 }
