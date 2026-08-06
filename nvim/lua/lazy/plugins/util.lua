@@ -49,6 +49,16 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
+      if vim.fn.executable('rg') == 0 then
+        local install = vim.fn.has('mac') == 1
+          and 'brew install ripgrep'
+          or 'sudo apt install ripgrep'
+        vim.notify(
+          'ripgrep (rg) not found: telescope live_grep will not work.\n'
+            .. 'Install it with: ' .. install,
+          vim.log.levels.WARN
+        )
+      end
       local telescope = require('telescope')
       telescope.setup({
         pickers = {
