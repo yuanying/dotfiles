@@ -56,7 +56,7 @@ fi
 # vim: set ft=zsh :
 
 # Added by Antigravity
-export PATH="/Users/yuanying/.antigravity/antigravity/bin:$PATH"
+[[ -d "$HOME/.antigravity/antigravity/bin" ]] && export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 
 # opencode
-[[ -d /home/yuanying/.opencode/bin ]] && export PATH=/home/yuanying/.opencode/bin:$PATH
+[[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
