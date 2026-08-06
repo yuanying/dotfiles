@@ -57,3 +57,6 @@ fi
 
 # Added by Antigravity
 export PATH="/Users/yuanying/.antigravity/antigravity/bin:$PATH"
+
+# opencode
+[[ -d /home/yuanying/.opencode/bin ]] && export PATH=/home/yuanying/.opencode/bin:$PATH
