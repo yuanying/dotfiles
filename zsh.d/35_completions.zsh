@@ -8,3 +8,7 @@
 if [ -x "`which hub 2>/dev/null`" ]; then
     compdef hub=git
 fi
+
+if [ -x "`which herdr 2>/dev/null`" ]; then
+    source <(herdr completion zsh)
+fi

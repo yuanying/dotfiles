@@ -10,6 +10,7 @@ brew install terminal-notifier
 brew install mosh
 brew install tree-sitter
 brew install gojq
+brew install herdr
 
 brew tap homebrew/cask-fonts
 brew install --cask font-hack-nerd-font

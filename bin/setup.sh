@@ -10,6 +10,9 @@ ln -s ${ROOT}/../tmuxline.conf ~/.tmuxline.conf
 ln -s ${ROOT}/../bash_aliases ~/.bash_aliases
 ln -s ${ROOT}/../spaceshiprc.zsh ~/.spaceshiprc.zsh
 
+mkdir -p ~/.config/herdr
+ln -sfn ${ROOT}/../herdr/config.toml ~/.config/herdr/config.toml
+
 if ! grep github.com ~/.ssh/known_hosts > /dev/null; then
 cat <<EOF > ~/.ssh/known_hosts
 # github.com:22 SSH-2.0-babeld-439edbdb

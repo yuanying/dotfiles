@@ -1,0 +1,57 @@
+# herdr configuration
+# ~/.config/herdr/config.toml (bin/setup.sh から symlink)
+#
+# 既定値は `herdr --default-config` で確認できる。
+# ここには tmux.conf から引き継いだ設定と、明示的に変えたい項目だけを書く。
+
+[keys]
+# tmux の `set -g prefix C-q` に合わせる。
+# これ以外のキーは herdr のデフォルトのまま使う:
+#   prefix+h/j/k/l ペイン移動   prefix+v 左右分割   prefix+- 上下分割
+#   prefix+c 新規タブ           prefix+q デタッチ   prefix+s 設定
+#   prefix+r リサイズモード     prefix+shift+r 設定リロード
+#   prefix+e スクロールバックを $EDITOR で開く
+#
+# NOTE: tmux の prefix と同じキーなので、herdr は tmux の中ではなく
+#       ターミナル直下で起動すること。
+prefix = "ctrl+q"
+
+[terminal]
+# tmux の `split-window -c '#{pane_current_path}'` 相当。
+# 新しいペイン/タブ/ワークスペースは呼び出し元の cwd を引き継ぐ。
+new_cwd = "follow"
+
+[theme]
+# tmuxline の zenburn 配色 (colour237 背景 / colour109 アクセント) に近いもの。
+name = "kanagawa"
+
+[theme.custom]
+# tmux の `set -g status-style bg=default` 相当。
+# パネル背景を塗らず、ターミナル側の背景 (透過含む) をそのまま見せる。
+panel_bg = "reset"
+
+[ui]
+# zenburn の colour109 相当。
+accent = "#87afaf"
+
+# tmux の `automatic-rename-format '#{b:pane_current_path}'` に近い挙動。
+# タブ作成時に名前を聞かず、自動生成された名前で即座に開く。
+prompt_new_tab_name = false
+
+[experimental]
+# tmux の `allow-passthrough on` 相当。image.nvim などの
+# Kitty graphics を herdr 経由で描画する (Ghostty は対応済み)。
+kitty_graphics = true
+
+# prefix モード中だけ ASCII 入力ソースに切り替える。
+# 日本語入力が有効なままでも prefix コマンドが通るようになる。
+switch_ascii_input_source_in_prefix = true
+
+# 自前でカーソルを描く TUI (Claude Code など) でも、macOS の
+# 変換候補ウィンドウがカーソル位置を追従できるようにする。
+reveal_hidden_cursor_for_cjk_ime = true
+cjk_ime_agents = ["claude"]
+
+[advanced]
+# tmux の `history-limit 1000000` 相当。herdr は行数ではなくバイト数指定。
+scrollback_limit_bytes = 100000000
