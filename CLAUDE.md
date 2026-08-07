@@ -45,7 +45,7 @@ The `make` targets build both `user_base` and `main` in a single `docker build` 
 - **Editor**: Neovim 0.11.1 (default `vi`/`vim`)
 - **Shell**: Zsh with spaceship-prompt, syntax-highlighting, autosuggestions
 - **Go**: 1.25 with gopls, goimports, ghq
-- **Terminal**: Tmux 3.5a (built from source)
+- **Terminal**: Tmux 3.5a (built from source), herdr 0.8.0 (prebuilt binary)
 - **Search**: ripgrep, ag, fd, fzf
 - **K8s**: kubectx, kubens
 - **Version manager**: asdf

@@ -192,6 +192,13 @@ RUN \
 # tmux
 COPY --from=tmux_builder /opt/tmux/bin/tmux /usr/local/bin/
 
+# herdr
+ARG HERDR_VERSION=0.8.0
+RUN \
+    sudo curl -fsSL -o /usr/local/bin/herdr \
+        https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-x86_64 && \
+    sudo chmod +x /usr/local/bin/herdr
+
 # docker
 COPY --from=docker_builder /usr/local/bin/docker /usr/local/bin/
 
