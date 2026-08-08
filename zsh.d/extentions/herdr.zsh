@@ -16,8 +16,35 @@ herdr_window_title() {
   exec {fd}>&-
 }
 
+# 名前の付いていないタブに、cwd の basename を付ける。
+#
+# config.toml の prefix+c は `herdr tab create --label` で名前を渡すが、
+# セッションやワークスペースの最初のタブは herdr 自身が名前なしで作るため、
+# そこだけは素通りしてしまう。herdr にタブの自動リネームは無く、名前なし
+# タブのラベルは表示位置の連番になるだけで cwd を見ない。
+#
+# API はカスタム名の有無を返さない (TabInfo は label と number のみで、
+# しかも未命名時の label は number ではなく表示位置) ので、「ラベルが数字
+# だけなら未命名」とみなす。prefix+c や prefix+shift+t で付けた名前は
+# 数字にならないため、この判定で上書きを避けられる。
+herdr_auto_tab_name() {
+  [[ -n "$HERDR_TAB_ID" && -S "$HERDR_SOCKET_PATH" ]] || return 0
+  (( $+commands[herdr] )) || return 0
+
+  local name=${PWD:t}
+  [[ -n "$name" ]] || return 0
+
+  # 応答を読む必要があるので、window_title と違いソケットではなく CLI を使う。
+  local info=$(herdr tab get "$HERDR_TAB_ID" 2>/dev/null) || return 0
+  local label=${${info##*'"label":"'}%%'"'*}
+  [[ "$label" == <-> ]] || return 0
+
+  herdr tab rename "$HERDR_TAB_ID" "$name" >/dev/null 2>&1
+}
+
 # ペインのシェルが起動するたびに送る。どのペインからも値は同じなので、
 # 2 回目以降は herdr 側で変更なしとして無視される。
-if [[ "$HERDR_ENV" == 1 && -n "$HERDR_SESSION" ]]; then
-  herdr_window_title "herdr: ${HERDR_SESSION}"
+if [[ "$HERDR_ENV" == 1 ]]; then
+  [[ -n "$HERDR_SESSION" ]] && herdr_window_title "herdr: ${HERDR_SESSION}"
+  herdr_auto_tab_name
 fi
