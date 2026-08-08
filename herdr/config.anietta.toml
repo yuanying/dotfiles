@@ -1,13 +1,12 @@
-# herdr configuration (ホスト共通のフォールバック)
+# herdr configuration (anietta)
 # ~/.config/herdr/config.toml (bin/setup.sh から symlink)
 #
 # herdr は設定ファイルを 1 本しか読まず、include の仕組みも無いため、
 # ホストごとに完全な設定を置いて setup.sh が hostname で symlink を張る。
-# config.<hostname>.toml が無いホストだけがこのファイルを使う。
+# 共通設定を変えるときは config.toml と各ホストのファイルを揃えること。
 #
-# テーマなどホスト固有にしたい項目が出たら config.<hostname>.toml を
-# 増やす。既存のホスト固有ファイルは herdr/config.anietta.toml と
-# herdr/config.boucherie.toml。
+# 設定 UI (prefix+s) の変更はこのファイルに書き戻される。ホストごとに
+# ファイルが分かれているので、他ホストの設定を上書きすることはない。
 #
 # 既定値は `herdr --default-config` で確認できる。
 # ここには tmux.conf から引き継いだ設定と、明示的に変えたい項目だけを書く。
