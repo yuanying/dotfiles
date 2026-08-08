@@ -4,17 +4,38 @@
 # 既定値は `herdr --default-config` で確認できる。
 # ここには tmux.conf から引き継いだ設定と、明示的に変えたい項目だけを書く。
 
+# 初回起動時の通知セットアップは選択済み。
+onboarding = false
+
 [keys]
 # tmux の `set -g prefix C-q` に合わせる。
 # これ以外のキーは herdr のデフォルトのまま使う:
 #   prefix+h/j/k/l ペイン移動   prefix+v 左右分割   prefix+- 上下分割
-#   prefix+c 新規タブ           prefix+q デタッチ   prefix+s 設定
+#   prefix+q デタッチ           prefix+s 設定
 #   prefix+r リサイズモード     prefix+shift+r 設定リロード
 #   prefix+e スクロールバックを $EDITOR で開く
 #
 # NOTE: tmux の prefix と同じキーなので、herdr は tmux の中ではなく
 #       ターミナル直下で起動すること。
 prefix = "ctrl+q"
+
+# 既定の new_tab を外し、下の [[keys.command]] に prefix+c を渡す。
+new_tab = ""
+
+# tmux の `automatic-rename-format '#{b:pane_current_path}'` の代わり。
+# herdr にタブの自動リネームは無く、名前を付けずに作ったタブのラベルは
+# 連番へフォールバックする (prompt_new_tab_name = false だとタブバーが
+# ほぼ空白に見える)。作成時に cwd の basename をラベルとして渡すことで、
+# 名前を聞かれずに tmux と同じ見た目にする。
+#
+# type = "shell" はフォーカス中のペインの cwd から `/bin/sh -lc` で走る。
+# カスタムコマンドにだけ渡る HERDR_ACTIVE_PANE_CWD を優先し、herdr が
+# cwd を検出できなかった場合に $PWD へ落とす。
+[[keys.command]]
+key = "prefix+c"
+type = "shell"
+description = "New tab named after the cwd"
+command = 'd="${HERDR_ACTIVE_PANE_CWD:-$PWD}"; herdr tab create --cwd "$d" --label "$(basename "$d")" --focus'
 
 [terminal]
 # tmux の `split-window -c '#{pane_current_path}'` 相当。
@@ -23,7 +44,10 @@ new_cwd = "follow"
 
 [theme]
 # tmuxline の zenburn 配色 (colour237 背景 / colour109 アクセント) に近いもの。
-name = "kanagawa"
+name = "gruvbox"
+
+# ホスト端末の light/dark には追従せず、上の name で固定する。
+auto_switch = false
 
 [theme.custom]
 # tmux の `set -g status-style bg=default` 相当。
@@ -34,8 +58,9 @@ panel_bg = "reset"
 # zenburn の colour109 相当。
 accent = "#87afaf"
 
-# tmux の `automatic-rename-format '#{b:pane_current_path}'` に近い挙動。
-# タブ作成時に名前を聞かず、自動生成された名前で即座に開く。
+# タブ作成時に名前を聞かない。ラベルは上の [[keys.command]] が渡す。
+# 名前なしで作られたタブは連番表示になるだけで、cwd もターミナル
+# タイトルも参照されない点に注意。
 prompt_new_tab_name = false
 
 [experimental]
