@@ -53,7 +53,17 @@ accent = "#87afaf"
 # zsh.d/extentions/herdr.zsh の herdr_auto_tab_name が行う。
 prompt_new_tab_name = false
 
+# エージェントパネルはスペース単位でまとめる。
 agent_panel_sort = "spaces"
+
+# Claude Code はターミナルタイトルにセッション名を出すので、それを
+# エージェント行に表示する。既定の行は state_icon/workspace/tab と agent
+# だけで、セッション名にあたるトークンを含んでいない。
+# herdr のセッション名 (HERDR_SESSION) を出すトークンは存在しないため、
+# そちらは引き続きウィンドウタイトルへ送っている (zsh.d/extentions/herdr.zsh)。
+[ui.sidebar.agents.rows_by_agent]
+claude = [["state_icon", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+
 [experimental]
 # tmux の `allow-passthrough on` 相当。image.nvim などの
 # Kitty graphics を herdr 経由で描画する (Ghostty は対応済み)。
