@@ -13,4 +13,8 @@ export NVIM_COLORSCHEME=tokyonight
 # airline に tokyonight 専用のテーマは無いため、寒色系で近いものを使う。
 export AIRLINE_THEME=base16_tomorrow_night
 
+# Claude Code の statusline はカスタムテーマの対象外で、スクリプトが自前で
+# 色を出す。claude/statusline-command.sh がこの値でパレットを選ぶ。
+export CLAUDE_STATUSLINE_THEME=tokyonight
+
 # vim: set ft=zsh :

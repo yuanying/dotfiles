@@ -30,6 +30,11 @@ for theme in ${ROOT}/../claude/themes/*.json; do
     ln -sfn ${theme} ~/.claude/themes/$(basename ${theme})
 done
 
+# statusline はテーマトークンの対象外なので、スクリプトが自前で色を出す。
+# パレットは $CLAUDE_STATUSLINE_THEME で切り替える (zshrc.<hostname> で設定)。
+# settings.json がこのパスを直接指しているため、名前は変えない。
+ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
+
 if ! grep github.com ~/.ssh/known_hosts > /dev/null; then
 cat <<EOF > ~/.ssh/known_hosts
 # github.com:22 SSH-2.0-babeld-439edbdb

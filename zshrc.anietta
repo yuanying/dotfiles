@@ -14,4 +14,8 @@ export NVIM_COLORSCHEME=gruvbox
 # gruvbox 系は base16 版のみ用意されている。
 export AIRLINE_THEME=base16_gruvbox_dark_medium
 
+# Claude Code の statusline はカスタムテーマの対象外で、スクリプトが自前で
+# 色を出す。claude/statusline-command.sh がこの値でパレットを選ぶ。
+export CLAUDE_STATUSLINE_THEME=gruvbox
+
 # vim: set ft=zsh :
