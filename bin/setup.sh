@@ -20,6 +20,16 @@ if [[ ! -f ${HERDR_CONFIG} ]]; then
 fi
 ln -sfn ${HERDR_CONFIG} ~/.config/herdr/config.toml
 
+# Claude Code のカスタムテーマ。どのホストでも両方選べるように全部張る。
+# 実際にどれを使うかは各ホストの ~/.claude/settings.json の theme で決める
+# (このファイルは machine local で dotfiles 管理外)。
+# ディレクトリごとではなくファイル単位で張るのは、/theme で作ったテーマが
+# リポジトリに混ざらないようにするため。
+mkdir -p ~/.claude/themes
+for theme in ${ROOT}/../claude/themes/*.json; do
+    ln -sfn ${theme} ~/.claude/themes/$(basename ${theme})
+done
+
 if ! grep github.com ~/.ssh/known_hosts > /dev/null; then
 cat <<EOF > ~/.ssh/known_hosts
 # github.com:22 SSH-2.0-babeld-439edbdb
