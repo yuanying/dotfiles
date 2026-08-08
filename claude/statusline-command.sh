@@ -5,20 +5,26 @@ INPUT=$(cat)
 # ホストごとの配色。~/.zshrc.<hostname> (dotfiles/zshrc.<hostname>) で選ぶ。
 # statusline はテーマトークンの対象外で、Claude Code が渡す JSON にも配色は
 # 含まれないため、ここだけは自前でパレットを持つ必要がある。
-# 未設定なら gruvbox。Claude Code の起動時の環境変数を引き継ぐので、
+# 未設定なら solarized。Claude Code の起動時の環境変数を引き継ぐので、
 # 値を変えたら Claude Code を起動し直すこと。
-case "${CLAUDE_STATUSLINE_THEME:-gruvbox}" in
+case "${CLAUDE_STATUSLINE_THEME:-solarized}" in
   tokyonight)
     C_LOW='79;214;190'    # #4fd6be teal
     C_MID='255;199;119'   # #ffc777 yellow
     C_HIGH='255;117;127'  # #ff757f red
     C_DIM='59;66;97'      # #3b4261
     ;;
-  *)
+  gruvbox)
     C_LOW='142;192;124'   # #8ec07c aqua
     C_MID='250;189;47'    # #fabd2f yellow
     C_HIGH='251;73;52'    # #fb4934 red
     C_DIM='102;92;84'     # #665c54 bg3
+    ;;
+  *)
+    C_LOW='42;161;152'    # #2aa198 cyan
+    C_MID='181;137;0'     # #b58900 yellow
+    C_HIGH='220;50;47'    # #dc322f red
+    C_DIM='88;110;117'    # #586e75 base01
     ;;
 esac
 

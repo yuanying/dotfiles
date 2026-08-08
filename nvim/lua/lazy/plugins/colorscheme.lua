@@ -24,6 +24,18 @@ return {
     end,
   },
   {
+    -- ホスト別設定が無いマシンのデフォルト。
+    -- setup() は colorscheme コマンドより先に呼ぶ必要がある。
+    "maxmx03/solarized.nvim",
+    lazy = false,
+    priority = 1000,
+    opts = {},
+    config = function(_, opts)
+      vim.o.background = "dark"
+      require("solarized").setup(opts)
+    end,
+  },
+  {
     -- boucherie 用。herdr 側のテーマ (tokyo-night) と揃える。
     "folke/tokyonight.nvim",
     lazy = false,

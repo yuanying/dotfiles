@@ -45,6 +45,13 @@ if [[ -f ~/.zshrc.${HOST%%.*} ]]; then
     source ~/.zshrc.${HOST%%.*}
 fi
 
+## テーマのフォールバック
+# .zshrc.<hostname> が無い (または設定していない) マシンのデフォルトは
+# solarized。ホスト別ファイルは上で先に読まれるので、そちらの値が勝つ。
+export NVIM_COLORSCHEME=${NVIM_COLORSCHEME:-solarized}
+export AIRLINE_THEME=${AIRLINE_THEME:-solarized}
+export CLAUDE_STATUSLINE_THEME=${CLAUDE_STATUSLINE_THEME:-solarized}
+
 ## .zsh_private
 if [[ -f ~/.zsh_private ]]; then
     source ~/.zsh_private

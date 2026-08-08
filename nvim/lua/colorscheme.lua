@@ -6,7 +6,7 @@
 -- おくこと。未登録の名前を指定すると既定値へフォールバックする。
 local M = {}
 
-local DEFAULT = "gruvbox"
+local DEFAULT = "solarized"
 
 function M.setup()
   local name = vim.env.NVIM_COLORSCHEME

@@ -33,8 +33,9 @@ prefix = "ctrl+q"
 new_cwd = "follow"
 
 [theme]
-# tmuxline の zenburn 配色 (colour237 背景 / colour109 アクセント) に近いもの。
-name = "gruvbox"
+# ホスト別設定 (config.<hostname>.toml) が無いマシンのデフォルト。
+# nvim / Claude Code のデフォルト (solarized) と揃える。
+name = "solarized"
 
 # ホスト端末の light/dark には追従せず、上の name で固定する。
 auto_switch = false
