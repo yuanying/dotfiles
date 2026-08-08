@@ -1,0 +1,17 @@
+# anietta 固有の zsh 設定
+# ~/.zshrc.anietta (bin/setup-zsh.sh から symlink)
+#
+# ホスト共通の設定は zshrc と zsh.d に置く。ここにはこのマシンでしか
+# 意味を持たない値だけを書く。
+#
+# 後方互換のため ~/.zshrc.local も引き続き読まれる。読み込み順はこちらが
+# 後なので、同じ変数を両方で設定した場合はこのファイルが勝つ。
+
+# herdr が gruvbox なので、nvim の配色も揃える。
+export NVIM_COLORSCHEME=gruvbox
+
+# vim-airline-themes に "gruvbox" という名前のテーマは無く、
+# gruvbox 系は base16 版のみ用意されている。
+export AIRLINE_THEME=base16_gruvbox_dark_medium
+
+# vim: set ft=zsh :

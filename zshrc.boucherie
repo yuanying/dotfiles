@@ -1,0 +1,16 @@
+# boucherie 固有の zsh 設定
+# ~/.zshrc.boucherie (bin/setup-zsh.sh から symlink)
+#
+# ホスト共通の設定は zshrc と zsh.d に置く。ここにはこのマシンでしか
+# 意味を持たない値だけを書く。
+#
+# 後方互換のため ~/.zshrc.local も引き続き読まれる。読み込み順はこちらが
+# 後なので、同じ変数を両方で設定した場合はこのファイルが勝つ。
+
+# herdr が tokyo-night なので、nvim の配色も揃える。
+export NVIM_COLORSCHEME=tokyonight
+
+# airline に tokyonight 専用のテーマは無いため、寒色系で近いものを使う。
+export AIRLINE_THEME=base16_tomorrow_night
+
+# vim: set ft=zsh :

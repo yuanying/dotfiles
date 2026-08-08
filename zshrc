@@ -27,12 +27,22 @@ fpath=(${HOME}/.zsh/zsh-completions $fpath)
 # Load all of zsh config files
 for config_file ($ZSH/*.zsh) source $config_file
 
-## .zshrc.local
+## .zshrc.local (後方互換)
+# ホスト固有の設定は dotfiles 管理の .zshrc.<hostname> へ移したが、
+# 既存マシンのために従来のファイルも読み続ける。
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
 if [[ -f ~/.zshrc.local.sh ]]; then
     bash ~/.zshrc.local.sh
+fi
+
+## .zshrc.<hostname> (dotfiles/zshrc.<hostname> から symlink)
+# zsh は HOSTNAME を設定しないので、組み込みの HOST から短いホスト名を作る。
+# bin/setup-zsh.sh が使う `hostname -s` と同じ値になる。
+# .zshrc.local より後に読むので、移行途中で両方に同じ変数があってもこちらが勝つ。
+if [[ -f ~/.zshrc.${HOST%%.*} ]]; then
+    source ~/.zshrc.${HOST%%.*}
 fi
 
 ## .zsh_private
