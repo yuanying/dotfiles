@@ -10,6 +10,8 @@ brew install terminal-notifier
 brew install mosh
 brew install tree-sitter
 brew install gojq
+# statusline-command.sh が jq を呼ぶ。gojq とは別物なので両方入れる。
+brew install jq
 brew install herdr
 
 brew tap homebrew/cask-fonts
