@@ -1,0 +1,12 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
+  },
+  "tui": "fullscreen",
+  "theme": "custom:solarized",
+  "agentPushNotifEnabled": true,
+  "permissions": {
+    "defaultMode": "auto"
+  }
+}

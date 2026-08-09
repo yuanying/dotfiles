@@ -35,6 +35,30 @@ done
 # settings.json がこのパスを直接指しているため、名前は変えない。
 ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 
+# settings.json は Claude Code 自身が /model や /theme や auto モードの初回
+# ダイアログで書き戻すので、symlink にするとリポジトリが常に汚れる。かわりに
+# リポジトリ側の値をマージして流し込む。jq の * は再帰的に重ねるので、
+# 追跡していないキー (認証まわりなど) は手元の値がそのまま残る。
+# 引数の順に後ろが勝つ: 手元 < 共通 < ホスト別。model は追跡しないので
+# /model での切り替えがここで巻き戻ることはない。
+CLAUDE_SETTINGS=~/.claude/settings.json
+CLAUDE_HOST_SETTINGS=${ROOT}/../claude/settings.$(hostname -s).json
+if [[ ! -f ${CLAUDE_HOST_SETTINGS} ]]; then
+    # 該当ホストが無ければ共通ファイルをもう一度重ねる。同じ値なので結果は
+    # 変わらず、jq に渡す引数の数を揃えられる (herdr と同じ落とし方)。
+    CLAUDE_HOST_SETTINGS=${ROOT}/../claude/settings.json
+fi
+if ! command -v jq > /dev/null; then
+    echo "jq が無いので ${CLAUDE_SETTINGS} のマージをスキップした" >&2
+else
+    [[ -f ${CLAUDE_SETTINGS} ]] || echo '{}' > ${CLAUDE_SETTINGS}
+    jq -s '.[0] * .[1] * .[2]' \
+        ${CLAUDE_SETTINGS} \
+        ${ROOT}/../claude/settings.json \
+        ${CLAUDE_HOST_SETTINGS} \
+        > ${CLAUDE_SETTINGS}.tmp && mv -f ${CLAUDE_SETTINGS}.tmp ${CLAUDE_SETTINGS}
+fi
+
 if ! grep github.com ~/.ssh/known_hosts > /dev/null; then
 cat <<EOF > ~/.ssh/known_hosts
 # github.com:22 SSH-2.0-babeld-439edbdb
