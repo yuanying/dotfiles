@@ -20,6 +20,21 @@ if [[ ! -f ${HERDR_CONFIG} ]]; then
 fi
 ln -sfn ${HERDR_CONFIG} ~/.config/herdr/config.toml
 
+# herdr のエージェント連携 (サイドバーに実行状態を出すためのフック)。
+# フック本体と各エージェントの設定ファイルへの登録を herdr 自身が行う。
+# 冪等なので毎回流してよい。対象が全部入っているホストは無いので
+# (opencode が無ければ install は失敗する)、1 つずつ実行して警告だけ出す。
+# `herdr integration status` で現状を確認できる。
+# 対応エージェントは他にもあるが、常用する 3 つだけ入れる。
+if ! command -v herdr > /dev/null; then
+    echo "herdr が無いので integration のセットアップをスキップした" >&2
+else
+    for target in claude codex opencode; do
+        herdr integration install ${target} || \
+            echo "herdr integration install ${target} に失敗した (${target} が未インストール?)" >&2
+    done
+fi
+
 # Claude Code のカスタムテーマ。どのホストでも両方選べるように全部張る。
 # 実際にどれを使うかは各ホストの ~/.claude/settings.json の theme で決める
 # (このファイルは machine local で dotfiles 管理外)。
@@ -38,7 +53,8 @@ ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 # settings.json は Claude Code 自身が /model や /theme や auto モードの初回
 # ダイアログで書き戻すので、symlink にするとリポジトリが常に汚れる。かわりに
 # リポジトリ側の値をマージして流し込む。jq の * は再帰的に重ねるので、
-# 追跡していないキー (認証まわりなど) は手元の値がそのまま残る。
+# 追跡していないキー (認証まわりや、上の herdr integration が書き込む
+# hooks など) は手元の値がそのまま残る。
 # 引数の順に後ろが勝つ: 手元 < 共通 < ホスト別。model は追跡しないので
 # /model での切り替えがここで巻き戻ることはない。
 CLAUDE_SETTINGS=~/.claude/settings.json
