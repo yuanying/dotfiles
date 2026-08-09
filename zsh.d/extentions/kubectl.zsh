@@ -2,10 +2,10 @@ if which kubectl >/dev/null 2>&1; then
   alias k='kubectl'
 
   ## Completion
-  if [[ ! -e "${fpath[1]}/_kubectl" ]]; then
-    kubectl completion zsh > "${fpath[1]}/_kubectl"
-  fi
-  # source <(kubectl completion zsh)
+  # 以前は fpath へ書き出していたが、compinit (20_modules.zsh) より後に走るので
+  # 生成した初回のシェルでは効かず、kubectl を更新しても古いままだった。
+  # herdr と同じく毎回生成する (asdf の shim 込みで 25ms 程度)。
+  source <(kubectl completion zsh)
   # complete -o default -F __start_kubectl k
 
 fi
