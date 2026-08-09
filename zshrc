@@ -21,8 +21,10 @@ if [ -x "`which go 2>/dev/null`" ]; then
     export GO111MODULE=on
 fi
 
+# 補完関数の置き場。compinit は zsh.d/20_modules.zsh で 1 回だけ走るので、
+# fpath への追加はそれより前 (= この設定ファイル群を読む前) に済ませておく。
 # brew info zsh-completions
-fpath=(${HOME}/.zsh/zsh-completions $fpath)
+fpath=(${HOME}/.zsh/zsh-completions ${HOME}/.zfunc $fpath)
 
 # Load all of zsh config files
 for config_file ($ZSH/*.zsh) source $config_file
@@ -61,8 +63,6 @@ fi
 typeset -U path
 
 export PATH=${HOME}/.claude/bin:${HOME}/bin:${PATH}
-
-fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
 
