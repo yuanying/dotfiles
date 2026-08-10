@@ -35,6 +35,30 @@ else
     done
 fi
 
+# Codex のカスタムテーマ。組み込みに無い Tokyo Night だけを張る。
+# ディレクトリごと張らず、/theme などで追加した手元のテーマは残す。
+mkdir -p ~/.codex/themes
+for theme in ${ROOT}/../codex/themes/*.tmTheme; do
+    ln -sfn ${theme} ~/.codex/themes/$(basename ${theme})
+done
+
+# config.toml は Codex 自身も書き戻すため、symlink ではなくテーマだけを
+# 更新する。model や MCP、権限など、追跡していない手元の設定とコメントは
+# そのまま残す。優先順は共通 < ホスト別。
+CODEX_SETTINGS=~/.codex/config.toml
+CODEX_HOST_SETTINGS=${ROOT}/../codex/config.$(hostname -s).toml
+if [[ ! -f ${CODEX_HOST_SETTINGS} ]]; then
+    CODEX_HOST_SETTINGS=${ROOT}/../codex/config.toml
+fi
+if ! command -v python3 > /dev/null; then
+    echo "python3 が無いので ${CODEX_SETTINGS} の更新をスキップした" >&2
+else
+    python3 ${ROOT}/merge-codex-config.py \
+        ${CODEX_SETTINGS} \
+        ${ROOT}/../codex/config.toml \
+        ${CODEX_HOST_SETTINGS}
+fi
+
 # Claude Code のカスタムテーマ。どのホストでも両方選べるように全部張る。
 # 実際にどれを使うかは各ホストの ~/.claude/settings.json の theme で決める
 # (このファイルは machine local で dotfiles 管理外)。

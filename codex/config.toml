@@ -1,0 +1,3 @@
+[tui]
+# ホスト別設定が無いマシンのデフォルト。
+theme = "solarized-dark"
