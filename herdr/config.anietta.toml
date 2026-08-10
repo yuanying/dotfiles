@@ -26,6 +26,15 @@ onboarding = false
 #       ターミナル直下で起動すること。
 prefix = "ctrl+q"
 
+# workspace picker (prefix+w で開く navigate mode) 内は vim 風に j/k で
+# ワークスペース選択を上下移動する。navigate mode の j/k はデフォルトで
+# ペイン移動に使われているため、玉突きでペイン上下移動はアローキーへ移す
+# (左右移動は元々矢印キーも常に有効)。
+navigate_workspace_up = "k"
+navigate_workspace_down = "j"
+navigate_pane_up = "up"
+navigate_pane_down = "down"
+
 [terminal]
 # tmux の `split-window -c '#{pane_current_path}'` 相当。
 # 新しいペイン/タブ/ワークスペースは呼び出し元の cwd を引き継ぐ。
