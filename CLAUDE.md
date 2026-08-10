@@ -46,6 +46,7 @@ The `make` targets build both `user_base` and `main` in a single `docker build` 
 - **Shell**: Zsh with spaceship-prompt, syntax-highlighting, autosuggestions
 - **Go**: 1.25 with gopls, goimports, ghq
 - **Terminal**: Tmux 3.5a (built from source), herdr 0.8.0 (prebuilt binary)
+- **Diff viewer**: hunk 0.18.0 (prebuilt binary, extracted to `/opt/hunk`)
 - **Search**: ripgrep, ag, fd, fzf
 - **K8s**: kubectx, kubens
 - **Version manager**: asdf
