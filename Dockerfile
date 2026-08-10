@@ -199,6 +199,14 @@ RUN \
         https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-x86_64 && \
     sudo chmod +x /usr/local/bin/herdr
 
+# hunk
+ARG HUNK_VERSION=0.18.0
+RUN \
+    sudo mkdir -p /opt/hunk && \
+    curl -fsSL https://github.com/modem-dev/hunk/releases/download/v${HUNK_VERSION}/hunkdiff-linux-x64.tar.gz | \
+        sudo tar zx --strip-components 1 -C /opt/hunk && \
+    sudo ln -s /opt/hunk/hunk /usr/local/bin/hunk
+
 # docker
 COPY --from=docker_builder /usr/local/bin/docker /usr/local/bin/
 
