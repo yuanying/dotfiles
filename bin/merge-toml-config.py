@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-"""Apply the host-specific theme without rewriting unrelated TOML.
+"""Apply the host-specific config without rewriting unrelated TOML.
 
-KEY はテーブル 1 段までのドット区切り (例: tui.theme, theme)。
+共通とホスト別の設定に書いてあるキーだけを流し込む (ホスト別が勝つ)。
+ツール自身が書き戻すファイルが相手なので、追跡していないキーとコメントは
+そのまま残す。扱えるのはテーブル 1 段までのスカラー値。
 """
 
 import json
@@ -16,6 +18,8 @@ import tomllib
 
 ANY_SECTION = re.compile(r"^\s*\[")
 
+SCALAR_TYPES = (str, bool, int, float)
+
 
 def section_pattern(section: str) -> re.Pattern[str]:
     return re.compile(rf"^\s*\[{re.escape(section)}\]\s*(?:#.*)?$")
@@ -25,25 +29,30 @@ def key_pattern(key: str) -> re.Pattern[str]:
     return re.compile(rf"^(\s*){re.escape(key)}\s*=.*$")
 
 
-def split_key(key: str) -> tuple[str | None, str]:
-    parts = key.split(".")
-    if len(parts) == 1:
-        return None, parts[0]
-    if len(parts) == 2:
-        return parts[0], parts[1]
-    raise SystemExit(f"{key}: KEY はテーブル 1 段までしか扱えない")
-
-
-def read_theme(path: Path, key: str) -> str | None:
-    section, name = split_key(key)
+def read_entries(path: Path) -> dict[tuple[str | None, str], object]:
     with path.open("rb") as source:
         table = tomllib.load(source)
-    if section is not None:
-        table = table.get(section, {})
-    theme = table.get(name)
-    if theme is not None and not isinstance(theme, str):
-        raise ValueError(f"{path}: {key} must be a string")
-    return theme
+
+    entries: dict[tuple[str | None, str], object] = {}
+    for key, value in table.items():
+        if isinstance(value, dict):
+            for nested_key, nested_value in value.items():
+                check_scalar(path, f"{key}.{nested_key}", nested_value)
+                entries[(key, nested_key)] = nested_value
+            continue
+        check_scalar(path, key, value)
+        entries[(None, key)] = value
+    return entries
+
+
+def check_scalar(path: Path, key: str, value: object) -> None:
+    if not isinstance(value, SCALAR_TYPES):
+        raise SystemExit(f"{path}: {key} はテーブル 1 段までのスカラー値のみ")
+
+
+def to_toml(value: object) -> str:
+    # TOML のスカラー表記は JSON と同じ (true/false も含む)。
+    return json.dumps(value)
 
 
 def find_section_end(lines: list[str], section_start: int) -> int:
@@ -118,17 +127,16 @@ def update_section(
     return "".join(lines)
 
 
-def update_theme(text: str, key: str, theme: str) -> str:
+def update_entry(text: str, section: str | None, name: str, value: object) -> str:
     if text.strip():
         tomllib.loads(text)
 
-    section, name = split_key(key)
     lines = text.splitlines(keepends=True)
-    value = json.dumps(theme)
+    serialized = to_toml(value)
 
     if section is None:
-        return update_top_level(lines, text, name, value)
-    return update_section(lines, text, section, name, value)
+        return update_top_level(lines, text, name, serialized)
+    return update_section(lines, text, section, name, serialized)
 
 
 def atomic_write(path: Path, text: str) -> None:
@@ -150,19 +158,20 @@ def atomic_write(path: Path, text: str) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 4:
         raise SystemExit(
-            "usage: merge-toml-theme.py KEY TARGET COMMON_CONFIG HOST_CONFIG"
+            "usage: merge-toml-config.py TARGET COMMON_CONFIG HOST_CONFIG"
         )
 
-    key = sys.argv[1]
-    target, common, host = map(Path, sys.argv[2:])
-    theme = read_theme(host, key) or read_theme(common, key)
-    if theme is None:
-        raise SystemExit(f"neither config defines {key}")
+    target, common, host = map(Path, sys.argv[1:])
+    entries = read_entries(common) | read_entries(host)
+    if not entries:
+        raise SystemExit(f"{common} と {host} のどちらにもキーが無い")
 
     current = target.read_text(encoding="utf-8") if target.exists() else ""
-    updated = update_theme(current, key, theme)
+    updated = current
+    for (section, name), value in entries.items():
+        updated = update_entry(updated, section, name, value)
     if updated != current:
         atomic_write(target, updated)
 

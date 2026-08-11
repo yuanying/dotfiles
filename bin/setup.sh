@@ -53,15 +53,15 @@ fi
 if ! command -v python3 > /dev/null; then
     echo "python3 が無いので ${CODEX_SETTINGS} の更新をスキップした" >&2
 else
-    python3 ${ROOT}/merge-toml-theme.py tui.theme \
+    python3 ${ROOT}/merge-toml-config.py \
         ${CODEX_SETTINGS} \
         ${ROOT}/../codex/config.toml \
         ${CODEX_HOST_SETTINGS}
 fi
 
-# hunk のテーマ。config.toml は hunk 自身も表示設定 (レイアウトや行番号) を
-# 書き戻すため、Codex と同じくテーマのキーだけを更新する。テーマはどれも
-# 組み込みなので、張るファイルは無い。優先順は共通 < ホスト別。
+# hunk の設定。config.toml は hunk 自身も表示設定 (レイアウトや行番号) を
+# 書き戻すため、Codex と同じくリポジトリで持っているキーだけを更新する。
+# テーマはどれも組み込みなので、張るファイルは無い。優先順は共通 < ホスト別。
 HUNK_SETTINGS=~/.config/hunk/config.toml
 HUNK_HOST_SETTINGS=${ROOT}/../hunk/config.$(hostname -s).toml
 if [[ ! -f ${HUNK_HOST_SETTINGS} ]]; then
@@ -70,7 +70,7 @@ fi
 if ! command -v python3 > /dev/null; then
     echo "python3 が無いので ${HUNK_SETTINGS} の更新をスキップした" >&2
 else
-    python3 ${ROOT}/merge-toml-theme.py theme \
+    python3 ${ROOT}/merge-toml-config.py \
         ${HUNK_SETTINGS} \
         ${ROOT}/../hunk/config.toml \
         ${HUNK_HOST_SETTINGS}
