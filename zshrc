@@ -1,6 +1,15 @@
 # Load zsh extentions
 export PATH=/usr/local/go/bin:/usr/local/bin:/go/bin:$PATH
 
+# Homebrew は /etc/paths.d/homebrew 経由で PATH に入るが、path_helper が
+# /etc/paths (/usr/bin など) を並べたあとに /etc/paths.d を足すため、必ず
+# システム側より後ろに落ちる。macOS 同梱の python3 は 3.9 で tomllib
+# (3.11 以降) が無く、bin/merge-toml-config.py がそれを掴んで失敗するので、
+# Homebrew を明示的に前へ出す。
+if [[ -d /opt/homebrew/bin ]]; then
+    export PATH=/opt/homebrew/bin:${PATH}
+fi
+
 if [[ -d ~/.asdf ]]; then
     export ASDF_DATA_DIR=~/.asdf
     export PATH=${ASDF_DATA_DIR}/bin:${ASDF_DATA_DIR}/shims:${PATH}
