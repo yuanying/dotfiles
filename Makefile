@@ -4,7 +4,7 @@ IMAGE := registry.fraction.jp/yuanying/devbox
 # renovate: datasource=docker depName=ubuntu versioning=ubuntu
 UBUNTU_IMAGE := ubuntu:24.04
 # renovate: datasource=docker depName=rocm/dev-ubuntu-24.04 versioning=regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)-complete$
-ROCM_IMAGE := rocm/dev-ubuntu-24.04:7.2.2-complete
+ROCM_IMAGE := rocm/dev-ubuntu-24.04:7.2.4-complete
 # renovate: datasource=docker depName=nvidia/cuda versioning=regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)-devel-ubuntu24\.04$
 CUDA_IMAGE := nvidia/cuda:13.1.0-devel-ubuntu24.04
 
