@@ -119,7 +119,7 @@ RUN go install github.com/nsf/gocode@latest
 RUN go install github.com/x-motemen/ghq@latest
 RUN go install github.com/jstemmer/gotags@latest
 # renovate: datasource=go depName=github.com/asdf-vm/asdf extractVersion=^v(?<version>.+)$
-ARG ASDF_VERSION=0.18.0
+ARG ASDF_VERSION=0.20.0
 RUN go install github.com/asdf-vm/asdf/cmd/asdf@v${ASDF_VERSION}
 
 # tmux builder
