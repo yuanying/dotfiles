@@ -11,10 +11,12 @@ Image registry: `registry.fraction.jp/yuanying/devbox`
 ## Build Commands
 
 ```bash
-make image   # CPU variant — ubuntu:24.04
-make cuda    # NVIDIA CUDA variant — nvidia/cuda:13.1.0-devel-ubuntu24.04
-make rocm    # AMD ROCm variant — rocm/dev-ubuntu-24.04:7.2.2-complete
+make image   # CPU variant — $(UBUNTU_IMAGE)
+make cuda    # NVIDIA CUDA variant — $(CUDA_IMAGE)
+make rocm    # AMD ROCm variant — $(ROCM_IMAGE)
 ```
+
+Base image tags are defined as `*_IMAGE` variables at the top of the `Makefile`.
 
 ## Running Containers
 
@@ -35,21 +37,41 @@ Multi-stage build with these named targets:
 | `user_base` | User-level environment (can be pushed independently) |
 | `golang_builder` | Compiles Go toolchain and tools |
 | `docker_builder` | Extracts Docker CLI binaries |
-| `tmux_builder` | Builds Tmux 3.5a from source |
+| `tmux_builder` | Builds Tmux from source |
 | `main` | Final image combining all stages |
 
 The `make` targets build both `user_base` and `main` in a single `docker build` invocation using multiple `--target` flags.
 
 ## Key Included Tools
 
-- **Editor**: Neovim 0.11.1 (default `vi`/`vim`)
+- **Editor**: Neovim (default `vi`/`vim`)
 - **Shell**: Zsh with spaceship-prompt, syntax-highlighting, autosuggestions
-- **Go**: 1.25 with gopls, goimports, ghq
-- **Terminal**: Tmux 3.5a (built from source), herdr 0.8.0 (prebuilt binary)
-- **Diff viewer**: hunk 0.18.0 (prebuilt binary, extracted to `/opt/hunk`)
+- **Go**: gopls, goimports, ghq (installed with `@latest`)
+- **Terminal**: Tmux (built from source), herdr (prebuilt binary)
+- **Diff viewer**: hunk (prebuilt binary, extracted to `/opt/hunk`)
 - **Search**: ripgrep, ag, fd, fzf
 - **K8s**: kubectx, kubens
 - **Version manager**: asdf
+
+Pinned versions live in `ARG <NAME>_VERSION` declarations in the `Dockerfile`; do not hardcode
+them anywhere else.
+
+## Dependency Updates (Renovate)
+
+Renovate keeps the pinned versions up to date. Configuration is in `renovate.json`:
+
+- Base images in `FROM` / `ARG BASE_IMAGE` are picked up by the built-in `dockerfile` manager.
+- `ARG <NAME>_VERSION=` in the `Dockerfile` and `<NAME>_IMAGE :=` in the `Makefile` are picked up by
+  custom regex managers, driven by a preceding `# renovate: datasource=... depName=...` comment.
+- Ubuntu is intentionally held at 24.04 (disabled by a package rule).
+
+When adding a new pinned tool, follow the same annotation + `ARG` naming convention so Renovate
+picks it up automatically. Validate changes with:
+
+```bash
+npx --package renovate renovate-config-validator
+npx --package renovate renovate --platform=local --dry-run=extract
+```
 
 ## Container Runtime Notes
 
