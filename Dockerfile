@@ -2,9 +2,12 @@
 # Unified Dockerfile - CPU/CUDA/ROCm
 # ==============================================================================
 # Build examples:
-#   CPU:  docker build --build-arg BASE_IMAGE=ubuntu:24.04 -t devbox:cpu .
-#   CUDA: docker build --build-arg BASE_IMAGE=nvidia/cuda:13.1.0-devel-ubuntu24.04 --network host -t devbox:cuda .
-#   ROCm: docker build --build-arg BASE_IMAGE=rocm/dev-ubuntu-24.04:7.0.2-complete -t devbox:rocm .
+#   CPU:  make image
+#   CUDA: make cuda
+#   ROCm: make rocm
+#
+# Base images are pinned in the Makefile (*_IMAGE variables) and versions of
+# the tools below are pinned in ARGs, so that Renovate can update them.
 # ==============================================================================
 
 ARG BASE_IMAGE=ubuntu:24.04
@@ -115,13 +118,18 @@ RUN go install golang.org/x/tools/cmd/goimports@latest
 RUN go install github.com/nsf/gocode@latest
 RUN go install github.com/x-motemen/ghq@latest
 RUN go install github.com/jstemmer/gotags@latest
-RUN go install github.com/asdf-vm/asdf/cmd/asdf@v0.18.0
+# renovate: datasource=go depName=github.com/asdf-vm/asdf extractVersion=^v(?<version>.+)$
+ARG ASDF_VERSION=0.18.0
+RUN go install github.com/asdf-vm/asdf/cmd/asdf@v${ASDF_VERSION}
 
 # tmux builder
 FROM base as tmux_builder
+# rpm versioning is used so that letter suffixes (3.5 < 3.5a < 3.6) sort correctly
+# renovate: datasource=github-tags depName=tmux/tmux versioning=rpm
+ARG TMUX_VERSION=3.5a
 RUN git clone https://github.com/tmux/tmux.git && \
     cd tmux && \
-    git checkout 3.5a && \
+    git checkout ${TMUX_VERSION} && \
     sh autogen.sh && \
     ./configure && \
     make && \
@@ -179,8 +187,11 @@ ENV EDITOR=vim
 ENV GOPATH="$HOME"
 ENV GHQ_ROOT="$HOME/src"
 
+# neovim
+# renovate: datasource=github-releases depName=neovim/neovim extractVersion=^v(?<version>.+)$
+ARG NEOVIM_VERSION=0.11.1
 RUN \
-     curl -L https://github.com/neovim/neovim/releases/download/v0.11.1/nvim-linux-x86_64.tar.gz | sudo sudo tar zx --strip-components 1 -C /usr
+     curl -L https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz | sudo sudo tar zx --strip-components 1 -C /usr
 RUN \
    sudo update-alternatives --install /usr/bin/vi vi /usr/bin/nvim 60 && \
    sudo update-alternatives --config vi && \
@@ -193,6 +204,7 @@ RUN \
 COPY --from=tmux_builder /opt/tmux/bin/tmux /usr/local/bin/
 
 # herdr
+# renovate: datasource=github-releases depName=herdrdev/herdr extractVersion=^v(?<version>.+)$
 ARG HERDR_VERSION=0.8.0
 RUN \
     sudo curl -fsSL -o /usr/local/bin/herdr \
@@ -200,6 +212,7 @@ RUN \
     sudo chmod +x /usr/local/bin/herdr
 
 # hunk
+# renovate: datasource=github-releases depName=modem-dev/hunk extractVersion=^v(?<version>.+)$
 ARG HUNK_VERSION=0.18.0
 RUN \
     sudo mkdir -p /opt/hunk && \
@@ -210,8 +223,11 @@ RUN \
 # docker
 COPY --from=docker_builder /usr/local/bin/docker /usr/local/bin/
 
+# kubectx
+# renovate: datasource=github-tags depName=ahmetb/kubectx extractVersion=^v(?<version>.+)$
+ARG KUBECTX_VERSION=0.11.0
 RUN \
-    sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx && \
+    sudo git clone --depth 1 --branch v${KUBECTX_VERSION} https://github.com/ahmetb/kubectx /opt/kubectx && \
     sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx && \
     sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
 
