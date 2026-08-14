@@ -136,5 +136,12 @@ if [[ -f /usr/bin/batcat ]];then
     ln -s /usr/bin/batcat ~/bin/bat
 fi
 
+# macOS には本物の pbcopy があるので Linux だけ。OSC 52 でホスト端末の
+# クリップボードへ送る実装で、mosh / ssh 越しのコンテナから使う。
+if [[ "$(uname)" == "Linux" ]]; then
+    mkdir -p ~/bin
+    ln -sfn ${ROOT}/pbcopy ~/bin/pbcopy
+fi
+
 bash ${ROOT}/setup-vim.sh
 bash ${ROOT}/setup-zsh.sh
