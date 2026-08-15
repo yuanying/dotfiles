@@ -103,4 +103,15 @@ npx --package renovate renovate --platform=local --dry-run=extract
 - Mounts host `$HOME` for persistence
 - Mounts Docker socket for nested container access
 - SSH daemon on port 3222; also exposes 8080, 9090, 60000–60010 UDP (mosh)
+- `entrypoint.sh` hands a small set of variables to sshd via `SetEnv`, because `sudo` strips the
+  image `ENV` and OpenSSH rebuilds the session environment. Processes that never go through a
+  login shell — herdr, exec'd straight from mosh, and the hunk binary and Nvim it spawns — read
+  these directly, so the dotfiles `zshrc` cannot supply them. Values live in exactly one place:
+  `EDITOR` / `VISUAL` in the `Dockerfile`, and everything host-specific in the dotfiles' own
+  `~/.zshrc.<hostname>`. Whatever that file exports is forwarded automatically — it is diffed
+  against a pristine zsh, so adding a variable needs no image rebuild. Two things follow from
+  that: sshd's arguments show up in `ps`, so anything that file exports becomes world-readable
+  and secrets belong in `~/.zsh_private` instead; and a value containing whitespace is skipped,
+  since `SetEnv` cannot represent it. `-o SetEnv` also honours only its first occurrence, which
+  is why every variable goes into a single `-o`.
 - On first start, `entrypoint.sh` fetches SSH keys from GitHub, installs zsh plugins, and clones dotfiles

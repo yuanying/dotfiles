@@ -210,7 +210,18 @@ ENV GOPATH="/go"
 ENV PATH="$GOPATH/bin:$PATH"
 
 # Set default environment variables
-ENV EDITOR=vim
+# vi/vim/editor はいずれも update-alternatives で nvim に向けてあるが、
+# EDITOR の値をそのまま表示するツールがあるので実体の名前で持つ。
+# VISUAL は EDITOR より優先して読むツール向け。entrypoint.sh がこの 2 つを
+# sshd の SetEnv へ渡すので、値の定義元はここ 1 箇所だけにする。
+ENV EDITOR=nvim
+ENV VISUAL=nvim
+# nvim は起動時に端末へ背景色を問い合わせ (DSR)、応答が無いとタイムアウトを
+# 待って E1568 を出す。mosh や herdr のプラグインペイン越しでは応答が返らない。
+# 問い合わせは --cmd や設定ファイルより前に走るので、抑止はこの環境変数しかない。
+# 配色は $NVIM_COLORSCHEME で決め termguicolors も明示しているため、
+# 問い合わせを止めても background/termguicolors/colorscheme は変わらない。
+ENV NVIM_NOTTYFAST=1
 ENV GOPATH="$HOME"
 ENV GHQ_ROOT="$HOME/src"
 
