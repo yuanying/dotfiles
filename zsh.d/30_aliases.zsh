@@ -13,7 +13,10 @@ esac
 alias cp='cp -i'
 alias rm='rm -i'
 alias mv='mv -i'
-alias svim='sudo vim'
+# sudo vim だと root で自分の設定を読まない (プラグインも配色も無い素の vim に
+# なる) ので sudoedit にする。一時コピーを $EDITOR で開いて書き戻す方式なので、
+# 編集そのものは自分のユーザーと設定のままで済む。ファイル引数が必須。
+alias svim='sudoedit'
 alias b='bundle'
 alias bi='bundle install'
 alias bu='bundle update'
@@ -33,7 +36,9 @@ alias kc='kubectl create'
 alias ka='kubectl apply'
 alias kl='kubectl logs'
 alias ke='kubectl exec'
-alias vi='vim'
+# 10_exports.zsh が決めた EDITOR (nvim があれば nvim、無ければ vim) に揃える。
+# alias は定義時に展開されるので、ここでの $EDITOR は確定済みの値になる。
+alias vi=$EDITOR
 alias delete-ds-store='find . -name "*.DS_Store" -print -exec rm -r {} ";"'
 alias delete-pyc='find . -name "*.pyc" -print -exec rm -r {} ";"'
 
