@@ -126,7 +126,7 @@ RUN go install github.com/asdf-vm/asdf/cmd/asdf@v${ASDF_VERSION}
 FROM base as tmux_builder
 # rpm versioning is used so that letter suffixes (3.5 < 3.5a < 3.6) sort correctly
 # renovate: datasource=github-tags depName=tmux/tmux versioning=rpm
-ARG TMUX_VERSION=3.5a
+ARG TMUX_VERSION=3.7b
 RUN git clone https://github.com/tmux/tmux.git && \
     cd tmux && \
     git checkout ${TMUX_VERSION} && \
