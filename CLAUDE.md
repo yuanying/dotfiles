@@ -38,6 +38,8 @@ Multi-stage build with these named targets:
 | `golang_builder` | Compiles Go toolchain and tools |
 | `docker_builder` | Extracts Docker CLI binaries |
 | `tmux_builder` | Builds Tmux from source |
+| `node_builder` | Supplies the Node.js runtime |
+| `herdr_plugin_builder` | Builds herdr plugins into `/opt/herdr/plugins` |
 | `main` | Final image combining all stages |
 
 The `make` targets build both `user_base` and `main` in a single `docker build` invocation using multiple `--target` flags.
@@ -49,12 +51,34 @@ The `make` targets build both `user_base` and `main` in a single `docker build` 
 - **Go**: gopls, goimports, ghq (installed with `@latest`)
 - **Terminal**: Tmux (built from source), herdr (prebuilt binary)
 - **Diff viewer**: hunk (prebuilt binary, extracted to `/opt/hunk`)
+- **Node.js**: system-wide `node` / `npm` / `npx` / `corepack`, from `node_builder`
+- **herdr plugins**: herdr-hunk-diff (see below)
 - **Search**: ripgrep, ag, fd, fzf
 - **K8s**: kubectx, kubens
 - **Version manager**: asdf
 
 Pinned versions live in `ARG <NAME>_VERSION` declarations in the `Dockerfile`; do not hardcode
 them anywhere else.
+
+## Herdr Plugins
+
+Plugins are built in `herdr_plugin_builder`, one block per plugin, into
+`/opt/herdr/plugins/<plugin id>` — the id being the `id` field of the plugin's `herdr-plugin.toml`.
+The main stage copies that directory as a whole, and `entrypoint.sh` links every plugin it finds
+there. herdr registers plugins under `~/.config/herdr`, which the host `$HOME` mount hides, which is
+why linking happens at runtime rather than at build time.
+
+To add a plugin, pin its version with a Renovate-annotated `ARG <NAME>_VERSION`, clone it at that
+tag into `/opt/herdr/plugins/<plugin id>`, and run the build commands its manifest declares.
+Nothing outside that block needs to change.
+
+Two things to keep in mind:
+
+- `herdr plugin link` does not run a plugin's build commands, so the tree in the image has to be
+  built already. Plugin config and state live under `$HOME`, so the tree itself stays read-only.
+- Plugins may vendor large binaries that this image already ships. herdr-hunk-diff, for instance,
+  depends on the `hunkdiff` npm package (~500 MB, it bundles Bun) purely to obtain a hunk binary;
+  it is dropped after the build and the path the plugin resolves points at `/opt/hunk` instead.
 
 ## Dependency Updates (Renovate)
 
