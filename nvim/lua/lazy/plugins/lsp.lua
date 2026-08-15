@@ -81,7 +81,9 @@ return {
       'williamboman/mason-lspconfig.nvim',
     },
     config = function()
-      vim.lsp.set_log_level("debug") -- for debug
+      -- LSP のログは既定 (WARN) のまま。debug へ落とすときは
+      -- vim.lsp.log.set_level("debug") を使う (set_log_level は 0.12 で
+      -- deprecated になり、起動のたびに警告が出る)。
       vim.api.nvim_create_autocmd("LspAttach", {
         group = lsp,
         callback = function(args)
