@@ -36,6 +36,35 @@ navigate_workspace_down = "j"
 navigate_pane_up = "up"
 navigate_pane_down = "down"
 
+# hunk プラグイン (jhochenbaum.hunkdiff) のレビュー操作。プラグインには
+# setup-keys アクションがあるが、これはこのファイル (dotfiles の実体) を
+# 直接書き換えてバックアップまで置いていくので使わず、同じ内容を手で持つ。
+# 他のアクション (コメント間の移動、pager 設定など) は
+# `herdr plugin action invoke <action> --plugin jhochenbaum.hunkdiff` で叩く。
+[[keys.command]]
+key = "prefix+shift+h"
+type = "plugin_action"
+command = "jhochenbaum.hunkdiff.review"
+description = "hunk: review changes"
+
+[[keys.command]]
+key = "prefix+shift+s"
+type = "plugin_action"
+command = "jhochenbaum.hunkdiff.send-review"
+description = "hunk: send review to agent"
+
+[[keys.command]]
+key = "prefix+shift+c"
+type = "plugin_action"
+command = "jhochenbaum.hunkdiff.review:commit"
+description = "hunk: review the last commit"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "jhochenbaum.hunkdiff.review:staged"
+description = "hunk: review staged changes"
+
 [terminal]
 # tmux の `split-window -c '#{pane_current_path}'` 相当。
 # 新しいペイン/タブ/ワークスペースは呼び出し元の cwd を引き継ぐ。
