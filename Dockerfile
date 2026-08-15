@@ -136,6 +136,33 @@ RUN git clone https://github.com/tmux/tmux.git && \
     mkdir -p /opt/tmux/bin && \
     mv tmux /opt/tmux/bin
 
+# node builder
+# The bookworm variant is deliberate: its glibc is older than Ubuntu 24.04's, so
+# the binaries copied out of this stage keep working in the final image.
+FROM node:24.12.0-bookworm as node_builder
+
+# herdr plugin builder
+# One block per plugin, each cloned at a pinned tag and built where it will live
+# in the final image: /opt/herdr/plugins/<plugin id>. entrypoint.sh links every
+# plugin it finds under that directory, so adding one only means adding a block
+# here. Plugins are Node projects, hence the node base image.
+FROM node_builder as herdr_plugin_builder
+
+# renovate: datasource=github-releases depName=jhochenbaum/herdr-hunk-diff extractVersion=^v(?<version>.+)$
+ARG HERDR_HUNK_DIFF_VERSION=0.1.0
+# This plugin depends on the `hunkdiff` npm package only to get a hunk binary,
+# and that package weighs ~500 MB because it ships Bun. Drop it after the build
+# and point the path the plugin resolves at the hunk the main stage installs.
+RUN git clone --depth 1 --branch v${HERDR_HUNK_DIFF_VERSION} \
+        https://github.com/jhochenbaum/herdr-hunk-diff \
+        /opt/herdr/plugins/jhochenbaum.hunkdiff && \
+    cd /opt/herdr/plugins/jhochenbaum.hunkdiff && \
+    npm ci && \
+    npm run build && \
+    npm uninstall hunkdiff --no-save --omit=dev && \
+    ln -sfn /usr/local/bin/hunk node_modules/.bin/hunk && \
+    rm -rf .git
+
 # main
 FROM user_base as main
 
@@ -219,6 +246,23 @@ RUN \
     curl -fsSL https://github.com/modem-dev/hunk/releases/download/v${HUNK_VERSION}/hunkdiff-linux-x64.tar.gz | \
         sudo tar zx --strip-components 1 -C /opt/hunk && \
     sudo ln -s /opt/hunk/hunk /usr/local/bin/hunk
+
+# node
+# asdf-managed versions still win on PATH; this is the fallback the herdr
+# plugins below run on.
+COPY --from=node_builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=node_builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node_builder /usr/local/include/node /usr/local/include/node
+# COPY resolves symlinks, so the npm/npx launchers have to be relinked by hand.
+RUN \
+    sudo ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    sudo ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
+    sudo ln -s ../lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack
+
+# herdr plugins
+# herdr registers plugins under ~/.config/herdr, which the host $HOME mount
+# hides, so entrypoint.sh links these trees in at runtime instead.
+COPY --from=herdr_plugin_builder /opt/herdr/plugins /opt/herdr/plugins
 
 # docker
 COPY --from=docker_builder /usr/local/bin/docker /usr/local/bin/

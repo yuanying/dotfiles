@@ -43,5 +43,23 @@ cd ~/dotfiles
 git checkout lua
 bash ~/dotfiles/bin/setup.sh
 
+echo "Setup herdr plugins"
+# The plugin trees are built into the image, but herdr registers plugins under
+# ~/.config/herdr, which comes from the host $HOME mount. Link whatever the
+# image ships; later image updates are picked up through the path, so a plugin
+# only has to be linked once per host.
+linked=$(herdr plugin list)
+for plugin in /opt/herdr/plugins/*; do
+    manifest=${plugin}/herdr-plugin.toml
+    [[ -f ${manifest} ]] || continue
+    id=$(sed -n 's/^id = "\(.*\)"/\1/p' "${manifest}" | head -1)
+    id=${id:-$(basename "${plugin}")}
+    if grep -qF "${id}" <<< "${linked}"; then
+        echo "herdr plugin ${id} is already linked"
+    else
+        herdr plugin link "${plugin}" || echo "failed to link herdr plugin ${id}" >&2
+    fi
+done
+
 echo "Starting sshd..."
 sudo /usr/sbin/sshd -D
