@@ -75,7 +75,7 @@ echo "Starting sshd..."
 # 注意: sshd の引数は ps に出るので、~/.zshrc.<hostname> が export したものは
 # そのまま全ユーザーから見える。秘密はこのファイルではなく ~/.zsh_private
 # (zshrc が読む、リポジトリ管理外) に置くこと。
-SESSION_ENV=("EDITOR=${EDITOR}" "VISUAL=${VISUAL}")
+SESSION_ENV=("EDITOR=${EDITOR}" "VISUAL=${VISUAL}" "NVIM_NOTTYFAST=${NVIM_NOTTYFAST}")
 
 # ホスト別設定が export した変数をそのまま渡す。zsh 構文なので zsh に読ませ、
 # source の前後で export 済みの一覧を比べて、このファイルが足した分だけを拾う。
