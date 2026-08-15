@@ -62,4 +62,46 @@ for plugin in /opt/herdr/plugins/*; do
 done
 
 echo "Starting sshd..."
-sudo /usr/sbin/sshd -D
+# sudo は env_reset で Dockerfile の ENV を捨て、OpenSSH もセッションの環境を
+# 作り直すため、そのままでは EDITOR がログインセッションに残らない。zshrc は
+# 対話シェルしか読まないので、ログインシェルを経由せずに起動されるプロセス
+# (mosh から直接 exec される herdr と、その子として動く hunk) には何も届かない。
+# hunk は $EDITOR を直接見て無ければ編集を拒否し、nvim は $NVIM_COLORSCHEME が
+# 無いと既定の配色に落ちる。必要なものだけ SetEnv で渡す。
+#
+# 値の定義元は 1 箇所に保つ。EDITOR/VISUAL は Dockerfile の ENV、ホスト固有の
+# 設定は dotfiles の ~/.zshrc.<hostname>。ここには変数名を持たない。
+#
+# 注意: sshd の引数は ps に出るので、~/.zshrc.<hostname> が export したものは
+# そのまま全ユーザーから見える。秘密はこのファイルではなく ~/.zsh_private
+# (zshrc が読む、リポジトリ管理外) に置くこと。
+SESSION_ENV=("EDITOR=${EDITOR}" "VISUAL=${VISUAL}")
+
+# ホスト別設定が export した変数をそのまま渡す。zsh 構文なので zsh に読ませ、
+# source の前後で export 済みの一覧を比べて、このファイルが足した分だけを拾う。
+# env -i で起動するのは、継承した環境変数を差分から追い出すため。
+host_zshrc=~/.zshrc.$(hostname -s)
+if [[ -f ${host_zshrc} ]]; then
+    zsh_clean=(env -i HOME="${HOME}" PATH="${PATH}" zsh -f -c)
+    # typeset の出力は値がクォートされうるので、差分からは名前だけを取り出し、
+    # 値は名前で引き直す。
+    names=$(
+        comm -13 \
+            <("${zsh_clean[@]}" 'typeset -px' | sort) \
+            <("${zsh_clean[@]}" "source ${host_zshrc} 2>/dev/null; typeset -px" | sort) |
+        sed -n 's/^export \([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' | tr '\n' ' '
+    )
+    while IFS= read -r kv; do
+        [[ -n ${kv} ]] && SESSION_ENV+=("${kv}")
+    done < <("${zsh_clean[@]}" "
+        source ${host_zshrc} 2>/dev/null
+        for k in ${names}; do
+            v=\${(P)k}
+            # 空白を含む値は SetEnv の書式に載らず、黙って捨てられる。
+            [[ -n \${v} && \${v} != *[[:space:]]* ]] && print -r -- \"\${k}=\${v}\"
+        done
+    ")
+fi
+
+# SetEnv は -o を複数回渡しても最初の 1 つしか効かないので、まとめて渡す。
+sudo /usr/sbin/sshd -D -o "SetEnv ${SESSION_ENV[*]}"

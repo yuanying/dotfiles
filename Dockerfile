@@ -210,7 +210,12 @@ ENV GOPATH="/go"
 ENV PATH="$GOPATH/bin:$PATH"
 
 # Set default environment variables
-ENV EDITOR=vim
+# vi/vim/editor はいずれも update-alternatives で nvim に向けてあるが、
+# EDITOR の値をそのまま表示するツールがあるので実体の名前で持つ。
+# VISUAL は EDITOR より優先して読むツール向け。entrypoint.sh がこの 2 つを
+# sshd の SetEnv へ渡すので、値の定義元はここ 1 箇所だけにする。
+ENV EDITOR=nvim
+ENV VISUAL=nvim
 ENV GOPATH="$HOME"
 ENV GHQ_ROOT="$HOME/src"
 
