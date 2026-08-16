@@ -33,8 +33,8 @@ Multi-stage build with these named targets:
 
 | Stage | Role |
 |---|---|
-| `base` | System packages, non-root user `yuanying` (UID 501) |
-| `user_base` | User-level environment (can be pushed independently) |
+| `base` | Only the packages this Dockerfile's own builds need (today: Tmux from source) |
+| `user_base` | Everything the user gets from apt, plus locale, sshd and the non-root user `yuanying` (UID 501); can be pushed independently |
 | `golang_builder` | Compiles Go toolchain and tools |
 | `docker_builder` | Extracts Docker CLI binaries |
 | `tmux_builder` | Builds Tmux from source |
@@ -44,6 +44,17 @@ Multi-stage build with these named targets:
 | `main` | Final image combining all stages |
 
 The `make` targets build both `user_base` and `main` in a single `docker build` invocation using multiple `--target` flags.
+
+Where a package goes follows from that table: `base` gets it only if a build stage in this file
+would fail without it, `user_base` gets anything else installable with apt, and `main` is for tools
+apt does not carry — toolchains, prebuilt binaries, plugin trees. Note that `user_base` builds on
+`base`, so the compiler and headers `base` installs are still there for asdf-built languages and
+Nvim's tree-sitter parsers; they are not listed twice.
+
+`user_base` installs in two apt calls with `etc/apt/apt.conf.d/01norecommend` copied between them.
+The first list predates the file and depends on recommends — `less`, `xauth`, `gnupg`, `manpages`
+and `ncurses-term` come in that way and nothing names them — while the applications in the second
+list never wanted the recommends of podman and virtinst. Moving the copy changes the installed set.
 
 ## Key Included Tools
 

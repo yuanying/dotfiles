@@ -15,7 +15,13 @@ FROM ${BASE_IMAGE} as base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install build-essential etc
+# Only what this Dockerfile needs to build things, which today means the Tmux
+# source build in tmux_builder: a toolchain, the autotools it runs from
+# autogen.sh, and Tmux's own two libraries. Everything a user reaches for goes
+# in user_base instead. The compiler and the headers here stay reachable in the
+# final image, because user_base builds on this stage -- asdf-built languages
+# and Nvim's tree-sitter parsers compile against them, so they are not repeated
+# in the user list below.
 RUN set -x -e && \
     apt-get update && \
     apt-get install -y \
@@ -25,11 +31,24 @@ RUN set -x -e && \
         bison \
         build-essential \
         ca-certificates \
+        git \
+        libevent-dev \
+        libncurses-dev \
+        pkg-config
+
+# Everything below is for the person using the container, not for the build.
+# This stage is pushed on its own (see the Makefile), so it carries the user
+# account and the whole package set; main only adds tools that are not apt
+# packages.
+FROM base as user_base
+
+RUN set -x -e && \
+    apt-get update && \
+    apt-get install -y \
         curl \
         dpkg \
         dnsutils \
         file \
-        git \
         git-lfs \
         iproute2 \
         iputils-ping \
@@ -37,7 +56,6 @@ RUN set -x -e && \
         libbz2-dev \
         libc6 \
         libcairo2-dev \
-        libevent-dev \
         libffi-dev \
         libgcc-s1 \
         libgdbm-dev \
@@ -47,7 +65,6 @@ RUN set -x -e && \
         libio-socket-ip-perl \
         libjpeg-dev \
         liblzma-dev \
-        libncurses-dev \
         libopenblas-dev \
         libpng-dev \
         libprotobuf-dev \
@@ -64,11 +81,11 @@ RUN set -x -e && \
         openssh-client \
         openssh-server \
         pciutils \
-        pkg-config \
         qemu-utils \
         rsync \
         software-properties-common \
         strace \
+        sudo \
         wget \
         zlib1g \
         zlib1g-dev \
@@ -83,8 +100,6 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
 	dpkg-reconfigure --frontend=noninteractive locales && \
 	update-locale LANG=$LANG LC_ALL=$LC_ALL LANGUAGE=$LANGUAGE
 
-COPY etc/apt/apt.conf.d/01norecommend /etc/apt/apt.conf.d/01norecommend
-
 RUN mkdir /run/sshd
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 RUN sed 's/#Port 22/Port 3222/' -i /etc/ssh/sshd_config
@@ -92,8 +107,6 @@ RUN sed 's/#Port 22/Port 3222/' -i /etc/ssh/sshd_config
 # Create a user
 ENV USER=yuanying
 RUN set -x -e && \
-    apt-get update && \
-    apt-get -y install sudo && \
     (getent group render > /dev/null || groupadd -g 110 render) && \
     (getent group libvirt > /dev/null || groupadd -g 112 libvirt) && \
     (getent group render2 > /dev/null || groupadd -g 993 render2) && \
@@ -103,7 +116,44 @@ RUN set -x -e && \
     useradd -G video,render,render2,libvirt,docker,systemd-journal,systemd-network,systemd-timesync -g 50 -m -s /bin/zsh -u 501 "$USER" && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-FROM base as user_base
+# The two package lists are split by this file on purpose. The list above is
+# older than it and still relies on recommends -- less, xauth, gnupg, manpages
+# and ncurses-term arrive that way, and nothing requests them by name -- while
+# the applications below have never wanted the recommends of podman, virtinst
+# and friends. Moving the file changes what is installed, so it stays here.
+COPY etc/apt/apt.conf.d/01norecommend /etc/apt/apt.conf.d/01norecommend
+
+RUN set -x -e && \
+    apt-get update && \
+    apt-get install -y \
+	    mosh \
+        bat \
+        bubblewrap \
+        cmake \
+        ccache \
+        libcurl4-openssl-dev \
+        fzf \
+        silversearcher-ag \
+        ripgrep \
+        socat \
+        fd-find \
+        universal-ctags \
+        # frecency ベースのディレクトリジャンプ。herdr-navigator の
+        # zoxide ソースもこの履歴を読む
+        zoxide \
+        # virt
+        virtinst \
+        libvirt-clients \
+        genisoimage \
+        uuid-runtime \
+        bzip2 \
+        kpartx \
+        # podman
+        podman uidmap slirp4netns \
+        # stable-diffusion pytorch
+        libomp-dev libjpeg62 \
+        unzip && \
+    chmod 4755 /usr/bin/bwrap
 
 USER "$USER"
 ENV HOME="/home/$USER"
@@ -200,42 +250,9 @@ RUN git clone --depth 1 --branch v${HERDR_HUNK_DIFF_VERSION} \
 COPY --from=herdr_navigator_builder /opt/herdr/plugins/herdr-navigator /opt/herdr/plugins/herdr-navigator
 
 # main
+# Tools that are not apt packages: language toolchains, prebuilt binaries and
+# the herdr plugin trees. Anything installable with apt belongs in user_base.
 FROM user_base as main
-
-# Install user applications
-RUN set -x -e && \
-    sudo apt-get update && \
-    sudo apt-get install -y \
-	    mosh \
-        bat \
-        bubblewrap \
-        cmake \
-        ccache \
-        libcurl4-openssl-dev \
-        fzf \
-        silversearcher-ag \
-        ripgrep \
-        socat \
-        fd-find \
-        universal-ctags \
-        # frecency ベースのディレクトリジャンプ。herdr-navigator の
-        # zoxide ソースもこの履歴を読む
-        zoxide \
-        # virt
-        virtinst \
-        libvirt-clients \
-        qemu-utils \
-        genisoimage \
-        uuid-runtime \
-        wget \
-        bzip2 \
-        kpartx \
-        # podman
-        podman uidmap slirp4netns \
-        # stable-diffusion pytorch
-        libomp-dev libjpeg62 \
-        unzip && \
-    sudo chmod 4755 /usr/bin/bwrap
 
 # golang
 COPY --from=golang_builder /usr/local/go /usr/local/go
