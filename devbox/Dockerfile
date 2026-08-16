@@ -15,13 +15,13 @@ FROM ${BASE_IMAGE} as base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Only what this Dockerfile needs to build things, which today means the Tmux
-# source build in tmux_builder: a toolchain, the autotools it runs from
-# autogen.sh, and Tmux's own two libraries. Everything a user reaches for goes
-# in user_base instead. The compiler and the headers here stay reachable in the
-# final image, because user_base builds on this stage -- asdf-built languages
-# and Nvim's tree-sitter parsers compile against them, so they are not repeated
-# in the user list below.
+# A toolchain and the headers built against it. No build stage in this file
+# uses them any more -- the ones that remain start from their own language
+# images -- but they are still reached for at runtime, because user_base builds
+# on this stage and so they survive into the final image: asdf-built languages
+# and Nvim's tree-sitter parsers compile there. That is why they are not
+# repeated in the user list below. Everything else a user reaches for goes in
+# user_base instead.
 RUN set -x -e && \
     apt-get update && \
     apt-get install -y \
@@ -32,7 +32,6 @@ RUN set -x -e && \
         build-essential \
         ca-certificates \
         git \
-        libevent-dev \
         libncurses-dev \
         pkg-config
 
@@ -172,20 +171,6 @@ RUN go install github.com/jstemmer/gotags@latest
 ARG ASDF_VERSION=0.20.0
 RUN go install github.com/asdf-vm/asdf/cmd/asdf@v${ASDF_VERSION}
 
-# tmux builder
-FROM base as tmux_builder
-# rpm versioning is used so that letter suffixes (3.5 < 3.5a < 3.6) sort correctly
-# renovate: datasource=github-tags depName=tmux/tmux versioning=rpm
-ARG TMUX_VERSION=3.7b
-RUN git clone https://github.com/tmux/tmux.git && \
-    cd tmux && \
-    git checkout ${TMUX_VERSION} && \
-    sh autogen.sh && \
-    ./configure && \
-    make && \
-    mkdir -p /opt/tmux/bin && \
-    mv tmux /opt/tmux/bin
-
 # node builder
 # The bookworm variant is deliberate: its glibc is older than Ubuntu 24.04's, so
 # the binaries copied out of this stage keep working in the final image.
@@ -293,9 +278,6 @@ RUN \
    sudo update-alternatives --config vim && \
    sudo update-alternatives --install /usr/bin/editor editor /usr/bin/nvim 60 && \
    sudo update-alternatives --config editor
-
-# tmux
-COPY --from=tmux_builder /opt/tmux/bin/tmux /usr/local/bin/
 
 # herdr
 # renovate: datasource=github-releases depName=herdrdev/herdr extractVersion=^v(?<version>.+)$
