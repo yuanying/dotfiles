@@ -11,7 +11,7 @@
 # ==============================================================================
 
 ARG BASE_IMAGE=ubuntu:24.04
-FROM ${BASE_IMAGE} as base
+FROM ${BASE_IMAGE} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -39,7 +39,7 @@ RUN set -x -e && \
 # This stage is pushed on its own (see the Makefile), so it carries the user
 # account and the whole package set; main only adds tools that are not apt
 # packages.
-FROM base as user_base
+FROM base AS user_base
 
 RUN set -x -e && \
     apt-get update && \
@@ -158,10 +158,10 @@ USER "$USER"
 ENV HOME="/home/$USER"
 
 # docker builder
-FROM docker:28-cli as docker_builder
+FROM docker:28-cli AS docker_builder
 
 # golang builder
-FROM golang:1.26 as golang_builder
+FROM golang:1.26 AS golang_builder
 RUN go install golang.org/x/tools/gopls@latest
 RUN go install golang.org/x/tools/cmd/goimports@latest
 RUN go install github.com/nsf/gocode@latest
@@ -174,14 +174,14 @@ RUN go install github.com/asdf-vm/asdf/cmd/asdf@v${ASDF_VERSION}
 # node builder
 # The bookworm variant is deliberate: its glibc is older than Ubuntu 24.04's, so
 # the binaries copied out of this stage keep working in the final image.
-FROM node:24.19.0-bookworm as node_builder
+FROM node:24.19.0-bookworm AS node_builder
 
 # herdr navigator plugin builder
 # Plugins declare their own build commands, and this one is Rust, so it gets a
 # stage of its own; herdr_plugin_builder folds the result back in so the main
 # stage still copies /opt/herdr/plugins as a single directory. Bookworm for the
 # same glibc reason as node_builder.
-FROM rust:1.97-bookworm as herdr_navigator_builder
+FROM rust:1.97-bookworm AS herdr_navigator_builder
 
 # renovate: datasource=github-releases depName=thanhdat77/herdr-navigator extractVersion=^v(?<version>.+)$
 ARG HERDR_NAVIGATOR_VERSION=0.3.6
@@ -203,7 +203,7 @@ RUN git clone --depth 1 --branch v${HERDR_NAVIGATOR_VERSION} \
 # plugin it finds under that directory, so adding one only means adding a block
 # here. The base image is node because most plugins are Node projects; one that
 # needs another toolchain builds in its own stage and is copied in below.
-FROM node_builder as herdr_plugin_builder
+FROM node_builder AS herdr_plugin_builder
 
 # Forked from jhochenbaum/herdr-hunk-diff to add `review.branch_scope`, which lets a
 # branch review diff the base against the working tree instead of `<base>...HEAD`, so
@@ -237,7 +237,7 @@ COPY --from=herdr_navigator_builder /opt/herdr/plugins/herdr-navigator /opt/herd
 # main
 # Tools that are not apt packages: language toolchains, prebuilt binaries and
 # the herdr plugin trees. Anything installable with apt belongs in user_base.
-FROM user_base as main
+FROM user_base AS main
 
 # golang
 COPY --from=golang_builder /usr/local/go /usr/local/go
