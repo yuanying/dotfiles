@@ -4,11 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This repository builds a Docker-based personal development environment image. A single `Dockerfile` supports three compute backends (CPU, CUDA, ROCm) via `--build-arg BASE_IMAGE`.
+This directory builds a Docker-based personal development environment image. A single `Dockerfile` supports three compute backends (CPU, CUDA, ROCm) via `--build-arg BASE_IMAGE`.
 
 Image registry: `registry.fraction.jp/yuanying/devbox`
 
+It was `yuanying/devbox` until that repository was deprecated in favour of living
+here. The move was made because the image and the dotfiles change together — the
+container runs `bin/setup.sh` from the parent directory, and the Mac package
+script reads the plugin versions pinned below. Paths outside `devbox/` in this
+document are relative to the repository root.
+
 ## Build Commands
+
+Run from this directory (the build context is `devbox/`, so nothing outside it
+reaches the image):
 
 ```bash
 make image   # CPU variant — $(UBUNTU_IMAGE)
@@ -71,7 +80,8 @@ list never wanted the recommends of podman and virtinst. Moving the copy changes
 - **Version manager**: asdf
 
 Pinned versions live in `ARG <NAME>_VERSION` declarations in the `Dockerfile`; do not hardcode
-them anywhere else.
+them anywhere else. That holds across the whole repository, not just this directory —
+`bin/mac/setup-packages.sh` reads the ARGs it needs out of this file rather than repeating them.
 
 ## Herdr Plugins
 
@@ -98,13 +108,14 @@ Three things to keep in mind:
   herdr-navigator works this way: `herdr_navigator_builder` runs `cargo build --release`, then
   strips everything from `target/` except the binary the manifest invokes.
 
-Keybindings are not part of the image. They live in the dotfiles' `herdr/config*.toml`, which is
-per host and has no include mechanism, so a binding has to be added to every one of those files.
+Keybindings are not part of the image. They live in `herdr/config*.toml`, which is per host and
+has no include mechanism, so a binding has to be added to every one of those files.
 herdr-navigator is bound to `prefix+t`.
 
-Macs have no image to link from, so the dotfiles install the same plugins from GitHub in
-`bin/mac/setup-packages.sh`, with the versions written out again as `--ref` arguments. Renovate
-only tracks the `ARG`s here, so a bump has to be carried over there by hand.
+Macs have no image to link from, so `bin/mac/setup-packages.sh` installs the same plugins from
+GitHub. It does not repeat the versions: it seds the `ARG <NAME>_VERSION` it wants out of this
+`Dockerfile` and passes it as `--ref v<version>`, so a Renovate bump here reaches the Mac on the
+next run. Adding a plugin that a Mac should get too means adding a call there naming the new ARG.
 
 herdr-hunk-diff is the one plugin not taken from its original author. It comes from
 `yuanying/herdr-hunk-diff`, a fork adding `review.branch_scope` so a branch review can include
@@ -118,20 +129,26 @@ because the versioning scheme changes. The fork's FORK.md has the details.
 
 ## Dependency Updates (Renovate)
 
-Renovate keeps the pinned versions up to date. Configuration is in `renovate.json`:
+Renovate keeps the pinned versions up to date. Configuration is in `renovate.json` at the
+repository root, because that is the only place Renovate reads it from:
 
 - Base images in `FROM` / `ARG BASE_IMAGE` are picked up by the built-in `dockerfile` manager.
 - `ARG <NAME>_VERSION=` in the `Dockerfile` and `<NAME>_IMAGE :=` in the `Makefile` are picked up by
   custom regex managers, driven by a preceding `# renovate: datasource=... depName=...` comment.
+  Their `managerFilePatterns` name these two files by their `devbox/` paths, so a file moved out of
+  this directory stops being tracked.
 - Ubuntu is intentionally held at 24.04 (disabled by a package rule).
 
 When adding a new pinned tool, follow the same annotation + `ARG` naming convention so Renovate
-picks it up automatically. Validate changes with:
+picks it up automatically. Validate changes from the repository root with:
 
 ```bash
 npx --package renovate renovate-config-validator
 npx --package renovate renovate --platform=local --dry-run=extract
 ```
+
+The second command should report fifteen dependencies across `devbox/Dockerfile` and
+`devbox/Makefile`; a manager whose pattern stopped matching shows up as a missing file there.
 
 ## Container Runtime Notes
 
@@ -150,4 +167,7 @@ npx --package renovate renovate --platform=local --dry-run=extract
   and secrets belong in `~/.zsh_private` instead; and a value containing whitespace is skipped,
   since `SetEnv` cannot represent it. `-o SetEnv` also honours only its first occurrence, which
   is why every variable goes into a single `-o`.
-- On first start, `entrypoint.sh` fetches SSH keys from GitHub, installs zsh plugins, and clones dotfiles
+- On first start, `entrypoint.sh` fetches SSH keys from GitHub, installs zsh plugins, and clones
+  the dotfiles into `~/dotfiles`. That is this same repository, cloned from GitHub rather than
+  copied out of the build context on purpose: the container's `$HOME` is the host's, so the working
+  copy has to be the host's too, not a snapshot frozen at image build time.
