@@ -1,0 +1,40 @@
+# herdr-navigator (thanhdat77/herdr-navigator) の設定。
+# 置き場所は herdr が決めるので、bin/setup.sh が
+# `herdr plugin config-dir herdr-navigator` に聞いて symlink を張る。
+# 他の場所に置いても読まれない。
+#
+# 書いていないキーはプラグイン側の既定値になるので、ここには既定から
+# 変えたものだけを置く。初回起動時に生成される全項目つきの見本は
+# プラグインの examples/default-config.toml にある。
+
+[picker]
+# カーソル移動を矢印キーだけに頼らず j/k でもできるようにする。
+# vim 風のノーマルモードが入るので、代わりに絞り込みの文字入力は `/` を
+# 押してから。Esc でノーマルモードへ戻り、ノーマルモードの Esc で閉じる。
+#
+# Ctrl+n / Ctrl+p は割り当てられない。プラグインが移動に用意している
+# キーは ↑/↓ とこのノーマルモードの j/k だけで、しかも Ctrl+p は
+# project ソースの絞り込みに埋まっている ([picker.filter_keys] で
+# 動かせるのはその絞り込みキーの方だけで、移動キーは動かせない)。
+vim_mode = true
+
+# ソースキー (ノーマルモードの w/a/p など) を押した直後に検索へ入るかどうか。
+# 既定の false のまま。絞り込んだ一覧をまず j/k で眺めたいため。
+# vim_filter_search = false
+
+# リポジトリの置き場。既定の見本にある ~/workspace と ~/projects は
+# どちらもこの環境に無いので、実際に使っている ~/src に差し替える。
+# zoxide が覚えているのは一度 cd した先だけなので、まだ開いていない
+# リポジトリを拾うのはこちらの役目。
+#
+# max_depth は「root から何階層まで見るか」で、root 自身を 1 と数える。
+# ここは ~/src/github.com/<owner>/<repo> の GOPATH 風なので、リポジトリまで
+# 届かせるには 4 が要る (既定の 3 だと owner 止まりで 1 件も出ない)。
+# 5 にすると各リポジトリの内部にある package.json / Cargo.toml や、
+# 旧ツリーの ~/src/src/ 配下まで拾ってしまうので上げない。
+#
+# 一覧に出るのは .git / package.json / Cargo.toml のどれかを持つ
+# ディレクトリだけなので、途中の github.com や owner は雑音にならない。
+[[roots]]
+path = "~/src"
+max_depth = 4
