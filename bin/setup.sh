@@ -20,6 +20,25 @@ if [[ ! -f ${HERDR_CONFIG} ]]; then
 fi
 ln -sfn ${HERDR_CONFIG} ~/.config/herdr/config.toml
 
+# herdr プラグインの設定。置き場所は herdr が決めるので config-dir に聞く
+# (README に「他の場所のファイルは無視される」と明記されている)。
+# プラグインは設定を読むだけで書き戻さないので、hunk 本体のような merge では
+# なく symlink でよい。
+# config-dir はプラグインが link される前でもパスを返す。devbox の
+# entrypoint.sh はこのスクリプトの後で `herdr plugin link` するので、
+# その性質に頼っている。
+if ! command -v herdr > /dev/null; then
+    echo "herdr が無いのでプラグイン設定のリンクをスキップした" >&2
+else
+    for plugin_config in ${ROOT}/../herdr/plugins/*/config.toml; do
+        [[ -f ${plugin_config} ]] || continue
+        plugin_id=$(basename "$(dirname "${plugin_config}")")
+        config_dir=$(herdr plugin config-dir "${plugin_id}") || continue
+        mkdir -p "${config_dir}"
+        ln -sfn "${plugin_config}" "${config_dir}/config.toml"
+    done
+fi
+
 # herdr のエージェント連携 (サイドバーに実行状態を出すためのフック)。
 # フック本体と各エージェントの設定ファイルへの登録を herdr 自身が行う。
 # 冪等なので毎回流してよい。対象が全部入っているホストは無いので

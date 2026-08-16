@@ -1,0 +1,18 @@
+# hunk プラグイン (jhochenbaum.hunkdiff) の設定。
+# 置き場所は herdr が決めるので、bin/setup.sh が
+# `herdr plugin config-dir jhochenbaum.hunkdiff` に聞いて symlink を張る。
+# 他の場所に置いても読まれない。
+#
+# ここに書くのはプラグインの挙動だけ。配色・レイアウト・行番号などの表示は
+# hunk 本体の所管で ~/.config/hunk/config.toml (dotfiles の hunk/) にある。
+
+[review]
+# ブランチレビューでベースと作業ツリーを比べる。既定の "commits" は
+# <base>...HEAD の 3 ドットで、コミット同士の比較なので未コミットの変更も
+# untracked ファイルも出てこない。エージェントが書いた直後に見たいのは
+# まさにそこなので、2 ドット相当の "worktree" にする。
+#
+# この設定は upstream には無く、yuanying/herdr-hunk-diff で足したもの。
+# 上流版のプラグインが入っている環境では未知のキーとして無視されるだけで、
+# 壊れはしない (既定値へフォールバックする)。
+branch_scope = "worktree"
