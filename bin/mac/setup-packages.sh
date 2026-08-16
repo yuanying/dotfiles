@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
 brew install ripgrep
 brew install fd
 brew install mosh
@@ -27,24 +29,40 @@ brew install --cask font-hack-nerd-font
 # 入れる。install はその場でプラグインのビルドコマンド (cargo / npm) を回すの
 # で、上の rust と node が要る。
 #
-# ref は devbox の Dockerfile の ARG <NAME>_VERSION と揃えること。Renovate が
-# 追うのは devbox 側だけなので、あちらが上がったらここも手で追随する。
-# hunk プラグインが upstream ではなく yuanying のフォークなのも devbox と同じ
+# バージョンは devbox/Dockerfile の ARG <NAME>_VERSION を正として読み出す。
+# Renovate が追うのはあの ARG だけなので、ここに書き写すと必ず古くなる。
+# Mac でもリポジトリごと clone するため、あのファイルは常に手元にある。
+# hunk プラグインが upstream ではなく yuanying のフォークなのは devbox と同じ
 # 理由 (branch review に未コミット・未追跡ファイルを含めるため)。
+DEVBOX_DOCKERFILE=${ROOT}/../../devbox/Dockerfile
+
+# 読めなければプラグインだけ古いバージョンで入る、では困るので落とす。
+devbox_version() { # <ARG 名>
+    local version
+    version=$(sed -n "s/^ARG $1=\\(.*\\)/\\1/p" "${DEVBOX_DOCKERFILE}")
+    if [[ -z ${version} ]]; then
+        echo "${DEVBOX_DOCKERFILE} から ARG $1 が読めなかった" >&2
+        return 1
+    fi
+    printf '%s' "${version}"
+}
+
 if ! command -v herdr > /dev/null; then
     echo "herdr が無いのでプラグインのインストールをスキップした" >&2
 else
     # 入れ直すとビルドをやり直すので、既に入っているものは飛ばす。
     herdr_plugins_installed=$(herdr plugin list)
-    install_herdr_plugin() { # <owner/repo> <ref> <plugin id>
+    install_herdr_plugin() { # <owner/repo> <ARG 名> <plugin id>
+        local version
         if grep -qF "$3" <<< "${herdr_plugins_installed}"; then
             echo "herdr plugin $3 は導入済み"
-        else
-            herdr plugin install "$1" --ref "$2" --yes || \
-                echo "herdr plugin install $1 に失敗した" >&2
+            return
         fi
+        version=$(devbox_version "$2") || return
+        herdr plugin install "$1" --ref "v${version}" --yes || \
+            echo "herdr plugin install $1 に失敗した" >&2
     }
 
-    install_herdr_plugin yuanying/herdr-hunk-diff v0.1.0-fork.1 jhochenbaum.hunkdiff
-    install_herdr_plugin thanhdat77/herdr-navigator v0.3.6 herdr-navigator
+    install_herdr_plugin yuanying/herdr-hunk-diff HERDR_HUNK_DIFF_VERSION jhochenbaum.hunkdiff
+    install_herdr_plugin thanhdat77/herdr-navigator HERDR_NAVIGATOR_VERSION herdr-navigator
 fi

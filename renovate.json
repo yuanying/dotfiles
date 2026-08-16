@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommitTypeAll(chore)"
+  ],
+  "timezone": "Asia/Tokyo",
+  "dependencyDashboard": true,
+  "customManagers": [
+    {
+      "description": "Update `ARG <NAME>_VERSION=` in devbox/Dockerfile via `# renovate:` annotations",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "devbox/Dockerfile"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: packageName=(?<packageName>\\S+))?(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s+ARG \\w+_VERSION=(?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    },
+    {
+      "description": "Update `<NAME>_IMAGE :=` base images in devbox/Makefile via `# renovate:` annotations",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "devbox/Makefile"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s+\\w+_IMAGE\\s*:?=\\s*[^\\s:]+:(?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}docker{{/if}}"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Stay on Ubuntu 24.04 for now; bump it manually when the CUDA/ROCm images move on",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ubuntu"],
+      "enabled": false
+    }
+  ]
+}
