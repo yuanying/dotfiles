@@ -22,6 +22,19 @@ vim_mode = true
 # 既定の false のまま。絞り込んだ一覧をまず j/k で眺めたいため。
 # vim_filter_search = false
 
-# 探索対象のディレクトリを列挙する [[roots]] は置かない。既定の見本には
-# ~/workspace と ~/projects があるが、どちらもこの環境には無く、頻繁に使う
-# ディレクトリは zoxide 側が覚えている。
+# リポジトリの置き場。既定の見本にある ~/workspace と ~/projects は
+# どちらもこの環境に無いので、実際に使っている ~/src に差し替える。
+# zoxide が覚えているのは一度 cd した先だけなので、まだ開いていない
+# リポジトリを拾うのはこちらの役目。
+#
+# max_depth は「root から何階層まで見るか」で、root 自身を 1 と数える。
+# ここは ~/src/github.com/<owner>/<repo> の GOPATH 風なので、リポジトリまで
+# 届かせるには 4 が要る (既定の 3 だと owner 止まりで 1 件も出ない)。
+# 5 にすると各リポジトリの内部にある package.json / Cargo.toml や、
+# 旧ツリーの ~/src/src/ 配下まで拾ってしまうので上げない。
+#
+# 一覧に出るのは .git / package.json / Cargo.toml のどれかを持つ
+# ディレクトリだけなので、途中の github.com や owner は雑音にならない。
+[[roots]]
+path = "~/src"
+max_depth = 4
