@@ -1,0 +1,27 @@
+# herdr-navigator (thanhdat77/herdr-navigator) の設定。
+# 置き場所は herdr が決めるので、bin/setup.sh が
+# `herdr plugin config-dir herdr-navigator` に聞いて symlink を張る。
+# 他の場所に置いても読まれない。
+#
+# 書いていないキーはプラグイン側の既定値になるので、ここには既定から
+# 変えたものだけを置く。初回起動時に生成される全項目つきの見本は
+# プラグインの examples/default-config.toml にある。
+
+[picker]
+# カーソル移動を矢印キーだけに頼らず j/k でもできるようにする。
+# vim 風のノーマルモードが入るので、代わりに絞り込みの文字入力は `/` を
+# 押してから。Esc でノーマルモードへ戻り、ノーマルモードの Esc で閉じる。
+#
+# Ctrl+n / Ctrl+p は割り当てられない。プラグインが移動に用意している
+# キーは ↑/↓ とこのノーマルモードの j/k だけで、しかも Ctrl+p は
+# project ソースの絞り込みに埋まっている ([picker.filter_keys] で
+# 動かせるのはその絞り込みキーの方だけで、移動キーは動かせない)。
+vim_mode = true
+
+# ソースキー (ノーマルモードの w/a/p など) を押した直後に検索へ入るかどうか。
+# 既定の false のまま。絞り込んだ一覧をまず j/k で眺めたいため。
+# vim_filter_search = false
+
+# 探索対象のディレクトリを列挙する [[roots]] は置かない。既定の見本には
+# ~/workspace と ~/projects があるが、どちらもこの環境には無く、頻繁に使う
+# ディレクトリは zoxide 側が覚えている。
