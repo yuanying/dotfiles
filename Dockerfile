@@ -141,11 +141,33 @@ RUN git clone https://github.com/tmux/tmux.git && \
 # the binaries copied out of this stage keep working in the final image.
 FROM node:24.19.0-bookworm as node_builder
 
+# herdr navigator plugin builder
+# Plugins declare their own build commands, and this one is Rust, so it gets a
+# stage of its own; herdr_plugin_builder folds the result back in so the main
+# stage still copies /opt/herdr/plugins as a single directory. Bookworm for the
+# same glibc reason as node_builder.
+FROM rust:1.97-bookworm as herdr_navigator_builder
+
+# renovate: datasource=github-releases depName=thanhdat77/herdr-navigator extractVersion=^v(?<version>.+)$
+ARG HERDR_NAVIGATOR_VERSION=0.3.6
+# The manifest invokes the binary as ./target/release/herdr-navigator, so the
+# crate keeps its build layout. The rest of target/ is intermediate output
+# weighing well over a gigabyte and goes away.
+RUN git clone --depth 1 --branch v${HERDR_NAVIGATOR_VERSION} \
+        https://github.com/thanhdat77/herdr-navigator \
+        /opt/herdr/plugins/herdr-navigator && \
+    cd /opt/herdr/plugins/herdr-navigator && \
+    cargo build --release && \
+    find target -mindepth 1 -maxdepth 1 ! -name release -exec rm -rf {} + && \
+    find target/release -mindepth 1 -maxdepth 1 ! -name herdr-navigator -exec rm -rf {} + && \
+    rm -rf .git
+
 # herdr plugin builder
 # One block per plugin, each cloned at a pinned tag and built where it will live
 # in the final image: /opt/herdr/plugins/<plugin id>. entrypoint.sh links every
 # plugin it finds under that directory, so adding one only means adding a block
-# here. Plugins are Node projects, hence the node base image.
+# here. The base image is node because most plugins are Node projects; one that
+# needs another toolchain builds in its own stage and is copied in below.
 FROM node_builder as herdr_plugin_builder
 
 # Forked from jhochenbaum/herdr-hunk-diff to add `review.branch_scope`, which lets a
@@ -172,6 +194,10 @@ RUN git clone --depth 1 --branch v${HERDR_HUNK_DIFF_VERSION} \
     npm uninstall hunkdiff --no-save --omit=dev && \
     ln -sfn /usr/local/bin/hunk node_modules/.bin/hunk && \
     rm -rf .git
+
+# Jump to any workspace, agent, session or directory from one fuzzy picker.
+# Built above because it is Rust; this is only where the tree joins the others.
+COPY --from=herdr_navigator_builder /opt/herdr/plugins/herdr-navigator /opt/herdr/plugins/herdr-navigator
 
 # main
 FROM user_base as main
