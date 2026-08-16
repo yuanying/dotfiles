@@ -39,6 +39,7 @@ Multi-stage build with these named targets:
 | `docker_builder` | Extracts Docker CLI binaries |
 | `tmux_builder` | Builds Tmux from source |
 | `node_builder` | Supplies the Node.js runtime |
+| `herdr_navigator_builder` | Builds the Rust herdr-navigator plugin |
 | `herdr_plugin_builder` | Builds herdr plugins into `/opt/herdr/plugins` |
 | `main` | Final image combining all stages |
 
@@ -52,8 +53,9 @@ The `make` targets build both `user_base` and `main` in a single `docker build` 
 - **Terminal**: Tmux (built from source), herdr (prebuilt binary)
 - **Diff viewer**: hunk (prebuilt binary, extracted to `/opt/hunk`)
 - **Node.js**: system-wide `node` / `npm` / `npx` / `corepack`, from `node_builder`
-- **herdr plugins**: herdr-hunk-diff (see below)
+- **herdr plugins**: herdr-hunk-diff, herdr-navigator (see below)
 - **Search**: ripgrep, ag, fd, fzf
+- **Navigation**: zoxide (`z`; also feeds herdr-navigator's zoxide source)
 - **K8s**: kubectx, kubens
 - **Version manager**: asdf
 
@@ -72,13 +74,26 @@ To add a plugin, pin its version with a Renovate-annotated `ARG <NAME>_VERSION`,
 tag into `/opt/herdr/plugins/<plugin id>`, and run the build commands its manifest declares.
 Nothing outside that block needs to change.
 
-Two things to keep in mind:
+Three things to keep in mind:
 
 - `herdr plugin link` does not run a plugin's build commands, so the tree in the image has to be
   built already. Plugin config and state live under `$HOME`, so the tree itself stays read-only.
 - Plugins may vendor large binaries that this image already ships. herdr-hunk-diff, for instance,
   depends on the `hunkdiff` npm package (~500 MB, it bundles Bun) purely to obtain a hunk binary;
   it is dropped after the build and the path the plugin resolves points at `/opt/hunk` instead.
+- `herdr_plugin_builder` is a Node stage because plugin manifests usually declare npm builds. A
+  plugin on another toolchain gets its own stage and is copied in at the end of
+  `herdr_plugin_builder`, so the main stage keeps copying `/opt/herdr/plugins` as one directory.
+  herdr-navigator works this way: `herdr_navigator_builder` runs `cargo build --release`, then
+  strips everything from `target/` except the binary the manifest invokes.
+
+Keybindings are not part of the image. They live in the dotfiles' `herdr/config*.toml`, which is
+per host and has no include mechanism, so a binding has to be added to every one of those files.
+herdr-navigator is bound to `prefix+t`.
+
+Macs have no image to link from, so the dotfiles install the same plugins from GitHub in
+`bin/mac/setup-packages.sh`, with the versions written out again as `--ref` arguments. Renovate
+only tracks the `ARG`s here, so a bump has to be carried over there by hand.
 
 herdr-hunk-diff is the one plugin not taken from its original author. It comes from
 `yuanying/herdr-hunk-diff`, a fork adding `review.branch_scope` so a branch review can include
