@@ -139,7 +139,7 @@ RUN git clone https://github.com/tmux/tmux.git && \
 # node builder
 # The bookworm variant is deliberate: its glibc is older than Ubuntu 24.04's, so
 # the binaries copied out of this stage keep working in the final image.
-FROM node:24.12.0-bookworm as node_builder
+FROM node:24.19.0-bookworm as node_builder
 
 # herdr plugin builder
 # One block per plugin, each cloned at a pinned tag and built where it will live
