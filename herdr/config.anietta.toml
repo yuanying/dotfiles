@@ -64,16 +64,6 @@ type = "plugin_action"
 command = "jhochenbaum.hunkdiff.review:staged"
 description = "hunk: review staged changes"
 
-# デフォルトブランチとの差分。未コミットの変更と untracked ファイルも含める
-# ため、プラグインの設定 (herdr/plugins/jhochenbaum.hunkdiff/config.toml) で
-# branch_scope = "worktree" にしてある。この設定は upstream には無く、
-# yuanying/herdr-hunk-diff で足したもの。
-[[keys.command]]
-key = "prefix+shift+b"
-type = "plugin_action"
-command = "jhochenbaum.hunkdiff.review:branch"
-description = "hunk: review against the default branch"
-
 [terminal]
 # tmux の `split-window -c '#{pane_current_path}'` 相当。
 # 新しいペイン/タブ/ワークスペースは呼び出し元の cwd を引き継ぐ。
