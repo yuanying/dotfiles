@@ -80,6 +80,16 @@ Two things to keep in mind:
   depends on the `hunkdiff` npm package (~500 MB, it bundles Bun) purely to obtain a hunk binary;
   it is dropped after the build and the path the plugin resolves points at `/opt/hunk` instead.
 
+herdr-hunk-diff is the one plugin not taken from its original author. It comes from
+`yuanying/herdr-hunk-diff`, a fork adding `review.branch_scope` so a branch review can include
+uncommitted and untracked files. Two things differ from the rule above: its tags are
+`v<upstream>-fork.<N>` and therefore carry a `versioning=regex` in the annotation, and its install
+directory keeps the upstream vendor prefix because that string is the plugin id — `entrypoint.sh`
+links by it and the dotfiles keybindings name it. The fork releases itself when upstream does; this
+repository is where that lands as a Renovate PR. To go back to upstream, restore the plain
+annotation and clone URL and set the ARG to an upstream version — Renovate cannot make that hop
+because the versioning scheme changes. The fork's FORK.md has the details.
+
 ## Dependency Updates (Renovate)
 
 Renovate keeps the pinned versions up to date. Configuration is in `renovate.json`:
