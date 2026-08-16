@@ -8,10 +8,10 @@
   "dependencyDashboard": true,
   "customManagers": [
     {
-      "description": "Update `ARG <NAME>_VERSION=` in the Dockerfile via `# renovate:` annotations",
+      "description": "Update `ARG <NAME>_VERSION=` in devbox/Dockerfile via `# renovate:` annotations",
       "customType": "regex",
       "managerFilePatterns": [
-        "Dockerfile"
+        "devbox/Dockerfile"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: packageName=(?<packageName>\\S+))?(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s+ARG \\w+_VERSION=(?<currentValue>\\S+)"
@@ -19,10 +19,10 @@
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     },
     {
-      "description": "Update `<NAME>_IMAGE :=` base images in the Makefile via `# renovate:` annotations",
+      "description": "Update `<NAME>_IMAGE :=` base images in devbox/Makefile via `# renovate:` annotations",
       "customType": "regex",
       "managerFilePatterns": [
-        "Makefile"
+        "devbox/Makefile"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s+\\w+_IMAGE\\s*:?=\\s*[^\\s:]+:(?<currentValue>\\S+)"
