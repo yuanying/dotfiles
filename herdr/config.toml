@@ -65,6 +65,18 @@ type = "plugin_action"
 command = "jhochenbaum.hunkdiff.review:staged"
 description = "hunk: review staged changes"
 
+# herdr-navigator。ワークスペース / エージェント / プロジェクト / セッション /
+# ディレクトリを 1 つの fuzzy picker から辿る。開いているワークスペースがあれば
+# 新規作成せずそこへフォーカスする。
+# 他にも open-side (常設サイドペイン) と jump-back (直前のワークスペースへ
+# 戻る) があるが、今のところ overlay だけ割り当てる。
+# prefix+t は herdr のデフォルトでは未使用 (prefix+shift+t がタブ名変更)。
+[[keys.command]]
+key = "prefix+t"
+type = "plugin_action"
+command = "herdr-navigator.open"
+description = "navigator: jump to anything"
+
 [terminal]
 # tmux の `split-window -c '#{pane_current_path}'` 相当。
 # 新しいペイン/タブ/ワークスペースは呼び出し元の cwd を引き継ぐ。
