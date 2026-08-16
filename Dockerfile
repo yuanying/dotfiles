@@ -148,13 +148,23 @@ FROM node:24.12.0-bookworm as node_builder
 # here. Plugins are Node projects, hence the node base image.
 FROM node_builder as herdr_plugin_builder
 
-# renovate: datasource=github-releases depName=jhochenbaum/herdr-hunk-diff extractVersion=^v(?<version>.+)$
-ARG HERDR_HUNK_DIFF_VERSION=0.1.0
+# Forked from jhochenbaum/herdr-hunk-diff to add `review.branch_scope`, which lets a
+# branch review diff the base against the working tree instead of `<base>...HEAD`, so
+# uncommitted and untracked files show up. The fork's FORK.md covers how to retire it if
+# upstream gains the same setting.
+#
+# Tags are `v<upstream>-fork.<N>`. The `versioning=regex` makes Renovate read `fork.<N>`
+# as a build number; read as a plain semver prerelease it would rank below `v0.1.0` and
+# `ignoreUnstable` would drop it. `^v?` because `extractVersion` strips the `v` first.
+# The directory name stays `jhochenbaum.hunkdiff` -- that is the plugin id, which
+# entrypoint.sh links by and dotfiles binds keys against.
+# renovate: datasource=github-releases depName=yuanying/herdr-hunk-diff versioning=regex:^v?(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)-fork\.(?<build>\d+)$ extractVersion=^v(?<version>.+)$
+ARG HERDR_HUNK_DIFF_VERSION=0.1.0-fork.1
 # This plugin depends on the `hunkdiff` npm package only to get a hunk binary,
 # and that package weighs ~500 MB because it ships Bun. Drop it after the build
 # and point the path the plugin resolves at the hunk the main stage installs.
 RUN git clone --depth 1 --branch v${HERDR_HUNK_DIFF_VERSION} \
-        https://github.com/jhochenbaum/herdr-hunk-diff \
+        https://github.com/yuanying/herdr-hunk-diff \
         /opt/herdr/plugins/jhochenbaum.hunkdiff && \
     cd /opt/herdr/plugins/jhochenbaum.hunkdiff && \
     npm ci && \
