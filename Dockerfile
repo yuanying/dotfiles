@@ -218,6 +218,9 @@ RUN set -x -e && \
         socat \
         fd-find \
         universal-ctags \
+        # frecency ベースのディレクトリジャンプ。herdr-navigator の
+        # zoxide ソースもこの履歴を読む
+        zoxide \
         # virt
         virtinst \
         libvirt-clients \

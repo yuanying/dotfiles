@@ -55,6 +55,7 @@ The `make` targets build both `user_base` and `main` in a single `docker build` 
 - **Node.js**: system-wide `node` / `npm` / `npx` / `corepack`, from `node_builder`
 - **herdr plugins**: herdr-hunk-diff, herdr-navigator (see below)
 - **Search**: ripgrep, ag, fd, fzf
+- **Navigation**: zoxide (`z`; also feeds herdr-navigator's zoxide source)
 - **K8s**: kubectx, kubens
 - **Version manager**: asdf
 
@@ -89,6 +90,10 @@ Three things to keep in mind:
 Keybindings are not part of the image. They live in the dotfiles' `herdr/config*.toml`, which is
 per host and has no include mechanism, so a binding has to be added to every one of those files.
 herdr-navigator is bound to `prefix+t`.
+
+Macs have no image to link from, so the dotfiles install the same plugins from GitHub in
+`bin/mac/setup-packages.sh`, with the versions written out again as `--ref` arguments. Renovate
+only tracks the `ARG`s here, so a bump has to be carried over there by hand.
 
 herdr-hunk-diff is the one plugin not taken from its original author. It comes from
 `yuanying/herdr-hunk-diff`, a fork adding `review.branch_scope` so a branch review can include
