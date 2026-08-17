@@ -20,6 +20,12 @@ if [[ ! -f ${HERDR_CONFIG} ]]; then
 fi
 ln -sfn ${HERDR_CONFIG} ~/.config/herdr/config.toml
 
+# herdr-navigator を Agent 一覧で開くカスタムキーから呼ぶラッパー。
+# herdr はログインシェルを経由せず起動されることがあり、その場合 ~/bin が
+# PATH に無いので、設定側はこのリンクを $HOME から絶対指定する。
+mkdir -p ~/bin
+ln -sfn ${ROOT}/herdr-navigator-agents ~/bin/herdr-navigator-agents
+
 # herdr プラグインの設定。置き場所は herdr が決めるので config-dir に聞く
 # (README に「他の場所のファイルは無視される」と明記されている)。
 # プラグインは設定を読むだけで書き戻さないので、hunk 本体のような merge では

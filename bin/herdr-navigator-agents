@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+# Navigator has no action that starts with a source filter. Open (or focus) its
+# overlay, reset any query left in an existing overlay, then select Agents.
+herdr plugin action invoke herdr-navigator.open
+
+pane_id=
+attempt=0
+while [ "${attempt}" -lt 40 ]; do
+    pane_id=$(
+        herdr pane list |
+            jq -r '.result.panes[] | select(.focused and .label == "Herdr Navigator") | .pane_id' |
+            head -n 1
+    )
+    [ -n "${pane_id}" ] && break
+    attempt=$((attempt + 1))
+    sleep 0.05
+done
+
+if [ -z "${pane_id}" ]; then
+    echo "focused Herdr Navigator pane not found" >&2
+    exit 1
+fi
+
+# Wait until the TUI has drawn at least once. If the snapshot API times out,
+# send the keys anyway: terminal input can still be queued while it starts.
+herdr pane wait-output \
+    --match "Herdr Navigator" \
+    --timeout 2000 \
+    "${pane_id}" >/dev/null 2>&1 || true
+herdr pane send-keys "${pane_id}" ctrl+u ctrl+a

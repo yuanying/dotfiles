@@ -77,6 +77,15 @@ type = "plugin_action"
 command = "herdr-navigator.open"
 description = "navigator: jump to anything"
 
+# Navigator 自体には Agent フィルタで開く action が無いため、open 後に
+# Ctrl-U (既存の検索をクリア) と Ctrl-A (Agents) を送るラッパーを使う。
+# prefix+a は herdr のデフォルトでは未使用。
+[[keys.command]]
+key = "prefix+a"
+type = "shell"
+command = "$HOME/bin/herdr-navigator-agents"
+description = "navigator: list agents"
+
 [terminal]
 # tmux の `split-window -c '#{pane_current_path}'` 相当。
 # 新しいペイン/タブ/ワークスペースは呼び出し元の cwd を引き継ぐ。
