@@ -111,7 +111,7 @@ Three things to keep in mind:
 
 Keybindings are not part of the image. They live in `herdr/config*.toml`, which is per host and
 has no include mechanism, so a binding has to be added to every one of those files.
-herdr-navigator is bound to `prefix+t`.
+herdr-navigator is bound to `prefix+t`; `prefix+a` opens it filtered to Agents.
 
 Macs have no image to link from, so `bin/mac/setup-packages.sh` installs the same plugins from
 GitHub. It does not repeat the versions: it seds the `ARG <NAME>_VERSION` it wants out of this
