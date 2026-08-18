@@ -10,6 +10,13 @@ brew install gojq
 # statusline-command.sh が jq を呼ぶ。gojq とは別物なので両方入れる。
 brew install jq
 brew install herdr
+# hunk 本体。hunkdiff プラグインは npm 側の hunk を同梱するので herdr 越しの
+# 利用には不要だが、シェルから直接 hunk を叩く用途があるので単体でも入れる。
+brew install hunk
+# brew install は導入済みのフォーミュラを更新しないので、herdr と hunk は
+# upgrade で最新に追従させる。バージョンは brew の formula が決めるため、
+# devbox/Dockerfile のピンとの厳密な一致は求めない運用。
+brew upgrade herdr hunk
 # herdr のプラグイン (herdr-navigator など) はインストール時に
 # ローカルで cargo build するため Rust ツールチェーンが必要。
 brew install rust
@@ -50,15 +57,27 @@ devbox_version() { # <ARG 名>
 if ! command -v herdr > /dev/null; then
     echo "herdr が無いのでプラグインのインストールをスキップした" >&2
 else
-    # 入れ直すとビルドをやり直すので、既に入っているものは飛ばす。
+    # plugin list の行にはインストール時の ref が入っている:
+    #   - <plugin id> (<名前>) enabled [github:<owner/repo>@v<version>]
+    # ここから導入済みバージョンを取り出し、Dockerfile のピンと一致すれば
+    # 飛ばす (入れ直すとビルドをやり直すため)。ずれていれば入れ直して追従する。
     herdr_plugins_installed=$(herdr plugin list)
     install_herdr_plugin() { # <owner/repo> <ARG 名> <plugin id>
-        local version
-        if grep -qF "$3" <<< "${herdr_plugins_installed}"; then
-            echo "herdr plugin $3 は導入済み"
+        local version installed
+        version=$(devbox_version "$2") || return
+        installed=$(sed -n "s/^- $3 .*@v\\([^]]*\\)\\].*/\\1/p" \
+            <<< "${herdr_plugins_installed}")
+        if [[ ${installed} == "${version}" ]]; then
+            echo "herdr plugin $3 は v${version} 導入済み"
             return
         fi
-        version=$(devbox_version "$2") || return
+        if [[ -n ${installed} ]]; then
+            # install に upgrade 相当は無いので、一度消してから入れ直す。
+            herdr plugin uninstall "$3" || {
+                echo "herdr plugin uninstall $3 に失敗した" >&2
+                return
+            }
+        fi
         herdr plugin install "$1" --ref "v${version}" --yes || \
             echo "herdr plugin install $1 に失敗した" >&2
     }
