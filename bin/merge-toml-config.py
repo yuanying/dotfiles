@@ -4,7 +4,7 @@
 
 共通とホスト別の設定に書いてあるキーだけを流し込む (ホスト別が勝つ)。
 ツール自身が書き戻すファイルが相手なので、追跡していないキーとコメントは
-そのまま残す。扱えるのはテーブル 1 段までのスカラー値。
+そのまま残す。扱えるのはテーブル 1 段までのスカラー値とその配列。
 """
 
 import json
@@ -19,6 +19,8 @@ import tomllib
 ANY_SECTION = re.compile(r"^\s*\[")
 
 SCALAR_TYPES = (str, bool, int, float)
+
+BARE_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def section_pattern(section: str) -> re.Pattern[str]:
@@ -46,13 +48,24 @@ def read_entries(path: Path) -> dict[tuple[str | None, str], object]:
 
 
 def check_scalar(path: Path, key: str, value: object) -> None:
-    if not isinstance(value, SCALAR_TYPES):
-        raise SystemExit(f"{path}: {key} はテーブル 1 段までのスカラー値のみ")
+    if isinstance(value, list):
+        if all(isinstance(item, SCALAR_TYPES) for item in value):
+            return
+    elif isinstance(value, SCALAR_TYPES):
+        return
+    raise SystemExit(
+        f"{path}: {key} はテーブル 1 段までのスカラー値かその配列のみ"
+    )
 
 
 def to_toml(value: object) -> str:
-    # TOML のスカラー表記は JSON と同じ (true/false も含む)。
+    # TOML のスカラーと配列の表記は JSON と同じ (true/false も含む)。
     return json.dumps(value)
+
+
+def format_key(key: str) -> str:
+    # hunk の keybindings のようにドットを含むキーは引用符が要る。
+    return key if BARE_KEY.match(key) else json.dumps(key)
 
 
 def find_section_end(lines: list[str], section_start: int) -> int:
@@ -132,6 +145,7 @@ def update_entry(text: str, section: str | None, name: str, value: object) -> st
         tomllib.loads(text)
 
     lines = text.splitlines(keepends=True)
+    name = format_key(name)
     serialized = to_toml(value)
 
     if section is None:

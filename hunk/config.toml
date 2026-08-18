@@ -8,3 +8,9 @@ watch = true
 [pager]
 # パイプで受けた入力は開き直せず、watch のままだと hunk が起動を拒否する。
 watch = false
+
+[keybindings]
+# nvim と同じ半ページ送り。ユーザー定義のバインドはデフォルトを置き換える
+# 仕様なので、既定の d / u も残すために列挙している。
+"hunk.review.halfPageDown" = ["ctrl+d", "d"]
+"hunk.review.halfPageUp" = ["ctrl+u", "u"]
