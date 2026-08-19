@@ -281,7 +281,7 @@ RUN \
 
 # herdr
 # renovate: datasource=github-releases depName=herdrdev/herdr extractVersion=^v(?<version>.+)$
-ARG HERDR_VERSION=0.8.0
+ARG HERDR_VERSION=0.8.2
 RUN \
     sudo curl -fsSL -o /usr/local/bin/herdr \
         https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-x86_64 && \
