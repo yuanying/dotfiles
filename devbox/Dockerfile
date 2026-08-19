@@ -161,7 +161,7 @@ ENV HOME="/home/$USER"
 FROM docker:28-cli AS docker_builder
 
 # golang builder
-FROM golang:1.26 AS golang_builder
+FROM golang:1.27 AS golang_builder
 RUN go install golang.org/x/tools/gopls@latest
 RUN go install golang.org/x/tools/cmd/goimports@latest
 RUN go install github.com/nsf/gocode@latest
