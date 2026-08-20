@@ -268,3 +268,59 @@ func flip(s string) string {
 	}
 	return string(b)
 }
+
+func TestStateRoundTrip(t *testing.T) {
+	s := testSigner(t, epoch)
+	raw, err := s.IssueState("the-nonce", "sd-webui", "/generate", epoch.Add(10*time.Minute))
+	if err != nil {
+		t.Fatalf("IssueState: %v", err)
+	}
+	nonce, svc, path, err := s.VerifyState(raw)
+	if err != nil {
+		t.Fatalf("VerifyState: %v", err)
+	}
+	if nonce != "the-nonce" || svc != "sd-webui" || path != "/generate" {
+		t.Errorf("got nonce=%q svc=%q path=%q", nonce, svc, path)
+	}
+}
+
+func TestStateIsNotACookie(t *testing.T) {
+	s := testSigner(t, epoch)
+	state, _ := s.IssueState("n", "sd-webui", "/", epoch.Add(10*time.Minute))
+	if _, err := s.Verify(state, KindCookie, "sd-webui"); err == nil {
+		t.Error("a state parameter was accepted as a session cookie")
+	}
+	if _, err := s.Verify(state, KindHandover, "sd-webui"); err == nil {
+		t.Error("a state parameter was accepted as a handover token")
+	}
+
+	cookie, _ := s.Issue(Token{Kind: KindCookie, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+	if _, _, _, err := s.VerifyState(cookie); err == nil {
+		t.Error("a session cookie was accepted as a state parameter")
+	}
+}
+
+func TestStateExpires(t *testing.T) {
+	s := testSigner(t, epoch)
+	raw, _ := s.IssueState("n", "sd-webui", "/", epoch.Add(10*time.Minute))
+	s.now = func() time.Time { return epoch.Add(11 * time.Minute) }
+	if _, _, _, err := s.VerifyState(raw); err == nil {
+		t.Error("an expired state parameter was accepted")
+	}
+}
+
+func TestStateTamperingIsRefused(t *testing.T) {
+	s := testSigner(t, epoch)
+	raw, _ := s.IssueState("n", "sd-webui", "/", epoch.Add(10*time.Minute))
+	dot := strings.IndexByte(raw, '.')
+	if _, _, _, err := s.VerifyState(flip(raw[:dot]) + "." + raw[dot+1:]); err == nil {
+		t.Error("a tampered state parameter was accepted")
+	}
+}
+
+func TestStateRejectsAnUnsafePath(t *testing.T) {
+	s := testSigner(t, epoch)
+	if _, err := s.IssueState("n", "sd-webui", "//evil.example.com/", epoch.Add(time.Minute)); err == nil {
+		t.Error("IssueState accepted a path that leaves the site")
+	}
+}

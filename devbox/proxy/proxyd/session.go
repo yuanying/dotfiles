@@ -34,6 +34,9 @@ const (
 	// KindHandover carries an identity from the auth host to a service host,
 	// once, within seconds.
 	KindHandover TokenKind = "h"
+	// KindState is the OAuth state parameter: it remembers where the visitor
+	// was going while they are away at GitHub.
+	KindState TokenKind = "s"
 )
 
 // keySize is what a fresh key gets, and the minimum an existing one may be.
@@ -81,13 +84,17 @@ func (s *Signer) Issue(t Token) (string, error) {
 		}
 	}
 
-	body, err := json.Marshal(payload{
+	return s.issue(payload{
 		Kind:    t.Kind,
 		Subject: t.Subject,
 		Service: t.Service,
 		Path:    t.Path,
 		Expires: t.Expires.Unix(),
 	})
+}
+
+func (s *Signer) issue(p payload) (string, error) {
+	body, err := json.Marshal(p)
 	if err != nil {
 		return "", err
 	}
@@ -99,6 +106,52 @@ func (s *Signer) Issue(t Token) (string, error) {
 // and its expiry, in that order -- nothing is parsed as JSON until the
 // signature has been shown to hold.
 func (s *Signer) Verify(raw string, kind TokenKind, service string) (*Token, error) {
+	p, err := s.parse(raw, kind)
+	if err != nil {
+		return nil, err
+	}
+	if p.Service != service {
+		return nil, fmt.Errorf("token was issued for %q, not %q", p.Service, service)
+	}
+	return &Token{
+		Kind:    p.Kind,
+		Subject: p.Subject,
+		Service: p.Service,
+		Path:    p.Path,
+		Expires: time.Unix(p.Expires, 0),
+	}, nil
+}
+
+// IssueState signs the OAuth state parameter. It carries where the visitor was
+// going, so that the callback -- which GitHub reaches with nothing but a code
+// and this string -- knows where to send them next. The nonce is matched
+// against a cookie on the auth host, so a state parameter somebody else
+// obtained cannot be used to start a login in this browser.
+func (s *Signer) IssueState(nonce, service, path string, expires time.Time) (string, error) {
+	if err := checkPath(path); err != nil {
+		return "", err
+	}
+	return s.issue(payload{
+		Kind:    KindState,
+		Subject: nonce,
+		Service: service,
+		Path:    path,
+		Expires: expires.Unix(),
+	})
+}
+
+// VerifyState checks a state parameter and returns what it was carrying.
+func (s *Signer) VerifyState(raw string) (nonce, service, path string, err error) {
+	p, err := s.parse(raw, KindState)
+	if err != nil {
+		return "", "", "", err
+	}
+	return p.Subject, p.Service, p.Path, nil
+}
+
+// parse checks the signature before anything else is believed, then the kind
+// and the expiry.
+func (s *Signer) parse(raw string, kind TokenKind) (*payload, error) {
 	parts := strings.Split(raw, ".")
 	if len(parts) != 2 {
 		return nil, errors.New("malformed token")
@@ -121,21 +174,10 @@ func (s *Signer) Verify(raw string, kind TokenKind, service string) (*Token, err
 	if p.Kind != kind {
 		return nil, fmt.Errorf("token is a %q, not a %q", p.Kind, kind)
 	}
-	if p.Service != service {
-		return nil, fmt.Errorf("token was issued for %q, not %q", p.Service, service)
-	}
-	expires := time.Unix(p.Expires, 0)
-	if s.now().After(expires) {
+	if s.now().After(time.Unix(p.Expires, 0)) {
 		return nil, errors.New("token has expired")
 	}
-
-	return &Token{
-		Kind:    p.Kind,
-		Subject: p.Subject,
-		Service: p.Service,
-		Path:    p.Path,
-		Expires: expires,
-	}, nil
+	return &p, nil
 }
 
 func (s *Signer) sign(encoded string) string {
