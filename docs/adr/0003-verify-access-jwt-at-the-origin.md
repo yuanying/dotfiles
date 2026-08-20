@@ -1,7 +1,7 @@
 # 0003. Verify the Access JWT at the origin instead of trusting the network
 
 - Date: 2026-08-20
-- Status: Accepted
+- Status: Superseded by [[0007]]
 
 ## Context
 

@@ -1,7 +1,7 @@
 # 0002. Use a wildcard Origin CA certificate and Full (strict)
 
 - Date: 2026-08-20
-- Status: Accepted
+- Status: Superseded by [[0006]]
 
 ## Context
 

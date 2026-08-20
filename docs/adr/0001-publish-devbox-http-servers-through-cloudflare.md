@@ -1,7 +1,7 @@
 # 0001. Publish devbox HTTP servers through Cloudflare
 
 - Date: 2026-08-20
-- Status: Accepted
+- Status: Superseded by [[0005]]
 
 ## Context
 

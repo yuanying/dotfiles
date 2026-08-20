@@ -3,6 +3,8 @@
 - Date: 2026-08-20
 - Status: Accepted
 
+Amended below by [[0005]].
+
 ## Context
 
 Publishing one service touches three unrelated systems: a Traefik router in the
@@ -116,3 +118,33 @@ would test the mock.
   Deleting the Access application without deleting the router would leave the
   route unauthenticated at the edge; the origin still refuses it, because the
   AUD no longer verifies. The failure direction is closed.
+
+## Amendment: the file after [[0005]]
+
+[[0005]] replaces everything that consumed this file, but not the file itself.
+The decision above — one declaration per devbox, everything else derived from
+it — holds; what changes is that there is nothing left to generate and nothing
+left to reconcile. The binary reads the file and *is* the configuration.
+
+Keys that disappear, because the systems that needed them are gone:
+
+| Key | Why |
+|---|---|
+| `team_domain` | Cloudflare Access is not in the picture ([[0007]]) |
+| `aud` | no Access application, so no audience tag to write back |
+| `origin` | only `sync-cloudflare.sh` used it, to place `AAAA` records; a single wildcard record is now placed by hand ([[0005]]) |
+
+`viewers.emails` becomes `viewers.logins`, listing GitHub account names rather
+than email addresses — see [[0007]] for why. `viewers.github_orgs` is unchanged.
+`zone`, `defaults.auth`, and each service's `name`, `port` and `auth` are
+unchanged.
+
+`auth` becomes a reserved name: the validator rejects a service called `auth`,
+because `auth.<zone>` is where the login flow lives ([[0007]]).
+
+The write-back that this record introduced — `sync-cloudflare.sh` putting the
+audience tag Cloudflare generated back into the file — is gone with it. Nothing
+writes to the file except a person and the `devbox-publish` skill, which means
+the file is now only ever edited deliberately.
+
+Adding a service is: edit the file, run `devbox-proxy reload`.
