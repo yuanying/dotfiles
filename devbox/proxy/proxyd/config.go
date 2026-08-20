@@ -263,3 +263,15 @@ func normaliseHost(host string) string {
 	}
 	return strings.ToLower(strings.TrimSuffix(host, "."))
 }
+
+// OAuthScope is what to ask GitHub for. A login comes back without any scope
+// at all, so nothing is requested unless some service is gated on an
+// organisation. docs/adr/0007.
+func (c *Config) OAuthScope() string {
+	for _, s := range c.Services {
+		if len(s.Viewers.GitHubOrgs) > 0 {
+			return "read:org"
+		}
+	}
+	return ""
+}
