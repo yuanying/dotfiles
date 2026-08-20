@@ -40,7 +40,9 @@ teardown() {
 }
 
 mint() {
-    python3 "${BATS_TEST_DIRNAME}/helpers/jwtfixture.py" token "${KEYS}" "${1:-\{\}}"
+    local overrides=$1
+    [ -n "${overrides}" ] || overrides='{}'
+    python3 "${BATS_TEST_DIRNAME}/helpers/jwtfixture.py" token "${KEYS}" "${overrides}"
 }
 
 # Prints the status code, with the response headers left in headers.txt.
