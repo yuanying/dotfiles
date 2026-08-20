@@ -3,10 +3,14 @@
 # Bring the devbox's public HTTPS proxy up and down.
 #
 # entrypoint.sh calls `start` on every boot, so the important property is that
-# nothing here can stop the devbox from coming up: no certificate or no
-# declaration file is a skip, not a failure. See docs/adr/0002 for why the
-# certificate is allowed to be absent -- it is issued by hand and Cloudflare
-# does not keep a copy, so "not yet" and "lost it" are both normal states.
+# nothing here can stop the devbox from coming up: no declaration file is a
+# skip, not a failure. Unlike the version this replaces, a missing certificate
+# is not even worth mentioning -- certificates arrive on their own now
+# (docs/adr/0006).
+#
+# Process management lives here and nothing else does. The binary has `serve`,
+# `status` and `check`; everything this needs to know about it is a file
+# (docs/adr/0008).
 
 set -euo pipefail
 
@@ -23,25 +27,37 @@ default_config() {
 
 CONFIG=${DEVBOX_PROXY_CONFIG:-$(default_config)}
 
-# Traefik binds :443, which needs root. Overridable so the tests can run the
-# stand-in daemons as themselves.
+HTTP_PORT=${DEVBOX_PROXY_HTTP_PORT:-80}
+HTTPS_PORT=${DEVBOX_PROXY_HTTPS_PORT:-443}
+
+# Only needed to hand the binary cap_net_bind_service after a build. Overridable
+# so the tests, which use unprivileged ports, never reach for it.
 SUDO=${DEVBOX_PROXY_SUDO-sudo}
 
-CERT=${STATE}/certs/origin.pem
-KEY=${STATE}/certs/origin.key
+SRC=${PROXY_DIR}/proxyd
 RUN=${STATE}/run
 LOG=${STATE}/log
+PIDFILE=${RUN}/devbox-proxyd.pid
+
+# The build lands under the state directory, keyed by the checkout it came
+# from: a worktree holds different sources and must not share a binary with the
+# checkout next to it.
+checkout_key() {
+    printf '%s' "${PROXY_DIR}" | sha256sum | cut -c1-12
+}
+BINARY=${STATE}/bin/$(checkout_key)/devbox-proxyd
 
 usage() {
     cat <<EOF
-usage: $(basename "$0") {start|stop|restart|reload|status|generate}
+usage: $(basename "$0") {start|stop|restart|reload|status|check|build}
 
-  start      generate the configuration and bring the daemons up
-  stop       take them down
+  start      build if the sources are newer, then bring the proxy up
+  stop       take it down
   restart    stop, then start
-  reload     same as restart -- the static Traefik configuration can change too
-  status     report what is running, and when the certificate expires
-  generate   write the Traefik configuration and stop there
+  reload     validate, then apply without dropping anything
+  status     what is running, when certificates expire, what renewal did last
+  check      validate the declaration file and stop
+  build      compile the binary and stop
 
   State lives in ${STATE}; the declaration file is ${CONFIG}.
 EOF
@@ -51,144 +67,152 @@ note() {
     echo "$(basename "$0"): $*" >&2
 }
 
-die() {
-    note "$*"
-    exit 1
-}
-
-pidfile() {
-    echo "${RUN}/$1.pid"
-}
-
 running() {
-    local file
-    file=$(pidfile "$1")
-    [[ -f ${file} ]] && kill -0 "$(cat "${file}")" 2> /dev/null
+    [[ -f ${PIDFILE} ]] && kill -0 "$(cat "${PIDFILE}")" 2> /dev/null
 }
 
-# Runs a daemon detached, recording its pid. Anything it writes goes to its own
-# log; nothing reaches the caller's stdout, which on boot belongs to sshd.
-#
-# setsid gives it a session and a process group of its own, and the pid
-# recorded is therefore also the group id. That matters because Traefik is
-# started through sudo: the pid this can see belongs to sudo, and signalling
-# only that would leave the daemon behind.
-spawn() {
-    local name=$1
-    shift
-    mkdir -p "${RUN}" "${LOG}"
-    setsid "$@" >> "${LOG}/${name}.log" 2>&1 &
-    echo $! > "$(pidfile "${name}")"
-}
-
-# Signals the whole process group, then the single process, as root and then as
-# ourselves -- whichever of the four gets through. Nothing here is fatal: a
-# daemon that is already gone is the outcome being asked for.
-signal() {
-    local sig=$1 pid=$2
-    {
-        ${SUDO} kill "-${sig}" -- "-${pid}" ||
-            kill "-${sig}" -- "-${pid}" ||
-            ${SUDO} kill "-${sig}" "${pid}" ||
-            kill "-${sig}" "${pid}"
-    } 2> /dev/null || true
-}
-
-reap() {
-    local name=$1 file pid
-    file=$(pidfile "${name}")
-    [[ -f ${file} ]] || return 0
-    pid=$(cat "${file}")
-    if kill -0 "${pid}" 2> /dev/null; then
-        signal TERM "${pid}"
-        # Give it a moment to go on its own before insisting.
-        for _ in $(seq 30); do
-            kill -0 "${pid}" 2> /dev/null || break
-            sleep 0.1
-        done
-        kill -0 "${pid}" 2> /dev/null && signal KILL "${pid}"
+have_config() {
+    if [[ ! -f ${CONFIG} ]]; then
+        note "no declaration file at ${CONFIG}"
+        return 1
     fi
-    rm -f "${file}"
 }
 
-# True when at least one service asks for authentication, which is the only
-# reason to run the verifier.
-needs_verifier() {
-    yq -o=json '.' "${CONFIG}" |
-        jq -e 'any((.services // [])[]; (.auth // (.defaults.auth // "required")) == "required")' \
-            > /dev/null
+# needs_build is true when there is no binary, or when anything it was built
+# from has changed since. This is what keeps `git pull` enough to fix the
+# proxy, the way it was when this was all shell (docs/adr/0005).
+needs_build() {
+    [[ -x ${BINARY} ]] || return 0
+    [[ -n $(find "${SRC}" \( -name '*.go' -o -name 'go.mod' -o -name 'go.sum' \) \
+        -newer "${BINARY}" -print -quit 2> /dev/null) ]]
 }
 
-generate() {
-    "${PROXY_DIR}/bin/generate-traefik-config.sh" --config "${CONFIG}" --state-dir "${STATE}"
+build() {
+    if ! needs_build; then
+        return 0
+    fi
+    if ! command -v go > /dev/null 2>&1; then
+        note "go is not installed, so the proxy cannot be built"
+        return 1
+    fi
+
+    note "building the proxy from ${SRC}"
+    mkdir -p "$(dirname "${BINARY}")"
+    ( cd "${SRC}" && go build -o "${BINARY}" . )
+
+    # Ports below 1024 need the capability; above them nothing is required,
+    # which is also how the tests avoid needing sudo. Running as the user keeps
+    # the signing key, the credentials and the certificates ordinarily
+    # accessible (docs/adr/0008).
+    if (( HTTPS_PORT < 1024 || HTTP_PORT < 1024 )) && [[ -n ${SUDO} ]]; then
+        ${SUDO} setcap cap_net_bind_service=+ep "${BINARY}" \
+            || note "setcap failed; binding the privileged ports will not work"
+    fi
 }
 
 start() {
-    # Skipping is the designed behaviour, not an error: the devbox has to come
-    # up either way. The reason goes to stderr so that a hand-run start is not
-    # a mystery, and stdout stays clean.
-    if [[ ! -f ${CONFIG} ]]; then
-        note "no declaration file at ${CONFIG}; not starting the proxy"
+    build || return 1
+    if running; then
+        note "already running (pid $(cat "${PIDFILE}"))"
         return 0
     fi
-    if [[ ! -f ${CERT} || ! -f ${KEY} ]]; then
-        note "no origin certificate in ${STATE}/certs; not starting the proxy"
-        note "run ${PROXY_DIR}/bin/issue-origin-cert.sh to get one"
-        return 0
-    fi
+    have_config || { note "not starting the proxy"; return 0; }
 
-    command -v traefik > /dev/null || die "traefik is not installed"
+    mkdir -p "${RUN}" "${LOG}"
+    setsid "${BINARY}" serve \
+        --config "${CONFIG}" \
+        --state "${STATE}" \
+        --http-port "${HTTP_PORT}" \
+        --https-port "${HTTPS_PORT}" >> "${LOG}/proxy.log" 2>&1 &
 
-    # A bad declaration file is a real error: the operator changed something
-    # and it does not hold together. Nothing is started on a half-configuration.
-    generate
+    # The binary writes the pid file itself, so waiting for it is how we learn
+    # that it got as far as binding its ports.
+    local tries=50
+    while (( tries-- > 0 )); do
+        if running; then
+            note "started (pid $(cat "${PIDFILE}"))"
+            return 0
+        fi
+        sleep 0.1
+    done
 
-    if needs_verifier && ! running forwardauth; then
-        local team port
-        team=$(yq -r '.team_domain' "${CONFIG}")
-        port=$(yq -r '.forward_auth_port // 9101' "${CONFIG}")
-        spawn forwardauth "${PROXY_DIR}/bin/cf-access-forwardauth" \
-            --team-domain "${team}" --port "${port}"
-    fi
-
-    if ! running traefik; then
-        spawn traefik ${SUDO} traefik "--configFile=${STATE}/traefik/traefik.yml"
-    fi
+    note "the proxy did not come up; the last few lines of ${LOG}/proxy.log:"
+    tail -5 "${LOG}/proxy.log" >&2 || true
+    return 1
 }
 
 stop() {
-    reap traefik
-    reap forwardauth
+    if ! running; then
+        note "not running"
+        return 0
+    fi
+    local pid
+    pid=$(cat "${PIDFILE}")
+    kill -TERM "${pid}" 2> /dev/null || true
+
+    local tries=100
+    while (( tries-- > 0 )); do
+        if ! running; then
+            note "stopped"
+            return 0
+        fi
+        sleep 0.1
+    done
+
+    note "it did not stop on its own; killing pid ${pid}"
+    kill -KILL "${pid}" 2> /dev/null || true
+    rm -f "${PIDFILE}"
+}
+
+# reload validates before it signals. SIGHUP is asynchronous, so sending it
+# proves nothing; checking first is how a broken file becomes a non-zero exit
+# here instead of a surprise in the log (docs/adr/0008). The process validates
+# again when it receives the signal, so a file that changes in between still
+# cannot take anything down.
+reload() {
+    build || return 1
+    have_config || return 1
+    "${BINARY}" check --config "${CONFIG}" --state "${STATE}" > /dev/null || return 1
+
+    if ! running; then
+        note "not running; nothing to reload"
+        return 0
+    fi
+    kill -HUP "$(cat "${PIDFILE}")"
+    note "reloaded"
 }
 
 status() {
-    local name
-    for name in traefik forwardauth; do
-        if running "${name}"; then
-            echo "${name}: running (pid $(cat "$(pidfile "${name}")"))"
-        else
-            echo "${name}: not running"
-        fi
-    done
-
-    if [[ -f ${CERT} ]]; then
-        # Nothing warns about this certificate expiring -- Cloudflare does not
-        # send a reminder for Origin CA -- so `status` is where the date lives.
-        local not_after
-        not_after=$(openssl x509 -in "${CERT}" -noout -enddate 2> /dev/null | cut -d= -f2-)
-        echo "certificate: expires ${not_after:-unknown}"
-    else
-        echo "certificate: absent"
-    fi
+    build || return 1
+    have_config || return 0
+    "${BINARY}" status --config "${CONFIG}" --state "${STATE}"
 }
 
-command=${1:-status}
+warnings() {
+    [[ -x ${BINARY} ]] || return 0
+    [[ -f ${CONFIG} ]] || return 0
+    "${BINARY}" status --config "${CONFIG}" --state "${STATE}" --warnings
+}
+
+check() {
+    build || return 1
+    have_config || return 1
+    "${BINARY}" check --config "${CONFIG}" --state "${STATE}"
+}
+
+command=${1:-}
 case ${command} in
     start) start ;;
     stop) stop ;;
-    restart | reload) stop; start ;;
+    restart) stop && start ;;
+    reload) reload ;;
     status) status ;;
-    generate) generate ;;
-    -h | --help) usage ;;
-    *) usage >&2; die "unknown command: ${command}" ;;
+    warnings) warnings ;;
+    check) check ;;
+    build) build ;;
+    -h | --help | help) usage ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
 esac

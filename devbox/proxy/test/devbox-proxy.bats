@@ -1,187 +1,210 @@
 #!/usr/bin/env bats
 
-# The proxy must never be the reason the devbox fails to come up: a missing
-# certificate or a missing declaration file is a skip, not an error.
+# The wrapper: docs/adr/0008.
+#
+# Two properties matter more than the rest. The proxy must never be the reason
+# the devbox fails to come up -- no declaration file is a skip, not an error --
+# and a reload that does not validate must leave what is running alone.
 
 bats_require_minimum_version 1.5.0
 
 load helpers
 
 setup() {
-    require yq
-    require jq
-    require openssl
+    require go
 
     STATE="${BATS_TEST_TMPDIR}/state"
     CONFIG="${BATS_TEST_TMPDIR}/services.yaml"
-    FAKE_BIN="${BATS_TEST_TMPDIR}/bin"
-    mkdir -p "${FAKE_BIN}"
+    # Ports nothing else on the machine is likely to want, and above 1024 so
+    # the wrapper does not reach for setcap.
+    HTTP_PORT=18080
+    HTTPS_PORT=18443
 
-    # A stand-in for the real daemon. It records how it was called, and it
-    # forks a child before settling down: in production traefik is started
-    # through sudo, so the recorded pid is the wrapper's and taking only that
-    # one down would orphan the daemon. The child is how the test notices.
-    cat > "${FAKE_BIN}/traefik" <<'EOF'
-#!/bin/bash
-printf '%s\n' "$@" > "${BATS_TEST_TMPDIR}/traefik.args"
-sleep 300 &
-echo $! > "${BATS_TEST_TMPDIR}/traefik.child"
-wait
-EOF
-    chmod +x "${FAKE_BIN}/traefik"
-
-    export PATH="${FAKE_BIN}:${PATH}"
-    export DEVBOX_PROXY_STATE="${STATE}"
-    export DEVBOX_PROXY_CONFIG="${CONFIG}"
-    # Binding :443 needs root in real life; the tests do not bind anything.
-    export DEVBOX_PROXY_SUDO=""
-
-    cp "${FIXTURES}/basic/services.yaml" "${CONFIG}"
+    cat > "${CONFIG}" <<'YAML'
+zone: example.test
+services:
+  - name: thing
+    port: 19999
+    auth: none
+YAML
 }
 
 teardown() {
-    "${PROXY_BIN}/devbox-proxy" stop > /dev/null 2>&1
-    return 0
+    if [[ -n ${STATE:-} && -f ${STATE}/run/devbox-proxyd.pid ]]; then
+        kill "$(cat "${STATE}/run/devbox-proxyd.pid")" 2> /dev/null || true
+    fi
 }
 
-install_cert() {
-    mkdir -p "${STATE}/certs"
-    openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj '/CN=*.example.org' \
-        -keyout "${STATE}/certs/origin.key" -out "${STATE}/certs/origin.pem" 2> /dev/null
+binary() {
+    find "${STATE}/bin" -name devbox-proxyd -type f 2> /dev/null | head -1
 }
 
-running() {
-    local pidfile="${STATE}/run/$1.pid"
-    [ -f "${pidfile}" ] && kill -0 "$(cat "${pidfile}")" 2> /dev/null
+@test "build compiles the binary when there is none" {
+    run -0 proxy build
+    [[ -n "$(binary)" ]]
+    [[ -x "$(binary)" ]]
 }
 
-# `start` returns as soon as the daemons are backgrounded, so anything they
-# write appears a moment later.
-wait_for() {
-    for _ in $(seq 50); do
-        [ -f "$1" ] && return 0
-        sleep 0.1
-    done
-    return 1
-}
-
-@test "start without a certificate skips instead of failing" {
-    run "${PROXY_BIN}/devbox-proxy" start
-    [ "$status" -eq 0 ]
-    [ ! -f "${BATS_TEST_TMPDIR}/traefik.args" ]
-}
-
-@test "start without a declaration file skips instead of failing" {
-    install_cert
-    rm "${CONFIG}"
-    run "${PROXY_BIN}/devbox-proxy" start
-    [ "$status" -eq 0 ]
-    [ ! -f "${BATS_TEST_TMPDIR}/traefik.args" ]
-}
-
-@test "a skipped start keeps stdout clean but still says why" {
-    # On boot stdout belongs to entrypoint.sh, so the reason goes to stderr.
-    run --separate-stderr "${PROXY_BIN}/devbox-proxy" start
-    [ -z "$output" ]
-    [[ "$stderr" == *"certificate"* ]]
-}
-
-@test "start brings up traefik against the generated config" {
-    install_cert
-    run "${PROXY_BIN}/devbox-proxy" start
-    [ "$status" -eq 0 ]
-    wait_for "${BATS_TEST_TMPDIR}/traefik.args"
-    grep -q -- "--configFile=${STATE}/traefik/traefik.yml" "${BATS_TEST_TMPDIR}/traefik.args"
-    [ -f "${STATE}/traefik/dynamic/services.yml" ]
-    running traefik
-}
-
-@test "start brings up the verifier when a service needs authentication" {
-    install_cert
-    "${PROXY_BIN}/devbox-proxy" start
-    running forwardauth
-}
-
-@test "the verifier is not started when nothing needs authentication" {
-    install_cert
-    cat > "${CONFIG}" <<'EOF'
-zone: example.org
-services:
-  - name: sd
-    port: 7860
-    auth: none
-EOF
-    "${PROXY_BIN}/devbox-proxy" start
-    ! running forwardauth
-}
-
-@test "a declaration file that does not validate fails loudly and starts nothing" {
-    install_cert
-    cat > "${CONFIG}" <<'EOF'
-zone: example.org
-services:
-  - name: llama.gpu
-    port: 8081
-    auth: none
-EOF
-    run "${PROXY_BIN}/devbox-proxy" start
-    [ "$status" -ne 0 ]
-    [ ! -f "${BATS_TEST_TMPDIR}/traefik.args" ]
-}
-
-@test "stop is fine when nothing is running" {
-    run "${PROXY_BIN}/devbox-proxy" stop
-    [ "$status" -eq 0 ]
-}
-
-@test "stop takes both daemons down" {
-    install_cert
-    "${PROXY_BIN}/devbox-proxy" start
-    running traefik
-    running forwardauth
-    "${PROXY_BIN}/devbox-proxy" stop
-    ! running traefik
-    ! running forwardauth
-}
-
-@test "stop reaches the daemon itself, not just what started it" {
-    install_cert
-    "${PROXY_BIN}/devbox-proxy" start
-    local child
-    wait_for "${BATS_TEST_TMPDIR}/traefik.child"
-    child=$(cat "${BATS_TEST_TMPDIR}/traefik.child")
-    kill -0 "${child}"
-    "${PROXY_BIN}/devbox-proxy" stop
-    ! kill -0 "${child}" 2> /dev/null
-}
-
-@test "status reports both states without failing" {
-    run "${PROXY_BIN}/devbox-proxy" status
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"traefik"* ]]
-    install_cert
-    "${PROXY_BIN}/devbox-proxy" start
-    run "${PROXY_BIN}/devbox-proxy" status
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"running"* ]]
-}
-
-@test "status names the certificate expiry, because nothing else will" {
-    install_cert
-    run "${PROXY_BIN}/devbox-proxy" status
-    [[ "$output" == *"expires"* ]]
-}
-
-@test "a second start does not leave two traefiks behind" {
-    install_cert
-    "${PROXY_BIN}/devbox-proxy" start
+@test "build is skipped when nothing has changed" {
+    run -0 proxy build
     local first
-    first=$(cat "${STATE}/run/traefik.pid")
-    "${PROXY_BIN}/devbox-proxy" start
-    [ "$(cat "${STATE}/run/traefik.pid")" = "${first}" ]
+    first="$(binary)"
+    local before
+    before="$(stat -c %Y "${first}")"
+
+    run -0 proxy build
+    [[ "$(stat -c %Y "${first}")" == "${before}" ]]
 }
 
-@test "an unknown subcommand is an error" {
-    run "${PROXY_BIN}/devbox-proxy" frobnicate
-    [ "$status" -ne 0 ]
+@test "build happens again when a source file is newer" {
+    run -0 proxy build
+    local bin
+    bin="$(binary)"
+    local before
+    before="$(stat -c %Y "${bin}")"
+
+    # Touching a source is what a `git pull` looks like from here.
+    sleep 1.1
+    touch "${PROXY_DIR}/proxyd/main.go"
+
+    run -0 proxy build
+    [[ "$(stat -c %Y "${bin}")" != "${before}" ]]
+}
+
+@test "start brings it up and writes a pid file" {
+    run -0 proxy start
+    wait_until is_running
+    is_running
+}
+
+@test "stop takes it down" {
+    run -0 proxy start
+    wait_until is_running
+
+    run -0 proxy stop
+    ! is_running
+}
+
+@test "starting twice is not an accident" {
+    run -0 proxy start
+    wait_until is_running
+    local first
+    first="$(cat "$(pidfile)")"
+
+    run -0 proxy start
+    [[ "$(cat "$(pidfile)")" == "${first}" ]]
+    is_running
+}
+
+@test "stopping something that is not running is fine" {
+    run -0 proxy stop
+}
+
+# docs/adr/0006 and 0008: no certificate is not a reason to refuse to start.
+@test "it starts with no certificates and no credentials" {
+    [[ ! -e ${STATE}/certs ]]
+    run -0 proxy start
+    wait_until is_running
+    is_running
+}
+
+# docs/adr/0001, kept by 0008: entrypoint.sh calls this on every boot.
+@test "a host with no declaration file starts nothing and succeeds" {
+    rm "${CONFIG}"
+    run -0 proxy start
+    ! is_running
+    [[ "${output}" == *"no declaration file"* ]]
+}
+
+@test "check accepts a good declaration file" {
+    run -0 proxy check
+    [[ "${output}" == *"thing.example.test"* ]]
+}
+
+@test "check refuses a bad one and says why" {
+    cat > "${CONFIG}" <<'YAML'
+zone: example.test
+services:
+  - name: not.one.label
+    port: 19999
+    auth: none
+YAML
+    run -1 proxy check
+    [[ "${output}" == *"one label"* ]]
+}
+
+@test "reload applies a declaration file that validates" {
+    run -0 proxy start
+    wait_until is_running
+    local pid
+    pid="$(cat "$(pidfile)")"
+
+    cat >> "${CONFIG}" <<'YAML'
+  - name: another
+    port: 19998
+    auth: none
+YAML
+    run -0 proxy reload
+
+    # Same process: 0008 wants the listeners and every established connection
+    # to survive a reload.
+    [[ "$(cat "$(pidfile)")" == "${pid}" ]]
+    is_running
+}
+
+@test "a reload that does not validate changes nothing and leaves it running" {
+    run -0 proxy start
+    wait_until is_running
+    local pid
+    pid="$(cat "$(pidfile)")"
+
+    cat > "${CONFIG}" <<'YAML'
+zone: example.test
+services:
+  - name: thing
+    port: 19999
+    auth: required
+YAML
+    run -1 proxy reload
+    [[ "${output}" == *"viewer"* ]]
+
+    is_running
+    [[ "$(cat "$(pidfile)")" == "${pid}" ]]
+}
+
+@test "reload without anything running says so rather than failing" {
+    run -0 proxy reload
+    [[ "${output}" == *"not running"* ]]
+}
+
+@test "restart replaces the process" {
+    run -0 proxy start
+    wait_until is_running
+    local first
+    first="$(cat "$(pidfile)")"
+
+    run -0 proxy restart
+    wait_until is_running
+    [[ "$(cat "$(pidfile)")" != "${first}" ]]
+}
+
+@test "status answers while it is stopped" {
+    run -0 proxy status
+    [[ "${output}" == *"not running"* ]]
+    [[ "${output}" == *"thing.example.test"* ]]
+}
+
+@test "status says what is running" {
+    run -0 proxy start
+    wait_until is_running
+
+    run -0 proxy status
+    [[ "${output}" == *"running"* ]]
+    [[ "${output}" == *"$(cat "$(pidfile)")"* ]]
+}
+
+@test "status with no declaration file does not blow up" {
+    rm "${CONFIG}"
+    run -0 proxy status
+    [[ "${output}" == *"no declaration file"* ]]
 }
