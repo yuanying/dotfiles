@@ -7,7 +7,7 @@
 
 [[0001]] leaves the devbox's global IPv6 reachable from anywhere. Cloudflare
 Access authenticates at the edge, but the edge is not the only way in: anyone
-who learns the origin address can open `https://llama.oeilvert.org` against it
+who learns the origin address can open `https://llama.oeilvert.dev` against it
 directly — `--resolve` on the command line is enough — and reach the backend
 with no login at all. Access is a doormat if the back door is open.
 

@@ -1,6 +1,6 @@
-# Services this devbox publishes on https://<name>.oeilvert.dev.
+# Services this devbox publishes on https://<name>.poissonnerie.dev.
 #
-# One file per host, the way ~/.zshrc.<hostname> is; boucherie gets its own.
+# One file per host, the way ~/.zshrc.<hostname> is; anietta gets its own.
 # Everything here is generated from -- Traefik's routers, the AAAA records and
 # the Access applications -- so adding a service is: add it below, run
 # sync-cloudflare.sh with a token in the environment, run `devbox-proxy reload`.
@@ -9,7 +9,7 @@
 # Access application; the origin key lives under $HOME and the Cloudflare token
 # is passed in the environment for one script run. See docs/adr/0004.
 
-zone: oeilvert.dev
+zone: poissonnerie.dev
 
 # The Cloudflare Zero Trust team domain, without the scheme. Zero Trust >
 # Settings > Custom Pages shows it, and it is the host the login page lives on.
@@ -17,8 +17,8 @@ zone: oeilvert.dev
 team_domain: ""
 
 # Where Cloudflare connects: this container's global IPv6, as passed to
-# `docker run --ip6` in start-rocm.
-origin: 2405:6581:8580:310::153
+# `docker run --ip6` in start-cuda.
+origin: 2405:6581:8580:302::151
 
 defaults:
   # Services that do not say otherwise need a Cloudflare Access login.
@@ -27,7 +27,7 @@ defaults:
 # A service name is one DNS label -- llama, not llama.gpu. Universal SSL and a
 # wildcard Origin CA certificate both stop at one level (docs/adr/0002).
 #
-#   - name: llama              # https://llama.oeilvert.dev
+#   - name: llama              # https://llama.poissonnerie.dev
 #     port: 8081               # http://127.0.0.1:8081
 #     auth: required           # or `none` for something fine to publish
 #     aud: ""                  # filled in by sync-cloudflare.sh; commit it

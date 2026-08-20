@@ -12,12 +12,17 @@ holds a global IPv6 address of its own (`start-rocm` / `start-cuda` pass
 public Internet as plain HTTP on a high port, with no TLS and no authentication
 in front of them. `anietta.oeilvert.org` resolves to that address today.
 
-What is wanted is `https://<service>.oeilvert.org` per service, behind a GitHub
-login, with adding a service being cheap enough that it happens.
+What is wanted is `https://<service>.<zone>` per service, behind a GitHub login,
+with adding a service being cheap enough that it happens. Each devbox gets a
+zone of its own: `oeilvert.dev` for anietta, `poissonnerie.dev` for boucherie.
 
 Constraints that shaped the answer:
 
-- `oeilvert.org` and `fraction.jp` are already on Cloudflare nameservers.
+- `oeilvert.dev` and `poissonnerie.dev` are already on Cloudflare nameservers,
+  and both are empty — neither holds an `A`, `AAAA`, `CNAME` or `MX` record.
+  Nothing else is published from either, which is why they were picked.
+- `anietta.oeilvert.org` — the name SSH and mosh reach the devbox on — lives in
+  a different zone, and nothing here ever touches it.
 - Cloudflare Zero Trust is free up to 50 users, and that tier includes Access
   and the GitHub identity provider. Nothing here needs a paid plan.
 - The devbox container's `$HOME` is a bind mount of the host's, so anything

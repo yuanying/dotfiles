@@ -165,10 +165,11 @@ done <<< "${declared}"
 
 if [[ -n ${prune} ]]; then
     # Proxied records only. This script never creates a grey-cloud record, so
-    # it has no business deleting one -- and there is one that matters:
-    # anietta.oeilvert.org is the raw address SSH and mosh reach the devbox on,
-    # it points at the same origin, and it is a single label under the zone.
-    # Without this it would look exactly like an abandoned service.
+    # it has no business deleting one. Nothing like that is in either zone
+    # today -- the raw address SSH and mosh reach the devbox on lives in another
+    # zone, anietta.oeilvert.org -- but a grey-cloud record added here later
+    # would point at the same origin and sit at the same level, and without
+    # this it would look exactly like an abandoned service.
     while IFS= read -r fqdn; do
         [[ -n ${fqdn} ]] || continue
         in_namespace "${fqdn}" || continue

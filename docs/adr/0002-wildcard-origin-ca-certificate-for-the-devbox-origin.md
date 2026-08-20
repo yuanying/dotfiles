@@ -27,16 +27,28 @@ Relevant facts about the free tier:
 
 ## Decision
 
-**One wildcard Origin CA certificate for `*.oeilvert.org` (plus the apex), with
-the zone's SSL mode set to Full (strict).**
+**One wildcard Origin CA certificate per zone — `*.oeilvert.dev` for anietta,
+`*.poissonnerie.dev` for boucherie, each plus its apex — with the zone's SSL
+mode set to Full (strict).**
 
 Service hostnames are therefore restricted to a single label —
-`llama.oeilvert.org`, never `llama.devbox.oeilvert.org`. The generator rejects a
+`llama.oeilvert.dev`, never `llama.devbox.oeilvert.dev`. The generator rejects a
 service name containing a dot. This is a free-tier constraint on the *edge*
 certificate, and it happens to line up with the wildcard on the *origin*
 certificate, which covers one level for the same reason.
 
-One certificate covers every service, so adding a service never touches TLS.
+One certificate covers every service **in one zone**, so adding a service never
+touches TLS. A certificate is scoped to the zone it was issued for, so each
+devbox issues and holds its own: `issue-origin-cert.sh` reads the zone from that
+host's declaration file, and the pair it writes into
+`~/.config/devbox-proxy/certs` is that zone's. Two devboxes in one zone would
+have shared a certificate; a zone each means two, and neither can stand in for
+the other. That is the cost of the split, and it buys the isolation below.
+
+Splitting the zones has a second effect worth stating: service names no longer
+collide. `llama` on anietta is `llama.oeilvert.dev` and `llama` on boucherie is
+`llama.poissonnerie.dev`, so the two devboxes never have to negotiate over a
+name, and neither `sync-cloudflare.sh --prune` can reach the other's records.
 
 **The private key lives in `~/.config/devbox-proxy/certs/`, mode 600, and is
 never committed.** The container's `$HOME` is the host's, so the key survives
@@ -90,8 +102,15 @@ The same reasoning applies to [[0004]]'s Cloudflare sync script.
 - Losing `~/.config/devbox-proxy/certs/origin.key` means re-issuing. That is a
   designed-for path, not an incident.
 - Service hostnames are stuck at one level. Namespacing by host
-  (`llama.gpu.oeilvert.org`) is not available without paying for ACM; namespace
-  in the service name instead (`gpu-llama.oeilvert.org`).
-- Full (strict) is a **zone-wide** setting. Turning it on affects every origin
-  behind `oeilvert.org`, not just the devbox. Any other origin in the zone must
-  already present a certificate Cloudflare trusts before the mode is changed.
+  (`llama.gpu.oeilvert.dev`) is not available without paying for ACM; namespace
+  in the service name instead (`gpu-llama.oeilvert.dev`).
+- Full (strict) is a **zone-wide** setting, but both zones were empty when they
+  were picked — no `A`, `AAAA`, `CNAME` or `MX` record in either — so there is
+  no other origin to break, and the mode can be switched without a survey. That
+  stops being true the moment something else is published from one of them: any
+  origin added later has to present a certificate Cloudflare trusts, or it fails
+  the day it is added.
+- Two zones mean two certificates, two expiry dates and two things to re-issue
+  after a loss. `devbox-proxy status` prints the date of the one on the box it
+  runs on, which is the one that host cares about; there is no single place that
+  shows both.

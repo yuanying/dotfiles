@@ -18,11 +18,18 @@ fix.
 
 ## Decision
 
-**One declaration file, `devbox/proxy/services.yaml`, is the source of truth.
-Everything else is generated from it.**
+**One declaration file per devbox, `devbox/proxy/services.<hostname>.yaml`, is
+the source of truth. Everything else is generated from it.**
+
+The split is by host the way `~/.zshrc.<hostname>` already is, and each file
+names its own zone: `oeilvert.dev` for anietta, `poissonnerie.dev` for
+boucherie. A devbox reads only its own file, so nothing it runs — `--prune`
+included — can reach the other's zone, and a service name means something
+different on each box rather than clashing.
 
 ```yaml
-zone: oeilvert.org
+# devbox/proxy/services.anietta.yaml
+zone: oeilvert.dev
 team_domain: yuanying.cloudflareaccess.com
 origin: 2405:6581:8580:310::153
 
@@ -30,7 +37,7 @@ defaults:
   auth: required
 
 services:
-  - name: llama          # -> llama.oeilvert.org
+  - name: llama          # -> llama.oeilvert.dev
     port: 8081           # -> http://127.0.0.1:8081
     auth: required
     aud: <application audience tag>
@@ -90,10 +97,13 @@ would test the mock.
 - The declaration file is authoritative for what exists, but deletion is not
   automatic: `sync-cloudflare.sh` removes nothing unless asked with `--prune`.
   Even then it is confined to names of the form `<label>.<zone>`, and to `AAAA`
-  records that are proxied — which is what keeps it away from
-  `anietta.oeilvert.org`, the grey-cloud record that SSH and mosh reach the box
-  on and that would otherwise look exactly like an abandoned service. A
-  half-reconciled zone is the price; deleting the wrong record is worse.
+  records that are proxied. Both zones are empty of anything this does not
+  manage, so there is nothing to protect there today — the SSH and mosh name,
+  `anietta.oeilvert.org`, is in a different zone entirely. The guard is for the
+  grey-cloud record that gets added later: it would point at the same origin and
+  sit at the same level, and would otherwise look exactly like an abandoned
+  service. A half-reconciled zone is the price; deleting the wrong record is
+  worse.
 - Editing Traefik's configuration by hand is pointless — it is overwritten on
   the next `generate`. The generated files carry a "do not edit" header saying
   so.
