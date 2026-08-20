@@ -170,3 +170,10 @@ fi
 
 bash ${ROOT}/setup-vim.sh
 bash ${ROOT}/setup-zsh.sh
+
+# エージェントのスキル。~/.agents/skills と ~/.claude/skills の両方へ張る。
+# 衝突を見つけると 1 つも張らずに中止する作りなので、別のスキルツリー
+# (yuanying/skills など) と名前がぶつかっているとここで止まる。setup.sh 全体は
+# 続行させ、理由だけ出す。
+bash ${ROOT}/setup-skills.sh || \
+    echo "スキルのリンクをスキップした (bash ${ROOT}/setup-skills.sh で理由が出る)" >&2

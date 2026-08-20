@@ -128,6 +128,31 @@ repository is where that lands as a Renovate PR. To go back to upstream, restore
 annotation and clone URL and set the ARG to an upstream version — Renovate cannot make that hop
 because the versioning scheme changes. The fork's FORK.md has the details.
 
+## Public HTTP Proxy
+
+`proxy/` publishes HTTP servers running in the container on
+`https://<name>.<zone>`, behind Cloudflare Access. `proxy/README.md` covers
+operating it and `docs/adr/0001`–`0004` cover why; three things constrain edits
+elsewhere in this directory.
+
+`entrypoint.sh` calls `~/dotfiles/devbox/proxy/bin/devbox-proxy start` before
+sshd takes the process over. It runs the copy under `$HOME`, not one baked into
+the image, because the declaration file changes far more often than the image —
+the same reasoning as the herdr plugin linking above. That call must stay before
+the final `sshd` line, and its failure must stay non-fatal: with no certificate
+or no declaration file for the host, the proxy starts nothing and the container
+comes up regardless.
+
+Traefik, yq and bats are pinned in the `Dockerfile` like everything else. The yq
+is the Go one from `mikefarah/yq`; Ubuntu's `yq` package is a different program
+with a different expression language and is not a substitute.
+
+Nothing generated is checked in, and nothing secret is either: the origin
+private key lives in `~/.config/devbox-proxy`, and Cloudflare API tokens are
+passed in the environment for a single script run. The audience tags in the
+declaration file are identifiers, not credentials, and are meant to be
+committed.
+
 ## Dependency Updates (Renovate)
 
 Renovate keeps the pinned versions up to date. Configuration is in `renovate.json` at the
@@ -148,7 +173,7 @@ npx --package renovate renovate-config-validator
 npx --package renovate renovate --platform=local --dry-run=extract
 ```
 
-The second command should report fifteen dependencies across `devbox/Dockerfile` and
+The second command should report eighteen dependencies across `devbox/Dockerfile` and
 `devbox/Makefile`; a manager whose pattern stopped matching shows up as a missing file there.
 
 ## Container Runtime Notes

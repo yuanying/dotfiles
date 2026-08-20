@@ -1,0 +1,361 @@
+#!/usr/bin/env bash
+#
+# Publish an HTTP server running in this devbox, permanently.
+#
+#   devbox-publish publish --name llama --port 8081 --github-org acme
+#   devbox-publish unpublish --name llama
+#   devbox-publish list
+#   devbox-publish where
+#
+# This is the skill's hands. It edits the declaration file for this host, then
+# does as much of the rest as the environment allows: with CLOUDFLARE_API_TOKEN
+# set it reconciles Cloudflare and reloads the proxy, and without one it stops
+# after the file and prints the commands left to run. Not having a token is the
+# normal state -- docs/adr/0002 explains why one does not live on the box -- so
+# it is not an error.
+#
+# The skill is loaded through ~/.claude/skills/devbox-publish, which is a
+# symlink into a dotfiles checkout that is not necessarily ~/dotfiles. Every
+# path below is derived from where this file physically is, never from a guess
+# about where the checkout was put.
+
+set -euo pipefail
+
+# `cd -P` walks .. physically, so this lands in the real checkout even when the
+# skill directory was reached through the symlink that installed it.
+SKILL_DIR=$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+DOTFILES=$(cd -P "${SKILL_DIR}/../.." && pwd)
+
+# Overridable so the tests can put stand-ins in the way of the real daemons.
+PROXY_DIR=${DEVBOX_PROXY_DIR:-${DOTFILES}/devbox/proxy}
+
+# One file per host, the way devbox-proxy and sync-cloudflare.sh already do it.
+default_config() {
+    local named=${PROXY_DIR}/services.$(hostname -s).yaml
+    [[ -f ${named} ]] && echo "${named}" || echo "${PROXY_DIR}/services.yaml"
+}
+
+CONFIG=${DEVBOX_PROXY_CONFIG:-$(default_config)}
+
+usage() {
+    cat <<EOF
+usage: $(basename "$0") <command> [options]
+
+  publish --name NAME --port PORT [options]
+      --auth required|none    default: required
+      --email ADDRESS         may be repeated
+      --github-org ORG        may be repeated
+      --no-listen-check       do not require the port to be listening yet
+
+  unpublish --name NAME
+  list                        what this host publishes
+  where                       the checkout and declaration file in use
+
+  Declaration file: ${CONFIG}
+EOF
+}
+
+note() {
+    echo "$(basename "$0"): $*" >&2
+}
+
+die() {
+    note "$*"
+    exit 1
+}
+
+step() {
+    echo "==> $*"
+}
+
+say() {
+    echo "    $*"
+}
+
+need_tools() {
+    local tool
+    for tool in yq jq; do
+        command -v "${tool}" > /dev/null || die "${tool} is not installed"
+    done
+    [[ -f ${CONFIG} ]] || die "no declaration file at ${CONFIG}"
+}
+
+zone_of() {
+    yq -r '.zone // ""' "${CONFIG}"
+}
+
+# The proxy connects to 127.0.0.1:<port>, so that is the address worth checking.
+# A server bound only to the container's global IPv6 would answer the outside
+# world and not the proxy, and this is where that is caught.
+port_is_open() {
+    (exec 3<> "/dev/tcp/127.0.0.1/$1") 2> /dev/null
+}
+
+json_array() {
+    if [[ $# -eq 0 ]]; then
+        echo '[]'
+    else
+        printf '%s\n' "$@" | jq -R . | jq -sc .
+    fi
+}
+
+declared() {
+    yq -r "[.services // [] | .[] | select(.name == \"$1\")] | length" "${CONFIG}"
+}
+
+# Whether the declaration file still turns into a Traefik configuration. Run
+# before every reload, because `reload` stops Traefik and then starts it, and a
+# start that fails leaves nothing running -- including the services that were
+# working before this one was added.
+config_generates() {
+    DEVBOX_PROXY_CONFIG="${CONFIG}" "${PROXY_DIR}/bin/devbox-proxy" generate > /dev/null 2>&1
+}
+
+reload_if_valid() {
+    step "Reloading the proxy"
+    if config_generates; then
+        DEVBOX_PROXY_CONFIG="${CONFIG}" "${PROXY_DIR}/bin/devbox-proxy" reload
+        say "done"
+        return 0
+    fi
+    say "the configuration does not hold together yet, so the proxy was left alone"
+    say "run '$(basename "${PROXY_DIR}/bin/devbox-proxy")' generate to see why"
+    return 1
+}
+
+sync_cloudflare() {
+    step "Reconciling Cloudflare"
+    "${PROXY_DIR}/bin/sync-cloudflare.sh" --config "${CONFIG}" "$@"
+}
+
+commit_hint() {
+    local what=$1 path=${CONFIG#"${DOTFILES}/"}
+    say "git -C ${DOTFILES} add ${path} && git -C ${DOTFILES} commit -m '${what}'"
+}
+
+# ---------------------------------------------------------------------------
+# publish
+# ---------------------------------------------------------------------------
+
+cmd_publish() {
+    local name= port= auth=required listen_check=yes
+    local emails=() orgs=()
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --name) name=$2; shift 2 ;;
+            --port) port=$2; shift 2 ;;
+            --auth) auth=$2; shift 2 ;;
+            --email) emails+=("$2"); shift 2 ;;
+            --github-org) orgs+=("$2"); shift 2 ;;
+            --no-listen-check) listen_check=; shift ;;
+            -h | --help) usage; exit 0 ;;
+            *) usage >&2; die "unknown option: $1" ;;
+        esac
+    done
+
+    need_tools
+
+    [[ -n ${name} ]] || die "--name is required"
+    [[ -n ${port} ]] || die "--port is required"
+
+    # One DNS label. A dot would need Advanced Certificate Manager at the edge
+    # and a second wildcard at the origin; docs/adr/0002 has the reasoning.
+    [[ ${name} =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] ||
+        die "${name} is not a single DNS label: lower case letters, digits and hyphens, nothing else"
+
+    [[ ${port} =~ ^[0-9]+$ ]] || die "--port must be a number, not ${port}"
+    [[ ${port} -ge 1 && ${port} -le 65535 ]] || die "--port must be between 1 and 65535"
+
+    [[ ${auth} == required || ${auth} == none ]] ||
+        die "--auth is 'required' or 'none', not ${auth}"
+
+    local emails_json orgs_json
+    emails_json=$(json_array ${emails[@]+"${emails[@]}"})
+    orgs_json=$(json_array ${orgs[@]+"${orgs[@]}"})
+
+    # An Access application with no allow rule refuses everyone, including
+    # whoever ran this. sync-cloudflare.sh refuses to create one; refusing here
+    # means the declaration file never gets into that state either.
+    if [[ ${auth} == required && ${emails_json} == "[]" && ${orgs_json} == "[]" ]]; then
+        die "a service with auth: required needs at least one viewer (--email or --github-org)"
+    fi
+
+    if [[ -n ${listen_check} ]] && ! port_is_open "${port}"; then
+        die "nothing is listening on 127.0.0.1:${port}; start the server first, or pass --no-listen-check"
+    fi
+
+    # An existing application keeps its audience tag: re-issuing it would be a
+    # needless round trip, and the origin would refuse every request until the
+    # new tag was committed.
+    local aud
+    aud=$(yq -r "[.services // [] | .[] | select(.name == \"${name}\") | .aud // \"\"] | .[0] // \"\"" "${CONFIG}")
+
+    local existed
+    existed=$(declared "${name}")
+
+    local zone
+    zone=$(zone_of)
+    [[ -n ${zone} ]] || die "${CONFIG} does not name a zone"
+
+    step "Publishing ${name}.${zone} -> http://127.0.0.1:${port}"
+
+    ENTRY=$(jq -n \
+        --arg name "${name}" \
+        --argjson port "${port}" \
+        --arg auth "${auth}" \
+        --arg aud "${aud}" \
+        --argjson emails "${emails_json}" \
+        --argjson orgs "${orgs_json}" '
+        {name: $name, port: $port, auth: $auth}
+        + (if $auth == "required" then {aud: $aud} else {} end)
+        + (if ($emails | length) > 0 or ($orgs | length) > 0
+           then {viewers: (
+                   (if ($emails | length) > 0 then {emails: $emails} else {} end)
+                   + (if ($orgs | length) > 0 then {github_orgs: $orgs} else {} end))}
+           else {} end)')
+    NAME=${name}
+    export ENTRY NAME
+
+    # Replace rather than append, so running this twice is an update and not a
+    # duplicate. The style="" puts the new entry in block form: the file is
+    # hand-edited too, and flow style is valid YAML nobody wants to read.
+    yq -i '
+        .services = ((.services // []) | map(select(.name != strenv(NAME))) + [env(ENTRY)]) |
+        (.services[] | select(.name == strenv(NAME)) | ...) style=""' "${CONFIG}"
+
+    if [[ ${existed} -gt 0 ]]; then
+        say "updated ${name} in ${CONFIG}"
+    else
+        say "added ${name} to ${CONFIG}"
+    fi
+
+    local synced=
+    if [[ ${auth} == none ]]; then
+        step "Reconciling Cloudflare"
+        if [[ -n ${CLOUDFLARE_API_TOKEN:-} ]]; then
+            sync_cloudflare
+            synced=yes
+        else
+            say "CLOUDFLARE_API_TOKEN is not set, so the AAAA record was not created"
+        fi
+    elif [[ -n ${CLOUDFLARE_API_TOKEN:-} ]]; then
+        sync_cloudflare
+        synced=yes
+    else
+        step "Reconciling Cloudflare"
+        say "CLOUDFLARE_API_TOKEN is not set, so the DNS record, the Access"
+        say "application and the audience tag ${name} needs are still missing"
+    fi
+
+    reload_if_valid || true
+
+    step "Next"
+    if [[ -z ${synced} ]]; then
+        say "CLOUDFLARE_API_TOKEN=... ${PROXY_DIR}/bin/sync-cloudflare.sh --config ${CONFIG} --dry-run"
+        say "CLOUDFLARE_API_TOKEN=... ${PROXY_DIR}/bin/sync-cloudflare.sh --config ${CONFIG}"
+        say "${PROXY_DIR}/bin/devbox-proxy reload"
+    fi
+    commit_hint "Publish ${name}"
+    say "then: https://${name}.${zone}"
+}
+
+# ---------------------------------------------------------------------------
+# unpublish
+# ---------------------------------------------------------------------------
+
+cmd_unpublish() {
+    local name=
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --name) name=$2; shift 2 ;;
+            -h | --help) usage; exit 0 ;;
+            *) usage >&2; die "unknown option: $1" ;;
+        esac
+    done
+
+    need_tools
+    [[ -n ${name} ]] || die "--name is required"
+    [[ $(declared "${name}") -gt 0 ]] || die "${CONFIG} does not declare ${name}"
+
+    local zone
+    zone=$(zone_of)
+
+    step "Unpublishing ${name}.${zone}"
+
+    NAME=${name}
+    export NAME
+    yq -i '.services = ((.services // []) | map(select(.name != strenv(NAME))))' "${CONFIG}"
+    say "removed ${name} from ${CONFIG}"
+
+    local pruned=
+    step "Reconciling Cloudflare"
+    if [[ -n ${CLOUDFLARE_API_TOKEN:-} ]]; then
+        # --prune is what deletes; it is confined to proxied records of the form
+        # <label>.<zone> that the file no longer mentions, and this does not
+        # widen that.
+        sync_cloudflare --prune
+        pruned=yes
+    else
+        say "CLOUDFLARE_API_TOKEN is not set, so the DNS record and the Access"
+        say "application for ${name}.${zone} are still there"
+    fi
+
+    reload_if_valid || true
+
+    step "Next"
+    if [[ -z ${pruned} ]]; then
+        say "CLOUDFLARE_API_TOKEN=... ${PROXY_DIR}/bin/sync-cloudflare.sh --config ${CONFIG} --prune --dry-run"
+        say "CLOUDFLARE_API_TOKEN=... ${PROXY_DIR}/bin/sync-cloudflare.sh --config ${CONFIG} --prune"
+        say "${PROXY_DIR}/bin/devbox-proxy reload"
+    fi
+    commit_hint "Unpublish ${name}"
+}
+
+# ---------------------------------------------------------------------------
+# list / where
+# ---------------------------------------------------------------------------
+
+cmd_list() {
+    need_tools
+    local zone
+    zone=$(zone_of)
+
+    if [[ $(yq -r '(.services // []) | length' "${CONFIG}") -eq 0 ]]; then
+        step "${CONFIG} publishes nothing"
+        return 0
+    fi
+
+    step "Published from ${CONFIG}"
+    yq -r "
+        (.defaults.auth // \"required\") as \$default
+        | (.services // [])[]
+        | \"    \" + .name + \".${zone}\"
+          + \" -> http://127.0.0.1:\" + (.port | tostring)
+          + \"  (auth: \" + (.auth // \$default) + \")\"" "${CONFIG}"
+}
+
+cmd_where() {
+    echo "dotfiles: ${DOTFILES}"
+    echo "proxy:    ${PROXY_DIR}"
+    echo "config:   ${CONFIG}"
+    if [[ -f ${CONFIG} ]] && command -v yq > /dev/null; then
+        echo "zone:     $(zone_of)"
+    else
+        echo "zone:     unknown -- ${CONFIG} does not exist"
+    fi
+}
+
+command=${1:-}
+[[ $# -gt 0 ]] && shift
+
+case ${command} in
+    publish) cmd_publish "$@" ;;
+    unpublish) cmd_unpublish "$@" ;;
+    list) cmd_list "$@" ;;
+    where) cmd_where "$@" ;;
+    -h | --help | help) usage ;;
+    "") usage >&2; die "no command given" ;;
+    *) usage >&2; die "unknown command: ${command}" ;;
+esac

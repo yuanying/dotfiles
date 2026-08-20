@@ -1,0 +1,23 @@
+zone: example.org
+team_domain: acme.cloudflareaccess.com
+origin: 2001:db8::1
+forward_auth_port: 9200
+
+defaults:
+  auth: none
+
+services:
+  # Ordering in the generated file follows this list, not the alphabet.
+  - name: sd
+    port: 7860
+  - name: llama
+    port: 8081
+    auth: required
+    aud: aud-llama
+    viewers:
+      github_orgs:
+        - acme
+  - name: notebook
+    port: 8888
+    auth: required
+    aud: aud-notebook

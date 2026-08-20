@@ -316,6 +316,37 @@ COPY --from=herdr_plugin_builder /opt/herdr/plugins /opt/herdr/plugins
 # docker
 COPY --from=docker_builder /usr/local/bin/docker /usr/local/bin/
 
+# The public HTTPS proxy: see proxy/ and docs/adr/0001. Traefik terminates TLS
+# for whatever the declaration file publishes; it is only started when an origin
+# certificate exists, so these three are inert in a container that never
+# publishes anything. yq reads the declaration file and bats runs the tests for
+# the scripts that generate the configuration -- both are wanted in the image
+# because that is where the editing happens.
+#
+# renovate: datasource=github-releases depName=traefik/traefik extractVersion=^v(?<version>.+)$
+ARG TRAEFIK_VERSION=3.7.11
+RUN \
+    curl -fsSL https://github.com/traefik/traefik/releases/download/v${TRAEFIK_VERSION}/traefik_v${TRAEFIK_VERSION}_linux_amd64.tar.gz | \
+        sudo tar zx -C /usr/local/bin traefik && \
+    sudo chmod +x /usr/local/bin/traefik
+
+# The Go one. Ubuntu's `yq` package is a different program with a different
+# expression language, so it is not a substitute.
+# renovate: datasource=github-releases depName=mikefarah/yq extractVersion=^v(?<version>.+)$
+ARG YQ_VERSION=4.53.6
+RUN \
+    sudo curl -fsSL -o /usr/local/bin/yq \
+        https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 && \
+    sudo chmod +x /usr/local/bin/yq
+
+# renovate: datasource=github-releases depName=bats-core/bats-core extractVersion=^v(?<version>.+)$
+ARG BATS_VERSION=1.14.0
+RUN \
+    curl -fsSL https://github.com/bats-core/bats-core/archive/refs/tags/v${BATS_VERSION}.tar.gz | \
+        tar zx -C /tmp && \
+    sudo /tmp/bats-core-${BATS_VERSION}/install.sh /usr/local && \
+    rm -rf /tmp/bats-core-${BATS_VERSION}
+
 # kubectx
 # renovate: datasource=github-tags depName=ahmetb/kubectx extractVersion=^v(?<version>.+)$
 ARG KUBECTX_VERSION=0.11.0
