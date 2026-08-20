@@ -69,10 +69,14 @@ verify() {
 
 @test "a token whose signature has been tampered with is refused" {
     jwt=$(mint)
-    # Flip the last character of the signature, keeping the token well-formed.
-    last=${jwt: -1}
-    [ "${last}" = "A" ] && replacement=B || replacement=A
-    [ "$(verify "${jwt%?}${replacement}")" = "403" ]
+    # Change the first character of the signature, keeping the token
+    # well-formed. Not the last one: base64url's final character of a 256-byte
+    # signature carries four bits of padding that the decoder discards, so
+    # flipping it is a coin toss between a real change and no change at all.
+    signature=${jwt##*.}
+    head=${signature:0:1}
+    [ "${head}" = "A" ] && replacement=B || replacement=A
+    [ "$(verify "${jwt%.*}.${replacement}${signature:1}")" = "403" ]
 }
 
 @test "a token signed by some other key is refused" {

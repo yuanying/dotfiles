@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+#
+# Bring the devbox's public HTTPS proxy up and down.
+#
+# entrypoint.sh calls `start` on every boot, so the important property is that
+# nothing here can stop the devbox from coming up: no certificate or no
+# declaration file is a skip, not a failure. See docs/adr/0002 for why the
+# certificate is allowed to be absent -- it is issued by hand and Cloudflare
+# does not keep a copy, so "not yet" and "lost it" are both normal states.
+
+set -euo pipefail
+
+PROXY_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+
+STATE=${DEVBOX_PROXY_STATE:-${HOME}/.config/devbox-proxy}
+CONFIG=${DEVBOX_PROXY_CONFIG:-${PROXY_DIR}/services.yaml}
+
+# Traefik binds :443, which needs root. Overridable so the tests can run the
+# stand-in daemons as themselves.
+SUDO=${DEVBOX_PROXY_SUDO-sudo}
+
+CERT=${STATE}/certs/origin.pem
+KEY=${STATE}/certs/origin.key
+RUN=${STATE}/run
+LOG=${STATE}/log
+
+usage() {
+    cat <<EOF
+usage: $(basename "$0") {start|stop|restart|reload|status|generate}
+
+  start      generate the configuration and bring the daemons up
+  stop       take them down
+  restart    stop, then start
+  reload     same as restart -- the static Traefik configuration can change too
+  status     report what is running, and when the certificate expires
+  generate   write the Traefik configuration and stop there
+
+  State lives in ${STATE}; the declaration file is ${CONFIG}.
+EOF
+}
+
+note() {
+    echo "$(basename "$0"): $*" >&2
+}
+
+die() {
+    note "$*"
+    exit 1
+}
+
+pidfile() {
+    echo "${RUN}/$1.pid"
+}
+
+running() {
+    local file
+    file=$(pidfile "$1")
+    [[ -f ${file} ]] && kill -0 "$(cat "${file}")" 2> /dev/null
+}
+
+# Runs a daemon detached, recording its pid. Anything it writes goes to its own
+# log; nothing reaches the caller's stdout, which on boot belongs to sshd.
+spawn() {
+    local name=$1
+    shift
+    mkdir -p "${RUN}" "${LOG}"
+    "$@" >> "${LOG}/${name}.log" 2>&1 &
+    echo $! > "$(pidfile "${name}")"
+}
+
+reap() {
+    local name=$1 file pid
+    file=$(pidfile "${name}")
+    [[ -f ${file} ]] || return 0
+    pid=$(cat "${file}")
+    if kill -0 "${pid}" 2> /dev/null; then
+        ${SUDO} kill "${pid}" 2> /dev/null || kill "${pid}" 2> /dev/null || true
+        # Give it a moment to go on its own before insisting.
+        for _ in $(seq 20); do
+            kill -0 "${pid}" 2> /dev/null || break
+            sleep 0.1
+        done
+        kill -0 "${pid}" 2> /dev/null && { ${SUDO} kill -9 "${pid}" 2> /dev/null || true; }
+    fi
+    rm -f "${file}"
+}
+
+# True when at least one service asks for authentication, which is the only
+# reason to run the verifier.
+needs_verifier() {
+    yq -o=json '.' "${CONFIG}" |
+        jq -e 'any((.services // [])[]; (.auth // (.defaults.auth // "required")) == "required")' \
+            > /dev/null
+}
+
+generate() {
+    "${PROXY_DIR}/bin/generate-traefik-config.sh" --config "${CONFIG}" --state-dir "${STATE}"
+}
+
+start() {
+    # Skipping is the designed behaviour, not an error: the devbox has to come
+    # up either way. The reason goes to stderr so that a hand-run start is not
+    # a mystery, and stdout stays clean.
+    if [[ ! -f ${CONFIG} ]]; then
+        note "no declaration file at ${CONFIG}; not starting the proxy"
+        return 0
+    fi
+    if [[ ! -f ${CERT} || ! -f ${KEY} ]]; then
+        note "no origin certificate in ${STATE}/certs; not starting the proxy"
+        note "run ${PROXY_DIR}/bin/issue-origin-cert.sh to get one"
+        return 0
+    fi
+
+    command -v traefik > /dev/null || die "traefik is not installed"
+
+    # A bad declaration file is a real error: the operator changed something
+    # and it does not hold together. Nothing is started on a half-configuration.
+    generate
+
+    if needs_verifier && ! running forwardauth; then
+        local team port
+        team=$(yq -r '.team_domain' "${CONFIG}")
+        port=$(yq -r '.forward_auth_port // 9101' "${CONFIG}")
+        spawn forwardauth "${PROXY_DIR}/bin/cf-access-forwardauth" \
+            --team-domain "${team}" --port "${port}"
+    fi
+
+    if ! running traefik; then
+        spawn traefik ${SUDO} traefik "--configFile=${STATE}/traefik/traefik.yml"
+    fi
+}
+
+stop() {
+    reap traefik
+    reap forwardauth
+}
+
+status() {
+    local name
+    for name in traefik forwardauth; do
+        if running "${name}"; then
+            echo "${name}: running (pid $(cat "$(pidfile "${name}")"))"
+        else
+            echo "${name}: not running"
+        fi
+    done
+
+    if [[ -f ${CERT} ]]; then
+        # Nothing warns about this certificate expiring -- Cloudflare does not
+        # send a reminder for Origin CA -- so `status` is where the date lives.
+        local not_after
+        not_after=$(openssl x509 -in "${CERT}" -noout -enddate 2> /dev/null | cut -d= -f2-)
+        echo "certificate: expires ${not_after:-unknown}"
+    else
+        echo "certificate: absent"
+    fi
+}
+
+command=${1:-status}
+case ${command} in
+    start) start ;;
+    stop) stop ;;
+    restart | reload) stop; start ;;
+    status) status ;;
+    generate) generate ;;
+    -h | --help) usage ;;
+    *) usage >&2; die "unknown command: ${command}" ;;
+esac

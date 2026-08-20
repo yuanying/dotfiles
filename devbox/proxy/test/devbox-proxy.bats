@@ -3,6 +3,8 @@
 # The proxy must never be the reason the devbox fails to come up: a missing
 # certificate or a missing declaration file is a skip, not an error.
 
+bats_require_minimum_version 1.5.0
+
 load helpers
 
 setup() {
@@ -63,9 +65,11 @@ running() {
     [ ! -f "${BATS_TEST_TMPDIR}/traefik.args" ]
 }
 
-@test "a skipped start says nothing on stdout" {
-    run "${PROXY_BIN}/devbox-proxy" start
-    [ -z "$output" ] || [ -z "$(echo "$output" | grep -v '^$')" ]
+@test "a skipped start keeps stdout clean but still says why" {
+    # On boot stdout belongs to entrypoint.sh, so the reason goes to stderr.
+    run --separate-stderr "${PROXY_BIN}/devbox-proxy" start
+    [ -z "$output" ]
+    [[ "$stderr" == *"certificate"* ]]
 }
 
 @test "start brings up traefik against the generated config" {
