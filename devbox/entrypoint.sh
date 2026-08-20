@@ -63,10 +63,10 @@ done
 
 echo "Setup public proxy"
 # Publishes whatever ~/dotfiles/devbox/proxy/services.<hostname>.yaml declares
-# on https://<name>.<zone>, behind Cloudflare Access. It is deliberately not a
+# on https://<name>.<zone>, behind a GitHub login. It is deliberately not a
 # condition for this container coming up: with no declaration file for this
-# host, or no origin certificate under ~/.config/devbox-proxy, devbox-proxy
-# starts nothing and says so. See docs/adr/0001.
+# host, devbox-proxy starts nothing and says so. Certificates are no longer a
+# precondition either -- they arrive on their own. See docs/adr/0005 and 0008.
 #
 # This has to happen here, before sshd takes over the process below and never
 # returns. It comes from ~/dotfiles rather than from the image for the same
@@ -75,6 +75,12 @@ echo "Setup public proxy"
 proxy=~/dotfiles/devbox/proxy/bin/devbox-proxy
 if [[ -x ${proxy} ]]; then
     "${proxy}" start || echo "the proxy did not start; carrying on" >&2
+    # A renewal that keeps failing is an outage on a thirty-day timer, and
+    # nothing else would ever mention it (docs/adr/0006). Silent when there is
+    # nothing wrong, which is the usual case.
+    "${proxy}" warnings 2> /dev/null | while read -r warning; do
+        echo "devbox-proxy: ${warning}" >&2
+    done
 fi
 
 echo "Starting sshd..."

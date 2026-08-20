@@ -208,3 +208,17 @@ YAML
     run -0 proxy status
     [[ "${output}" == *"no declaration file"* ]]
 }
+
+# entrypoint.sh pipes this into the container's log on every boot, so it has to
+# be silent unless something is actually wrong (docs/adr/0006).
+@test "warnings says nothing on a devbox with no certificates yet" {
+    run -0 proxy build
+    run -0 proxy warnings
+    [ -z "${output}" ]
+}
+
+@test "warnings says nothing when there is no declaration file" {
+    rm "${CONFIG}"
+    run -0 proxy warnings
+    [ -z "${output}" ]
+}

@@ -131,8 +131,8 @@ because the versioning scheme changes. The fork's FORK.md has the details.
 ## Public HTTP Proxy
 
 `proxy/` publishes HTTP servers running in the container on
-`https://<name>.<zone>`, behind Cloudflare Access. `proxy/README.md` covers
-operating it and `docs/adr/0001`–`0004` cover why; three things constrain edits
+`https://<name>.<zone>`, behind a GitHub login. `proxy/README.md` covers
+operating it and `docs/adr/0004`–`0008` cover why; four things constrain edits
 elsewhere in this directory.
 
 `entrypoint.sh` calls `~/dotfiles/devbox/proxy/bin/devbox-proxy start` before
@@ -143,15 +143,20 @@ the final `sshd` line, and its failure must stay non-fatal: with no certificate
 or no declaration file for the host, the proxy starts nothing and the container
 comes up regardless.
 
-Traefik, yq and bats are pinned in the `Dockerfile` like everything else. The yq
-is the Go one from `mikefarah/yq`; Ubuntu's `yq` package is a different program
-with a different expression language and is not a substitute.
+The proxy itself is Go, in `proxy/proxyd`, and is compiled on first start into
+`~/.config/devbox-proxy/bin` rather than baked into the image — so that fixing
+it stays a `git pull`, which it was for free when this was shell
+(`docs/adr/0005`). The Go toolchain in this image is therefore load-bearing for
+running the proxy, not only for editing Go.
 
-Nothing generated is checked in, and nothing secret is either: the origin
-private key lives in `~/.config/devbox-proxy`, and Cloudflare API tokens are
-passed in the environment for a single script run. The audience tags in the
-declaration file are identifiers, not credentials, and are meant to be
-committed.
+yq and bats are pinned in the `Dockerfile` like everything else. The yq is the
+Go one from `mikefarah/yq`; Ubuntu's `yq` package is a different program with a
+different expression language and is not a substitute.
+
+Nothing generated is checked in, and nothing secret is either: the GitHub
+client secret and the token-signing key live in `~/.config/devbox-proxy` at
+mode 600, and no API token exists anywhere on the box. The declaration file
+holds GitHub account names, which are public, and is meant to be committed.
 
 ## Dependency Updates (Renovate)
 

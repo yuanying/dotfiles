@@ -8,44 +8,45 @@ Each devbox has a zone of its own — **anietta is `oeilvert.dev`, boucherie is
 hostname. So a name means something different on each box instead of clashing:
 `llama` on anietta is `llama.oeilvert.dev`, `llama` on boucherie is
 `llama.poissonnerie.dev`, and both can exist at once. The examples below use
-anietta's zone; substitute your own.
+boucherie's zone; substitute your own.
 
 ```
-browser ──TLS──▶ Cloudflare edge ──TLS──▶ devbox :443 ──▶ 127.0.0.1:<port>
-                 Access checks              Traefik checks
-                 the GitHub login           the token Access issued
+browser ──TLS──▶ devbox :443 ──▶ 127.0.0.1:<port>
+                 │
+                 ├─ certificate from Let's Encrypt, obtained and renewed here
+                 ├─ session cookie checked, or the visitor is sent to
+                 │  auth.<zone>, which runs the GitHub login
+                 └─ one process: devbox-proxyd
 ```
 
-Cloudflare terminates the public certificate and runs the login. The devbox's
-own global IPv6 is the origin, so the second leg needs a certificate Cloudflare
-trusts, and — because that address is reachable by anyone who finds it — a check
-that the request really came through Access. The reasoning behind each of those
-is in [`docs/adr/`](../../docs/adr/): 0001 the shape, 0002 the certificate,
-0003 the JWT check, 0004 the declaration file.
+Nothing is in front of the devbox. Cloudflare holds one wildcard `AAAA` record
+and answers DNS queries for it; that is the entire dependency. There is no
+proxy, no Access application, and no API token anywhere on this machine.
+
+The reasoning is in [`docs/adr/`](../../docs/adr/): 0005 the shape, 0006 the
+certificates, 0007 the login, 0008 the process. Records 0001 to 0003 describe
+the arrangement this replaced and are marked superseded.
 
 ## What is here
 
 | | |
 |---|---|
 | `services.<hostname>.yaml` | the declaration file — the only thing edited by hand |
-| `bin/devbox-proxy` | `start` / `stop` / `restart` / `reload` / `status`; `entrypoint.sh` calls `start` |
-| `bin/generate-traefik-config.sh` | declaration file → Traefik configuration |
-| `bin/issue-origin-cert.sh` | issue (or re-issue) the origin certificate |
-| `bin/sync-cloudflare.sh` | reconcile DNS records and Access applications |
-| `bin/cf-access-forwardauth` | the JWT check Traefik calls on every request |
-| `test/` | `bats devbox/proxy/test`; `bats -r .` from the repository root runs these and the skill's |
+| `bin/devbox-proxy` | `start` / `stop` / `restart` / `reload` / `status` / `check` / `build`; `entrypoint.sh` calls `start` |
+| `proxyd/` | the proxy itself: TLS, the GitHub login, and the reverse proxy |
+| `test/` | `bats devbox/proxy/test` for the wrapper; `go test ./...` in `proxyd/` for the rest |
 
 Adding a service by hand is below. An agent that has just started a server does
 it through the `devbox-publish` skill in `skills/` instead, which is the same
-three steps with the arguments checked first.
+two steps with the arguments checked first.
 
-Runtime state lives in `~/.config/devbox-proxy` — certificates, generated
-configuration, logs, pid files. It is under `$HOME`, which is the host's, so it
-survives the container being rebuilt.
+Runtime state lives in `~/.config/devbox-proxy` — certificates, the signing key,
+the GitHub credentials, the compiled binary, logs, pid file. It is under
+`$HOME`, which is the host's, so it survives the container being rebuilt.
 
 ## One-time setup
 
-Steps 1 to 3 are dashboard work and cannot be scripted from here.
+Two of these are dashboard work; the third is one file.
 
 ### 1. A GitHub OAuth App
 
@@ -53,102 +54,72 @@ github.com → Settings → Developer settings → OAuth Apps → New OAuth App.
 
 | Field | Value |
 |---|---|
-| Application name | anything, e.g. `Cloudflare Access` |
-| Homepage URL | `https://<team>.cloudflareaccess.com` |
-| Authorization callback URL | `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback` |
+| Application name | anything, e.g. `boucherie devbox` |
+| Homepage URL | `https://auth.poissonnerie.dev` |
+| Authorization callback URL | `https://auth.poissonnerie.dev/callback` |
 
-`<team>` is the Cloudflare Zero Trust team name. Keep the Client ID, and
-generate a client secret — it is shown once.
+**The callback is `auth.<zone>` and nothing else.** One application covers every
+service on the box, now and later, because every login happens on that one host
+and is handed to the service afterwards (`docs/adr/0007`). Publishing a service
+never involves this page again.
 
-### 2. GitHub as an identity provider in Zero Trust
+Keep the Client ID, and generate a client secret — it is shown once.
 
-Zero Trust dashboard → Settings → Authentication → Login methods → Add new →
-GitHub. Paste the App ID and the client secret from step 1, and use **Test
-connection** before saving.
-
-Cloudflare asks GitHub for `Organizations and teams (read-only)` and
-`Email addresses (read-only)`, which is why a policy can be written against
-either a GitHub organisation or an email address.
-
-Note the team domain while here — Settings → Custom Pages shows it, and it is
-the host in the URLs above. It goes into `team_domain` in the declaration file.
-The origin uses it to know which team's signatures to accept.
-
-### 3. SSL mode: Full (strict)
-
-Dashboard → the zone → SSL/TLS → Overview → **Full (strict)**.
-
-This is **zone-wide**: every other origin behind the zone must already present
-a certificate Cloudflare trusts, or it breaks when the mode changes. Both zones
-were empty when they were picked — no `A`, `AAAA`, `CNAME` or `MX` record in
-either — so today there is nothing else to break. Publishing anything else from
-one of these zones later means giving it a trusted certificate first.
-
-Full alone is not a substitute — it accepts any certificate the origin offers,
-including a forged one, which is the whole reason not to use a self-signed
-certificate here (`docs/adr/0002`).
-
-### 4. API tokens
-
-Two scripts want a token, and they want different things. Either make one token
-with the union, or make two and use each where it belongs. Create them at
-dashboard → My Profile → API Tokens → Create Token → Custom token.
-
-For `issue-origin-cert.sh`:
-
-| Scope | Permission |
-|---|---|
-| Zone → this host's zone | SSL and Certificates → Edit |
-
-For `sync-cloudflare.sh`:
-
-| Scope | Permission |
-|---|---|
-| Zone → this host's zone | Zone → Read |
-| Zone → this host's zone | DNS → Edit |
-| Account → the account holding the zone | Access: Apps and Policies → Edit |
-| Account → the account holding the zone | Access: Organizations, Identity Providers, and Groups → Read |
-
-The last one is only needed if a service lists `github_orgs`: a GitHub
-organisation rule has to name the identity provider it belongs to, so the script
-looks it up.
-
-Tokens are passed in the environment for the length of one run and are never
-written to disk. `docs/adr/0002` explains why that is worth the inconvenience.
-
-### 5. Issue the origin certificate
+### 2. The credentials file
 
 ```bash
-cd ~/dotfiles
-$EDITOR devbox/proxy/services.$(hostname -s).yaml   # fill in team_domain
-CLOUDFLARE_API_TOKEN=... devbox/proxy/bin/issue-origin-cert.sh
+mkdir -p ~/.config/devbox-proxy
+cat > ~/.config/devbox-proxy/github.yaml <<'EOF'
+client_id: Iv1.xxxxxxxxxxxx
+client_secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EOF
+chmod 600 ~/.config/devbox-proxy/github.yaml
 ```
 
-This writes `~/.config/devbox-proxy/certs/origin.{pem,key}` for `*.<zone>` plus
-the apex, valid for fifteen years. The zone comes from the declaration file, so
-each devbox gets a certificate for its own and neither can stand in for the
-other — boucherie needs its own run of this.
+The proxy refuses to read it if other accounts can. This is the only secret that
+has to be placed by hand: the token-signing key is generated on first use, and
+certificates arrive on their own.
 
-**Cloudflare shows the private key once and keeps no copy.** There is nothing to
-download later. Losing it is not a disaster — re-running this script issues a
-new one — but there is no other way back. Nothing will warn about expiry either;
-`devbox-proxy status` prints the date.
+### 3. One DNS record
+
+In the Cloudflare dashboard, on the zone:
+
+| Type | Name | Content | Proxy status |
+|---|---|---|---|
+| `AAAA` | `*` | the devbox's global IPv6 | **DNS only (grey cloud)** |
+
+The address is the one `start-cuda` / `start-rocm` pass to `docker run --ip6`.
+
+**Grey cloud matters.** With the orange cloud on, Cloudflare intercepts port 80
+and the ACME challenge never reaches the devbox, so no certificate is ever
+issued (`docs/adr/0006`).
+
+Nothing else in the zone is touched, and nothing on the devbox ever writes to
+Cloudflare again.
+
+### 4. Ports 80 and 443 reachable
+
+Port 443 serves everything. Port 80 answers ACME challenges and redirects the
+rest to HTTPS; it has to be open or no certificate can be issued.
+
+`bin/devbox-proxy build` gives the binary `cap_net_bind_service` so it can bind
+both as your own user — the one `sudo` in the whole arrangement, and only at
+build time.
 
 ## Adding a service
 
 Suppose `llama-server` is listening on `127.0.0.1:8081` and it should be at
-`https://llama.oeilvert.dev` for you and anyone in the `acme` GitHub org.
+`https://llama.poissonnerie.dev` for you and anyone in the `acme` GitHub org.
 
 ```yaml
-# devbox/proxy/services.anietta.yaml
+# devbox/proxy/services.boucherie.yaml
 services:
   - name: llama
     port: 8081
     auth: required
-    aud: ""            # sync-cloudflare.sh fills this in
     viewers:
-      emails:
-        - you@example.com
+      logins:
+        - yuanying
       github_orgs:
         - acme
 ```
@@ -156,9 +127,7 @@ services:
 Then:
 
 ```bash
-CLOUDFLARE_API_TOKEN=... devbox/proxy/bin/sync-cloudflare.sh --dry-run   # look first
-CLOUDFLARE_API_TOKEN=... devbox/proxy/bin/sync-cloudflare.sh
-devbox-proxy reload
+devbox/proxy/bin/devbox-proxy reload
 git add -A devbox/proxy && git commit -m 'Publish llama'
 ```
 
@@ -170,80 +139,84 @@ Or, the same thing without editing YAML:
 ```
 
 That checks the arguments, checks something is actually listening on the port,
-writes the block, and then goes as far as it can: with a token in the
-environment it syncs and reloads, and without one it stops after the file and
-prints what is left. It skips the reload when the configuration does not
-generate — an authenticated service has no audience tag until the sync runs, and
-reloading would stop Traefik and then fail to start it, taking down whatever was
-already working.
+writes the block and reloads. There is no third step and no token: adding a
+service touches nothing outside this devbox.
 
-The sync creates the proxied `AAAA` record and the Access application, and
-writes back the audience tag Cloudflare generated. That tag has to be committed:
-the origin checks it on every request, and without it the next `reload` refuses
-to generate a configuration at all.
+The first request to `https://llama.poissonnerie.dev` waits a few seconds while
+Let's Encrypt issues a certificate. Every request after that is served from the
+cached one, and renewal happens on its own about thirty days before expiry.
 
-Names are a **single label**. `llama` is fine, `llama.gpu` is rejected — free
-Universal SSL covers one level of subdomain and a wildcard Origin CA certificate
-covers exactly one level too. Namespace in the name (`gpu-llama`) instead.
+Names are a **single label**. `llama` is fine, `llama.gpu` is rejected — the
+wildcard `AAAA` record covers exactly one level. Namespace in the name
+(`gpu-llama`) instead. `auth` is reserved.
+
+Viewers are **GitHub account names**, not email addresses. A login is what the
+account is; an address can be unverified, one of several, or changed quietly.
 
 `auth: none` publishes something with no login at all. It is then genuinely
-public, at the hostname and at the origin address alike; that is what the
-setting means.
+public: the IPv6 address is in DNS and the hostname appears in Certificate
+Transparency logs, so "nobody will find it" is not a property it has.
 
-Removing a service is the reverse: delete the block, then
-`sync-cloudflare.sh --prune`, then `devbox-proxy reload`. Without `--prune`
-nothing is ever deleted from Cloudflare. Even with it, only names of the form
-`<label>.<zone>` in *this host's* zone that the file no longer mentions, and
-only ones that are proxied — a grey-cloud record is never touched.
+Removing a service is the reverse: delete the block and reload, or
+`devbox-publish unpublish --name llama`. The wildcard record stays — it always
+covered every label — but nothing answers on that name, and its certificate
+simply stops being renewed.
 
 ## Checking that it works
 
-**The devbox comes up without any of this.** Move the certificate aside and
-restart the container; it should start normally, with `devbox-proxy` saying on
-stderr that it found no certificate and starting nothing.
+**The devbox comes up without any of this.** There is no certificate to be
+missing any more, so the only thing that stops the proxy starting is having no
+declaration file:
 
 ```bash
-mv ~/.config/devbox-proxy/certs ~/.config/devbox-proxy/certs.away
 docker restart devbox && docker logs devbox 2>&1 | grep -i proxy
-mv ~/.config/devbox-proxy/certs.away ~/.config/devbox-proxy/certs
 ```
 
-**The front door.** Open `https://llama.oeilvert.dev` in a browser. Expect a
-Cloudflare Access page, GitHub, a consent screen the first time, and then the
-service. `~/.config/devbox-proxy/log/forwardauth.log` records who was let in.
+**The front door.** Open `https://llama.poissonnerie.dev` in a browser. Expect a
+redirect to `auth.poissonnerie.dev`, GitHub, a consent screen the first time,
+and then the service. `~/.config/devbox-proxy/log/proxy.log` records what
+happened.
 
-**The back door is shut.** Ask the origin directly, bypassing Cloudflare:
+**There is no back door to check.** The login is verified by the same process
+that serves the request, so it holds whether the request arrived through the
+hostname or straight at the IPv6 address. That is the difference from the
+arrangement `docs/adr/0003` had to shore up separately.
 
 ```bash
 curl -sk -o /dev/null -w '%{http_code}\n' \
-    --resolve 'llama.oeilvert.dev:443:[2405:6581:8580:310::153]' \
-    https://llama.oeilvert.dev/
+    --resolve 'llama.poissonnerie.dev:443:[2405:6581:8580:302::151]' \
+    https://llama.poissonnerie.dev/
 ```
 
-Expect **403**. A 200 means the check is not running — look at
-`forwardauth.log` and at whether the router actually got its middleware. `-k` is
-needed because the origin certificate is signed by Cloudflare's Origin CA, which
-no public trust store carries; that is by design.
+Expect **302** to the auth host. `-k` is not needed — the certificate is
+publicly trusted now — but it does no harm.
 
-**Everything at once:** `devbox-proxy status`.
+**Everything at once:** `devbox-proxy status`. It prints every hostname, when
+its certificate expires, and what the last renewal attempt did. It answers
+while the proxy is stopped, too.
 
 ## When it goes wrong
 
 | Symptom | Where to look |
 |---|---|
-| Cloudflare error 526 | the certificate does not verify: is SSL mode Full (strict), and is the certificate the one issued for this zone? |
-| Cloudflare error 521/522 | Traefik is not listening: `devbox-proxy status`, then `~/.config/devbox-proxy/log/traefik.log` |
-| Everything returns 403 | `forwardauth.log`; usually a stale `aud` after the Access application was recreated |
-| Authenticated routes return 500 | the verifier is not running. It fails closed on purpose |
-| `devbox-proxy start` says nothing happened | no certificate, or no declaration file for this hostname |
+| The browser cannot connect at all | is the proxy running? `devbox-proxy status`. Then whether `:443` reaches the devbox from outside |
+| A certificate warning, or a name that never gets one | `devbox-proxy status` for the last attempt and its reason. Then: is the record grey cloud, and does port 80 reach the box? |
+| `status` says `pending` for a name | nothing has visited it yet, or the first attempt is still running. Normal on a fresh devbox |
+| The login loops back to GitHub | the callback URL in the OAuth App is not exactly `https://auth.<zone>/callback` |
+| "You are signed in as X, who is not on the list" | X is the GitHub account you are actually signed in to. Add it to `viewers.logins`, or sign in as someone who is |
+| 502 from a name that used to work | the backend stopped. `devbox-proxy status` is fine, the service behind the port is not |
+| `reload` exits non-zero | the declaration file does not validate, and the message says why. Whatever was running is still running |
 
 ## Tests
 
 ```bash
-bats devbox/proxy/test
+bats devbox/proxy/test          # the wrapper: building, starting, reloading
+cd devbox/proxy/proxyd && go test ./...   # everything else
 ```
 
-They cover the declaration file → Traefik configuration transformation, the
-validation rules, the start/stop behaviour, certificate issuance against a
-stand-in API, and the JWT check — mostly its negative cases. What they do not
-cover is Cloudflare itself and a real browser login; those are the steps above.
+From the repository root, `bats -r .` runs the wrapper's tests and the
+publishing skill's. The Go tests cover the declaration file, token forgery and
+expiry, a cookie replayed against another service, the GitHub exchange against a
+stand-in, the routing table being replaced under load, and what `status` says.
+What they do not cover is Let's Encrypt itself and a real browser login; those
+are the steps above.
