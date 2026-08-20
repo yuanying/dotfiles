@@ -148,7 +148,7 @@ npx --package renovate renovate-config-validator
 npx --package renovate renovate --platform=local --dry-run=extract
 ```
 
-The second command should report fifteen dependencies across `devbox/Dockerfile` and
+The second command should report eighteen dependencies across `devbox/Dockerfile` and
 `devbox/Makefile`; a manager whose pattern stopped matching shows up as a missing file there.
 
 ## Container Runtime Notes

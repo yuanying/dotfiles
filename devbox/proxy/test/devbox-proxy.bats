@@ -17,12 +17,16 @@ setup() {
     FAKE_BIN="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${FAKE_BIN}"
 
-    # Stand-ins for the real daemons: they record how they were called and then
-    # stay alive so that the pid files mean something.
+    # A stand-in for the real daemon. It records how it was called, and it
+    # forks a child before settling down: in production traefik is started
+    # through sudo, so the recorded pid is the wrapper's and taking only that
+    # one down would orphan the daemon. The child is how the test notices.
     cat > "${FAKE_BIN}/traefik" <<'EOF'
 #!/bin/bash
 printf '%s\n' "$@" > "${BATS_TEST_TMPDIR}/traefik.args"
-exec sleep 300
+sleep 300 &
+echo $! > "${BATS_TEST_TMPDIR}/traefik.child"
+wait
 EOF
     chmod +x "${FAKE_BIN}/traefik"
 
@@ -51,6 +55,16 @@ running() {
     [ -f "${pidfile}" ] && kill -0 "$(cat "${pidfile}")" 2> /dev/null
 }
 
+# `start` returns as soon as the daemons are backgrounded, so anything they
+# write appears a moment later.
+wait_for() {
+    for _ in $(seq 50); do
+        [ -f "$1" ] && return 0
+        sleep 0.1
+    done
+    return 1
+}
+
 @test "start without a certificate skips instead of failing" {
     run "${PROXY_BIN}/devbox-proxy" start
     [ "$status" -eq 0 ]
@@ -76,6 +90,7 @@ running() {
     install_cert
     run "${PROXY_BIN}/devbox-proxy" start
     [ "$status" -eq 0 ]
+    wait_for "${BATS_TEST_TMPDIR}/traefik.args"
     grep -q -- "--configFile=${STATE}/traefik/traefik.yml" "${BATS_TEST_TMPDIR}/traefik.args"
     [ -f "${STATE}/traefik/dynamic/services.yml" ]
     running traefik
@@ -127,6 +142,17 @@ EOF
     "${PROXY_BIN}/devbox-proxy" stop
     ! running traefik
     ! running forwardauth
+}
+
+@test "stop reaches the daemon itself, not just what started it" {
+    install_cert
+    "${PROXY_BIN}/devbox-proxy" start
+    local child
+    wait_for "${BATS_TEST_TMPDIR}/traefik.child"
+    child=$(cat "${BATS_TEST_TMPDIR}/traefik.child")
+    kill -0 "${child}"
+    "${PROXY_BIN}/devbox-proxy" stop
+    ! kill -0 "${child}" 2> /dev/null
 }
 
 @test "status reports both states without failing" {

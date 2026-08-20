@@ -61,6 +61,22 @@ for plugin in /opt/herdr/plugins/*; do
     fi
 done
 
+echo "Setup public proxy"
+# Publishes whatever ~/dotfiles/devbox/proxy/services.<hostname>.yaml declares
+# on https://<name>.<zone>, behind Cloudflare Access. It is deliberately not a
+# condition for this container coming up: with no declaration file for this
+# host, or no origin certificate under ~/.config/devbox-proxy, devbox-proxy
+# starts nothing and says so. See docs/adr/0001.
+#
+# This has to happen here, before sshd takes over the process below and never
+# returns. It comes from ~/dotfiles rather than from the image for the same
+# reason the herdr plugin config does: the declaration file changes far more
+# often than the image, and $HOME is the host's.
+proxy=~/dotfiles/devbox/proxy/bin/devbox-proxy
+if [[ -x ${proxy} ]]; then
+    "${proxy}" start || echo "the proxy did not start; carrying on" >&2
+fi
+
 echo "Starting sshd..."
 # sudo は env_reset で Dockerfile の ENV を捨て、OpenSSH もセッションの環境を
 # 作り直すため、そのままでは EDITOR がログインセッションに残らない。zshrc は

@@ -164,12 +164,18 @@ while IFS= read -r name; do
 done <<< "${declared}"
 
 if [[ -n ${prune} ]]; then
+    # Proxied records only. This script never creates a grey-cloud record, so
+    # it has no business deleting one -- and there is one that matters:
+    # anietta.oeilvert.org is the raw address SSH and mosh reach the devbox on,
+    # it points at the same origin, and it is a single label under the zone.
+    # Without this it would look exactly like an abandoned service.
     while IFS= read -r fqdn; do
         [[ -n ${fqdn} ]] || continue
         in_namespace "${fqdn}" || continue
         grep -qxF "${fqdn%".${zone}"}" <<< "${declared}" && continue
         id=$(jq -r --arg fqdn "${fqdn}" \
-            '.[] | select(.name == $fqdn) | .id' <<< "${records}" | head -1)
+            '.[] | select(.name == $fqdn and .proxied == true) | .id' <<< "${records}" | head -1)
+        [[ -n ${id} ]] || continue
         mutate "delete AAAA ${fqdn}" DELETE "/zones/${zone_id}/dns_records/${id}"
     done < <(jq -r '.[].name' <<< "${records}")
 fi

@@ -68,12 +68,30 @@ running() {
 
 # Runs a daemon detached, recording its pid. Anything it writes goes to its own
 # log; nothing reaches the caller's stdout, which on boot belongs to sshd.
+#
+# setsid gives it a session and a process group of its own, and the pid
+# recorded is therefore also the group id. That matters because Traefik is
+# started through sudo: the pid this can see belongs to sudo, and signalling
+# only that would leave the daemon behind.
 spawn() {
     local name=$1
     shift
     mkdir -p "${RUN}" "${LOG}"
-    "$@" >> "${LOG}/${name}.log" 2>&1 &
+    setsid "$@" >> "${LOG}/${name}.log" 2>&1 &
     echo $! > "$(pidfile "${name}")"
+}
+
+# Signals the whole process group, then the single process, as root and then as
+# ourselves -- whichever of the four gets through. Nothing here is fatal: a
+# daemon that is already gone is the outcome being asked for.
+signal() {
+    local sig=$1 pid=$2
+    {
+        ${SUDO} kill "-${sig}" -- "-${pid}" ||
+            kill "-${sig}" -- "-${pid}" ||
+            ${SUDO} kill "-${sig}" "${pid}" ||
+            kill "-${sig}" "${pid}"
+    } 2> /dev/null || true
 }
 
 reap() {
@@ -82,13 +100,13 @@ reap() {
     [[ -f ${file} ]] || return 0
     pid=$(cat "${file}")
     if kill -0 "${pid}" 2> /dev/null; then
-        ${SUDO} kill "${pid}" 2> /dev/null || kill "${pid}" 2> /dev/null || true
+        signal TERM "${pid}"
         # Give it a moment to go on its own before insisting.
-        for _ in $(seq 20); do
+        for _ in $(seq 30); do
             kill -0 "${pid}" 2> /dev/null || break
             sleep 0.1
         done
-        kill -0 "${pid}" 2> /dev/null && { ${SUDO} kill -9 "${pid}" 2> /dev/null || true; }
+        kill -0 "${pid}" 2> /dev/null && signal KILL "${pid}"
     fi
     rm -f "${file}"
 }
