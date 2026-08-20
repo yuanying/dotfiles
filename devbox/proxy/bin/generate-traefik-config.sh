@@ -29,7 +29,15 @@ die() {
     exit 1
 }
 
-config=${DEVBOX_PROXY_CONFIG:-${PROXY_DIR}/services.yaml}
+# The image runs on more than one host and they publish different things, so
+# the declaration file is per host the way ~/.zshrc.<hostname> already is. The
+# unnamed file is the fallback, and is also what a single-host setup uses.
+default_config() {
+    local named=${PROXY_DIR}/services.$(hostname -s).yaml
+    [[ -f ${named} ]] && echo "${named}" || echo "${PROXY_DIR}/services.yaml"
+}
+
+config=${DEVBOX_PROXY_CONFIG:-$(default_config)}
 state_dir=${DEVBOX_PROXY_STATE:-${HOME}/.config/devbox-proxy}
 write_to=
 

@@ -58,3 +58,29 @@ golden() {
     [ -f "${BATS_TEST_TMPDIR}/state/traefik/traefik.yml" ]
     [ -f "${BATS_TEST_TMPDIR}/state/traefik/dynamic/services.yml" ]
 }
+
+# The image runs on more than one host -- anietta publishes different services
+# from boucherie, and from a different IPv6 -- so the declaration file is
+# per host, the way zshrc.<hostname> already is.
+
+@test "the declaration file defaults to the one named after this host" {
+    local dir="${BATS_TEST_TMPDIR}/proxy"
+    mkdir -p "${dir}/bin"
+    cp "${PROXY_BIN}/generate-traefik-config.sh" "${dir}/bin/"
+    cp "${FIXTURES}/basic/services.yaml" "${dir}/services.$(hostname -s).yaml"
+    cat > "${dir}/services.yaml" <<'EOF'
+zone: wrong.example
+services: []
+EOF
+    "${dir}/bin/generate-traefik-config.sh" --state-dir "${BATS_TEST_TMPDIR}/state"
+    grep -q 'llama.example.org' "${BATS_TEST_TMPDIR}/state/traefik/dynamic/services.yml"
+}
+
+@test "an unnamed declaration file is the fallback" {
+    local dir="${BATS_TEST_TMPDIR}/proxy"
+    mkdir -p "${dir}/bin"
+    cp "${PROXY_BIN}/generate-traefik-config.sh" "${dir}/bin/"
+    cp "${FIXTURES}/basic/services.yaml" "${dir}/services.yaml"
+    "${dir}/bin/generate-traefik-config.sh" --state-dir "${BATS_TEST_TMPDIR}/state"
+    grep -q 'llama.example.org' "${BATS_TEST_TMPDIR}/state/traefik/dynamic/services.yml"
+}

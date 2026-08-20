@@ -13,7 +13,15 @@ set -euo pipefail
 PROXY_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
 STATE=${DEVBOX_PROXY_STATE:-${HOME}/.config/devbox-proxy}
-CONFIG=${DEVBOX_PROXY_CONFIG:-${PROXY_DIR}/services.yaml}
+
+# Per host, the way ~/.zshrc.<hostname> already is: anietta and boucherie
+# publish different services. The unnamed file is the fallback.
+default_config() {
+    local named=${PROXY_DIR}/services.$(hostname -s).yaml
+    [[ -f ${named} ]] && echo "${named}" || echo "${PROXY_DIR}/services.yaml"
+}
+
+CONFIG=${DEVBOX_PROXY_CONFIG:-$(default_config)}
 
 # Traefik binds :443, which needs root. Overridable so the tests can run the
 # stand-in daemons as themselves.
