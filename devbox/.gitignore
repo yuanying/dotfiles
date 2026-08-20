@@ -1,1 +1,5 @@
 .env
+
+# proxy/bin/cf-access-forwardauth と proxy/test/helpers は python なので、
+# bats を回すとその隣に __pycache__ が生まれる。
+__pycache__/
