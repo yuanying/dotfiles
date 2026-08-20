@@ -33,7 +33,11 @@ is in [`docs/adr/`](../../docs/adr/): 0001 the shape, 0002 the certificate,
 | `bin/issue-origin-cert.sh` | issue (or re-issue) the origin certificate |
 | `bin/sync-cloudflare.sh` | reconcile DNS records and Access applications |
 | `bin/cf-access-forwardauth` | the JWT check Traefik calls on every request |
-| `test/` | `bats devbox/proxy/test` |
+| `test/` | `bats devbox/proxy/test`; `bats -r .` from the repository root runs these and the skill's |
+
+Adding a service by hand is below. An agent that has just started a server does
+it through the `devbox-publish` skill in `skills/` instead, which is the same
+three steps with the arguments checked first.
 
 Runtime state lives in `~/.config/devbox-proxy` — certificates, generated
 configuration, logs, pid files. It is under `$HOME`, which is the host's, so it
@@ -157,6 +161,21 @@ CLOUDFLARE_API_TOKEN=... devbox/proxy/bin/sync-cloudflare.sh
 devbox-proxy reload
 git add -A devbox/proxy && git commit -m 'Publish llama'
 ```
+
+Or, the same thing without editing YAML:
+
+```bash
+~/.claude/skills/devbox-publish/bin/devbox-publish \
+    publish --name llama --port 8081 --github-org acme
+```
+
+That checks the arguments, checks something is actually listening on the port,
+writes the block, and then goes as far as it can: with a token in the
+environment it syncs and reloads, and without one it stops after the file and
+prints what is left. It skips the reload when the configuration does not
+generate — an authenticated service has no audience tag until the sync runs, and
+reloading would stop Traefik and then fail to start it, taking down whatever was
+already working.
 
 The sync creates the proxied `AAAA` record and the Access application, and
 writes back the audience tag Cloudflare generated. That tag has to be committed:
