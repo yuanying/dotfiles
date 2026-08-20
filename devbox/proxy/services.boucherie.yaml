@@ -14,7 +14,7 @@ zone: poissonnerie.dev
 # The Cloudflare Zero Trust team domain, without the scheme. Zero Trust >
 # Settings > Custom Pages shows it, and it is the host the login page lives on.
 # Required before any service can use auth: required.
-team_domain: ""
+team_domain: "yuanying.cloudflareaccess.com"
 
 # Where Cloudflare connects: this container's global IPv6, as passed to
 # `docker run --ip6` in start-cuda.
@@ -36,4 +36,11 @@ defaults:
 #         - you@example.com
 #       github_orgs:
 #         - some-org
-services: []
+services:
+  - name: sd-viewer
+    port: 8189
+    auth: required
+    aud: "e7474a278c11995d2e1be19cd7919c6b4a8f66229bec14561fdaee20db0ccdcc"
+    viewers:
+      emails:
+        - yuanying@fraction.jp
