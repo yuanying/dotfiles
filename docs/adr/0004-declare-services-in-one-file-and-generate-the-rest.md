@@ -87,10 +87,13 @@ would test the mock.
 
 ## Consequences
 
-- Cloudflare state that nobody declared here still gets removed by the sync
-  script if it is inside the namespace it manages. It touches only records and
-  applications whose hostname is `<name>.<zone>` for a name it knows, and it
-  never touches the apex or anything else in the zone.
+- The declaration file is authoritative for what exists, but deletion is not
+  automatic: `sync-cloudflare.sh` removes nothing unless asked with `--prune`.
+  Even then it is confined to names of the form `<label>.<zone>`, and to `AAAA`
+  records that are proxied — which is what keeps it away from
+  `anietta.oeilvert.org`, the grey-cloud record that SSH and mosh reach the box
+  on and that would otherwise look exactly like an abandoned service. A
+  half-reconciled zone is the price; deleting the wrong record is worse.
 - Editing Traefik's configuration by hand is pointless — it is overwritten on
   the next `generate`. The generated files carry a "do not edit" header saying
   so.
