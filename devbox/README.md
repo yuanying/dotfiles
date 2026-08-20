@@ -14,6 +14,15 @@ $ ./start-daemon
 
 The build context is this directory, so nothing outside it goes into the image.
 
+## Publishing HTTP servers
+
+`proxy/` puts an HTTP server running in the container on
+`https://<name>.oeilvert.org` behind a Cloudflare Access login, driven by one
+declaration file per host. `entrypoint.sh` starts it on boot and skips it
+silently when no origin certificate is present, so it is not something the
+container depends on. See `proxy/README.md`, and `docs/adr/0001` to `0004` for
+why it is built the way it is.
+
 ## License
 
 MIT — the rest of the dotfiles repository is Apache-2.0, so this directory
