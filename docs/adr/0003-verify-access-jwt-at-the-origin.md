@@ -1,0 +1,96 @@
+# 0003. Verify the Access JWT at the origin instead of trusting the network
+
+- Date: 2026-08-20
+- Status: Accepted
+
+## Context
+
+[[0001]] leaves the devbox's global IPv6 reachable from anywhere. Cloudflare
+Access authenticates at the edge, but the edge is not the only way in: anyone
+who learns the origin address can open `https://llama.oeilvert.org` against it
+directly — `--resolve` on the command line is enough — and reach the backend
+with no login at all. Access is a doormat if the back door is open.
+
+The usual answers:
+
+1. **Firewall the origin to Cloudflare's published IP ranges.** Works, and
+   means tracking a list that changes, in a container whose network is
+   configured by `docker run` flags. It also authorises *all* of Cloudflare,
+   including every other customer's Workers.
+2. **Authenticated Origin Pulls** (client certificates from Cloudflare to the
+   origin). Solid, but the shared certificate again authenticates "Cloudflare",
+   not "Cloudflare, having checked this request against my Access policy".
+3. **Verify the Access JWT.** On every request it proxies, Cloudflare Access
+   sets `Cf-Access-Jwt-Assertion` to a token signed by the team's key. It is
+   the only one of the three that carries proof the Access policy actually ran.
+
+Verifying it needs no secret: the public keys are published at
+`https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`, and the checks are
+signature, `iss` (the team domain) and `aud` (the per-application AUD tag).
+Because `aud` is per application, a token minted for one service does not open
+another.
+
+## Decision
+
+**The origin rejects any request whose `Cf-Access-Jwt-Assertion` does not verify,
+with 403.** A request arriving straight at the IPv6 address carries no such
+header and is refused; a forged header fails the signature check.
+
+Services can opt out per service (`auth: none` in the declaration file, see
+[[0004]]), in which case no verification runs and the service is genuinely
+public. That is the point of the setting.
+
+### Where the verification runs
+
+Traefik has a JWT middleware, but it is a Traefik Hub feature and is not in the
+open-source proxy. The open-source middleware list has `BasicAuth`,
+`DigestAuth` and `ForwardAuth`, and nothing that understands a JWT. So the
+choice is how to add it:
+
+- **A Yaegi plugin.** Traefik interprets third-party Go plugins at startup, and
+  Cloudflare Access plugins exist. None found was maintained enough to depend
+  on: the closest match has four stars, seven commits and **no release tags at
+  all**, so there is nothing to pin, which conflicts with the way every other
+  version in `devbox/` is handled. The other candidate has moved or been
+  deleted. Rejected on supply-chain grounds — this is the component that decides
+  whether a request is authorised.
+- **ForwardAuth to a local verifier.** Traefik calls a small HTTP endpoint on
+  `127.0.0.1` and forwards the request only on a 2xx. Chosen.
+
+The verifier, `devbox/proxy/bin/cf-access-forwardauth`, is a Python 3 script
+using nothing but the standard library — `/usr/bin/python3` is already in the
+base image, so this adds no dependency. It is around two hundred lines and is
+in this repository, which is the property that matters for an authorisation
+component: it can be read.
+
+RSA signature verification is done directly against the JWK's `n` and `e` with
+`pow()` and `hashlib`, by rebuilding the expected PKCS#1 v1.5 block and
+comparing it whole. That is the construction that has no parser to get wrong,
+and it avoids a subprocess and a temporary file per request. The alternative —
+the PEM certificates the same endpoint publishes under `public_certs`, fed to
+`openssl dgst -verify` — was left as the thing to fall back to if this ever
+looks like the wrong call.
+
+One ForwardAuth middleware is generated per authenticated service, because the
+AUD tag being checked differs per service and ForwardAuth passes it in the
+address query string.
+
+## Consequences
+
+- The devbox runs one more background process. It is started and stopped with
+  the proxy; if it is not listening, Traefik's ForwardAuth call fails and
+  authenticated routes return 500 rather than letting requests through. Failing
+  closed is the correct direction for this component.
+- The verifier caches the JWKS in memory with a short TTL, so key rotation is
+  picked up without a restart, and a Cloudflare outage does not immediately
+  break already-cached keys.
+- **Services declared `auth: none` are wide open**, both through Cloudflare and
+  directly at the origin IPv6. This is accepted rather than mitigated: the
+  setting exists for things that are fine to publish, and adding a second
+  half-measure (obscurity, IP filtering) for the rest would cost more than it
+  buys.
+- **Backends remain reachable on their own ports.** Binding `llama-server` to
+  `127.0.0.1` is what keeps that from being a hole; the proxy cannot enforce it.
+- The AUD tag is generated by Cloudflare when the Access application is created,
+  so it has to reach the origin somehow. It is an identifier, not a credential,
+  and it lives in the declaration file — see [[0004]].
