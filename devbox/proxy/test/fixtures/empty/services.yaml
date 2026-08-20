@@ -1,0 +1,5 @@
+zone: example.org
+team_domain: acme.cloudflareaccess.com
+origin: 2001:db8::1
+
+services: []
