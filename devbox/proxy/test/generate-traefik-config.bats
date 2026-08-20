@@ -46,7 +46,8 @@ golden() {
 
 @test "a public service gets no middleware at all" {
     generate "${FIXTURES}/mixed/services.yaml" "${BATS_TEST_TMPDIR}/out"
-    run yq -e '.http.routers.sd | has("middlewares")' "${BATS_TEST_TMPDIR}/out/dynamic/services.yml"
+    # Not `yq -e`: a falsy result makes it add an error line to the output.
+    run yq '.http.routers.sd | has("middlewares")' "${BATS_TEST_TMPDIR}/out/dynamic/services.yml"
     [ "$output" = "false" ]
 }
 
