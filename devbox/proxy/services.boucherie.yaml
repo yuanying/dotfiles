@@ -10,11 +10,9 @@
 # appear in this repository. docs/adr/0007.
 
 zone: poissonnerie.dev
-
 defaults:
   # Services that do not say otherwise ask for a GitHub login.
   auth: required
-
 # A service name is one DNS label -- llama, not llama.gpu. The wildcard AAAA
 # record covers exactly one level (docs/adr/0006). `auth` is reserved: it is
 # the host the login itself happens on.
@@ -36,6 +34,12 @@ services:
         - yuanying
   - name: sd-webui
     port: 7860
+    auth: required
+    viewers:
+      logins:
+        - yuanying
+  - name: tageditor
+    port: 5173
     auth: required
     viewers:
       logins:
