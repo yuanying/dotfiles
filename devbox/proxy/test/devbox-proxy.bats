@@ -161,12 +161,12 @@ YAML
     cat > "${CONFIG}" <<'YAML'
 zone: example.test
 services:
-  - name: thing
+  - name: not.one.label
     port: 19999
-    auth: required
+    auth: none
 YAML
     run -1 proxy reload
-    [[ "${output}" == *"viewer"* ]]
+    [[ "${output}" == *"one label"* ]]
 
     is_running
     [[ "$(cat "$(pidfile)")" == "${pid}" ]]
@@ -221,4 +221,158 @@ YAML
     rm "${CONFIG}"
     run -0 proxy warnings
     [ -z "${output}" ]
+}
+
+# The pid file goes away as the process exits, so testing for it and then
+# reading it has a gap in the middle. stop used to spill a "No such file" from
+# cat into the middle of an otherwise successful shutdown.
+@test "stop is quiet about the pid file it is watching disappear" {
+    run -0 proxy start
+    wait_until is_running
+
+    run -0 proxy stop
+    [[ "${output}" != *"No such file"* ]]
+}
+
+# ---------------------------------------------------------------------------
+# The overlay in the state directory (docs/adr/0009)
+# ---------------------------------------------------------------------------
+
+authenticated_config() {
+    cat > "${CONFIG}" <<'YAML'
+zone: example.test
+services:
+  - name: thing
+    port: 19999
+    auth: required
+YAML
+}
+
+overlay() {
+    mkdir -p "${STATE}"
+    cat > "${STATE}/services.local.yaml"
+}
+
+@test "the overlay adds viewers to a declared service" {
+    authenticated_config
+    overlay <<'YAML'
+services:
+  - name: thing
+    viewers:
+      logins: [someone]
+YAML
+    run -0 proxy check
+    [[ "${output}" == *"1 viewer"* ]]
+    [[ "${output}" == *"services.local.yaml"* ]]
+}
+
+@test "the overlay adds to what the declaration already lists" {
+    cat > "${CONFIG}" <<'YAML'
+zone: example.test
+services:
+  - name: thing
+    port: 19999
+    auth: required
+    viewers:
+      logins: [declared]
+YAML
+    overlay <<'YAML'
+services:
+  - name: thing
+    viewers:
+      logins: [private]
+YAML
+    run -0 proxy check
+    [[ "${output}" == *"2 viewer"* ]]
+}
+
+# The reason the overlay holds whole services and not just viewers: something
+# the repository never hears about.
+@test "the overlay can publish a service the declaration never mentions" {
+    overlay <<'YAML'
+services:
+  - name: private
+    port: 19998
+    auth: none
+YAML
+    run -0 proxy check
+    [[ "${output}" == *"private.example.test"* ]]
+    [[ "${output}" == *"19998"* ]]
+}
+
+@test "the overlay can move a port without touching the repository" {
+    overlay <<'YAML'
+services:
+  - name: thing
+    port: 19001
+YAML
+    run -0 proxy check
+    [[ "${output}" == *"19001"* ]]
+}
+
+@test "the merged result is validated, not just each half" {
+    overlay <<'YAML'
+services:
+  - name: other
+    port: 19999
+    auth: none
+YAML
+    run -1 proxy check
+    [[ "${output}" == *"port 19999"* ]]
+}
+
+@test "an overlay service with no port is refused" {
+    overlay <<'YAML'
+services:
+  - name: private
+    auth: none
+YAML
+    run -1 proxy check
+    [[ "${output}" == *"port"* ]]
+}
+
+# The zone would move every hostname and every certificate at once.
+@test "the overlay cannot name a zone" {
+    overlay <<'YAML'
+zone: elsewhere.test
+services: []
+YAML
+    run -1 proxy check
+}
+
+# The operator chose that a service nobody can reach still starts. Something
+# has to say so, or the first sign is a login that can never succeed.
+@test "a service nobody can reach starts, with a warning" {
+    authenticated_config
+    run -0 proxy check
+    [[ "${output}" == *"nobody"* ]]
+
+    run -0 proxy warnings
+    [[ "${output}" == *"thing.example.test"* ]]
+
+    run -0 proxy start
+    wait_until is_running
+    is_running
+}
+
+@test "no overlay is the ordinary case, not an error" {
+    [[ ! -e ${STATE}/services.local.yaml ]]
+    run -0 proxy check
+}
+
+@test "the overlay is picked up by reload" {
+    run -0 proxy start
+    wait_until is_running
+    local pid
+    pid="$(cat "$(pidfile)")"
+
+    overlay <<'YAML'
+services:
+  - name: private
+    port: 19998
+    auth: none
+YAML
+    run -0 proxy reload
+    [[ "$(cat "$(pidfile)")" == "${pid}" ]]
+    is_running
 }

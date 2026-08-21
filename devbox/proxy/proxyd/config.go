@@ -87,6 +87,32 @@ func Parse(data []byte) (*Config, error) {
 		return nil, err
 	}
 
+	c.applyDefaults()
+	if err := c.validate(); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+// applyDefaults folds `defaults` into each service, so that nothing downstream
+// has to consult them again. A service that says nothing anywhere asks for a
+// login, because that is the safe direction.
+func (c *Config) applyDefaults() {
+	for i := range c.Services {
+		if c.Services[i].Auth == "" {
+			c.Services[i].Auth = c.Defaults.Auth
+		}
+		if c.Services[i].Auth == "" {
+			c.Services[i].Auth = AuthRequired
+		}
+	}
+}
+
+// validate checks everything that has to hold about a whole configuration. It
+// runs after the overlay has been folded in as well as after parsing, because
+// a declaration and an overlay are only valid together (docs/adr/0009) --
+// a port collision, for instance, can be created by either one alone.
+func (c *Config) validate() error {
 	var problems []error
 	if strings.TrimSpace(c.Zone) == "" {
 		problems = append(problems, errors.New("zone is required: it is the DNS zone every service is published under"))
@@ -96,13 +122,6 @@ func Parse(data []byte) (*Config, error) {
 	seenPort := map[int]string{}
 	for i := range c.Services {
 		s := &c.Services[i]
-
-		if s.Auth == "" {
-			s.Auth = c.Defaults.Auth
-		}
-		if s.Auth == "" {
-			s.Auth = AuthRequired
-		}
 
 		switch {
 		case s.Name == "":
@@ -129,9 +148,10 @@ func Parse(data []byte) (*Config, error) {
 
 		switch s.Auth {
 		case AuthRequired:
-			if s.Viewers.empty() {
-				problems = append(problems, fmt.Errorf("service %q: auth is required but no viewer is listed, which would lock out everyone; add viewers.logins or viewers.github_orgs", s.Name))
-			}
+			// Listing nobody here is not an error: the guest list can also
+			// come from the overlay in the state directory (docs/adr/0009).
+			// Config.Unreachable reports what nobody can reach once both have
+			// been read.
 		case AuthNone:
 			if !s.Viewers.empty() {
 				problems = append(problems, fmt.Errorf("service %q: auth is none, so the viewers listed would be ignored", s.Name))
@@ -142,9 +162,9 @@ func Parse(data []byte) (*Config, error) {
 	}
 
 	if len(problems) > 0 {
-		return nil, errors.Join(problems...)
+		return errors.Join(problems...)
 	}
-	return &c, nil
+	return nil
 }
 
 // removedKeys turns "unknown field" into an explanation. These four were load

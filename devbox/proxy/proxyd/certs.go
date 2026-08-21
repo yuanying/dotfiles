@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -41,6 +42,11 @@ type CertManager struct {
 
 	// Log is what `status` reads to answer "did the last renewal fail?".
 	Log *RenewalLog
+
+	// primeOne is what Manage does to each name, overridable so the tests can
+	// watch which names are covered without talking to an ACME server.
+	primeOne func(ctx context.Context, name string)
+	priming  sync.WaitGroup
 }
 
 // NewCertManager wires certmagic against the state directory. acmeCA is the
@@ -75,13 +81,63 @@ func NewCertManager(stateDir string, current func() *Config, acmeCA string) *Cer
 
 	m.magic = magic
 	m.issuer = issuer
+	m.primeOne = m.prime
 	return m
 }
 
-// Manage registers names for renewal. It does not block on the network: a
+// Manage puts names under management. It does not block on the network: a
 // devbox that reboots with no uplink still starts and serves what it can.
+//
+// ManageAsync alone is not enough. With an OnDemandConfig set -- which is what
+// keeps a stranger's request for xyz.<zone> from costing a certificate --
+// certmagic's manageAll files each name in an on-demand allow-list and returns
+// without obtaining or caching anything. The renewal loop only ever looks at
+// certificates in the cache, so names nobody has visited would never be
+// renewed, which is precisely what docs/adr/0006 registers them to avoid. So
+// the allow-list registration is kept for its own sake, and the caching is
+// done here.
 func (m *CertManager) Manage(ctx context.Context, names []string) error {
-	return m.magic.ManageAsync(ctx, names)
+	if err := m.magic.ManageAsync(ctx, names); err != nil {
+		return err
+	}
+	for _, name := range names {
+		m.priming.Add(1)
+		go func(name string) {
+			defer m.priming.Done()
+			m.primeOne(ctx, name)
+		}(name)
+	}
+	return nil
+}
+
+// waitForPriming blocks until every name Manage started has been dealt with.
+// Only the tests need this; serving does not wait for it.
+func (m *CertManager) waitForPriming() { m.priming.Wait() }
+
+// prime puts one name's certificate in the cache, obtaining it first if there
+// is none, so that the renewal loop can see it. This is what manageOne does
+// internally when on-demand is not in the way.
+//
+// A failure here is not fatal and is not retried: the on-demand path still
+// covers the name at the next handshake, and a certificate that was obtained
+// once is on disk, where the next start finds it. What is lost is the
+// background renewal of a name that has never had a certificate at all, and
+// `status` reports that as pending rather than as working.
+func (m *CertManager) prime(ctx context.Context, name string) {
+	if _, err := m.magic.CacheManagedCertificate(ctx, name); err == nil {
+		return
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		log.Printf("certificates: caching %s: %v", name, err)
+		return
+	}
+
+	if err := m.magic.ObtainCertAsync(ctx, name); err != nil {
+		log.Printf("certificates: obtaining one for %s: %v", name, err)
+		return
+	}
+	if _, err := m.magic.CacheManagedCertificate(ctx, name); err != nil {
+		log.Printf("certificates: caching %s after obtaining it: %v", name, err)
+	}
 }
 
 // TLSConfig is what the HTTPS listener runs on.

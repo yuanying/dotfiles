@@ -13,6 +13,7 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -59,6 +60,9 @@ func (a *authHost) serve(w http.ResponseWriter, r *http.Request, cfg *Config) {
 
 // login starts the round trip, remembering where the visitor was going.
 func (a *authHost) login(w http.ResponseWriter, r *http.Request, cfg *Config) {
+	if !a.configured(w) {
+		return
+	}
 	svc, dest, err := destination(cfg, r.URL.Query().Get("rd"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -84,14 +88,19 @@ func (a *authHost) login(w http.ResponseWriter, r *http.Request, cfg *Config) {
 
 // callback is where GitHub returns. It has a code, a state, and nothing else.
 func (a *authHost) callback(w http.ResponseWriter, r *http.Request, cfg *Config) {
+	if !a.configured(w) {
+		return
+	}
 	nonce, svcName, dest, err := a.signer.VerifyState(r.URL.Query().Get("state"))
 	if err != nil {
+		log.Printf("login: bad state parameter: %v", err)
 		http.Error(w, "this login could not be completed; start again", http.StatusForbidden)
 		return
 	}
 
 	c, err := r.Cookie(loginCookieName)
 	if err != nil || subtle.ConstantTimeCompare([]byte(c.Value), []byte(nonce)) != 1 {
+		log.Printf("login for %s: the nonce cookie does not match the state parameter", svcName)
 		http.Error(w, "this login did not start in this browser; start again", http.StatusForbidden)
 		return
 	}
@@ -100,6 +109,7 @@ func (a *authHost) callback(w http.ResponseWriter, r *http.Request, cfg *Config)
 
 	svc, ok := cfg.Lookup(svcName + "." + cfg.Zone)
 	if !ok || svc.Auth != AuthRequired {
+		log.Printf("login: %s is no longer a service that asks for a login", svcName)
 		http.Error(w, "that service is no longer published", http.StatusNotFound)
 		return
 	}
@@ -107,11 +117,13 @@ func (a *authHost) callback(w http.ResponseWriter, r *http.Request, cfg *Config)
 	ctx := r.Context()
 	token, err := a.github.Exchange(ctx, r.URL.Query().Get("code"), callbackURI(cfg))
 	if err != nil {
+		log.Printf("login for %s: exchanging the code with GitHub: %v", svcName, err)
 		http.Error(w, "GitHub would not complete the login", http.StatusBadGateway)
 		return
 	}
 	login, err := a.github.Login(ctx, token)
 	if err != nil {
+		log.Printf("login for %s: asking GitHub who this is: %v", svcName, err)
 		http.Error(w, "GitHub would not say who you are", http.StatusBadGateway)
 		return
 	}
@@ -120,10 +132,12 @@ func (a *authHost) callback(w http.ResponseWriter, r *http.Request, cfg *Config)
 	if err != nil {
 		// Fail closed: an organisation lookup that failed is not a no, but it
 		// is certainly not a yes.
+		log.Printf("login for %s: checking whether %s is allowed in: %v", svcName, login, err)
 		http.Error(w, "could not check whether you are allowed in; try again", http.StatusBadGateway)
 		return
 	}
 	if !admitted {
+		log.Printf("login for %s: refused %s, who is not listed", svcName, login)
 		// Naming the account is the difference between "fix your account" and
 		// "this is broken".
 		http.Error(w, fmt.Sprintf("You are signed in to GitHub as %s, who is not on the list for %s.", login, svcName), http.StatusForbidden)
@@ -148,7 +162,22 @@ func (a *authHost) callback(w http.ResponseWriter, r *http.Request, cfg *Config)
 		Path:     setPath,
 		RawQuery: url.Values{"t": {handover}}.Encode(),
 	}
+	log.Printf("login for %s: admitted %s", svcName, login)
 	http.Redirect(w, r, u.String(), http.StatusFound)
+}
+
+// configured reports whether there is a GitHub application to log in against,
+// answering the visitor if there is not. Refusing here rather than at startup
+// keeps the proxy running for everything that does not need a login.
+func (a *authHost) configured(w http.ResponseWriter) bool {
+	if a.github != nil && a.github.ClientID != "" {
+		return true
+	}
+	log.Printf("login: no GitHub credentials are configured, so nobody can log in")
+	http.Error(w, "This devbox has no GitHub credentials yet, so logging in is not possible.\n"+
+		"Whoever runs it needs to put client_id and client_secret in github.yaml\n"+
+		"under the proxy's state directory.\n", http.StatusServiceUnavailable)
+	return false
 }
 
 func (a *authHost) index(w http.ResponseWriter, cfg *Config) {

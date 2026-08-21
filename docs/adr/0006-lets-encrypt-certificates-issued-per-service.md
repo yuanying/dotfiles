@@ -108,3 +108,34 @@ the startup warning are for.
 - A dependency on certmagic enters the trust boundary. Unlike the Traefik plugin
   [[0003]] rejected, it is the certificate stack Caddy ships, released under
   tags that can be pinned the way everything else in `devbox/` is.
+
+## Notes from implementing it
+
+Two things turned out differently from the description above. Neither changes
+the decision, and both are worth writing down because the code does not read
+the way this record led you to expect.
+
+**The challenge is usually TLS-ALPN-01, not HTTP-01.** certmagic tries TLS-ALPN
+first and falls back to HTTP-01. Both validate over a port the devbox already
+answers on and neither needs a DNS credential, which is the property this record
+actually chose them for — so nothing above is wrong except the name. Port 80
+stays open regardless: it redirects to HTTPS, and it is the fallback when
+TLS-ALPN cannot be used.
+
+**Registering names for renewal takes more than `ManageAsync`.** With an
+`OnDemandConfig` set, certmagic's `manageAll` files each name in an on-demand
+allow-list and returns without obtaining or caching anything:
+
+    // if on-demand is configured, defer obtain and renew operations
+    if cfg.OnDemand != nil {
+        cfg.OnDemand.hostAllowlist[domainName] = struct{}{}
+        continue
+    }
+
+The maintenance loop only ever looks at certificates in the cache, so the two
+mechanisms this record wanted to run together do not, as written: registration
+becomes a no-op and only visited names get renewed. `CertManager.Manage` does
+the caching itself — load from storage, obtain if there is none — which is what
+`manageOne` does internally when on-demand is not in the way. Both are exported,
+so this needs no fork and no patch, only the knowledge that the obvious call
+does not do the obvious thing.

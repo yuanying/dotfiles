@@ -31,7 +31,7 @@ the arrangement this replaced and are marked superseded.
 
 | | |
 |---|---|
-| `services.<hostname>.yaml` | the declaration file — the only thing edited by hand |
+| `services.<hostname>.yaml` | the declaration file — the only thing in here edited by hand |
 | `bin/devbox-proxy` | `start` / `stop` / `restart` / `reload` / `status` / `check` / `build`; `entrypoint.sh` calls `start` |
 | `proxyd/` | the proxy itself: TLS, the GitHub login, and the reverse proxy |
 | `test/` | `bats devbox/proxy/test` for the wrapper; `go test ./...` in `proxyd/` for the rest |
@@ -41,7 +41,8 @@ it through the `devbox-publish` skill in `skills/` instead, which is the same
 two steps with the arguments checked first.
 
 Runtime state lives in `~/.config/devbox-proxy` — certificates, the signing key,
-the GitHub credentials, the compiled binary, logs, pid file. It is under
+the GitHub credentials, the private half of the guest list (`viewers.yaml`, see
+below), the compiled binary, logs, pid file. It is under
 `$HOME`, which is the host's, so it survives the container being rebuilt.
 
 ## One-time setup
@@ -153,9 +154,57 @@ wildcard `AAAA` record covers exactly one level. Namespace in the name
 Viewers are **GitHub account names**, not email addresses. A login is what the
 account is; an address can be unverified, one of several, or changed quietly.
 
-`auth: none` publishes something with no login at all. It is then genuinely
-public: the IPv6 address is in DNS and the hostname appears in Certificate
-Transparency logs, so "nobody will find it" is not a property it has.
+## Publishing without publishing it
+
+This repository is public, so everything in `services.<hostname>.yaml` is on the
+Internet: the account names of whoever is allowed in, and the existence and
+purpose of everything the box runs. A second declaration in the state directory
+is merged over it, and nothing in it is committed anywhere:
+
+```yaml
+# ~/.config/devbox-proxy/services.local.yaml
+services:
+  # let somebody in without announcing them
+  - name: sd-webui
+    viewers:
+      logins:
+        - someone
+
+  # publish something the repository never hears about
+  - name: private
+    port: 9000
+    auth: required
+    viewers:
+      logins:
+        - yuanying
+```
+
+Then `devbox-proxy reload`. The rules, in full:
+
+| | |
+|---|---|
+| an entry naming a declared service | updates it |
+| an entry naming anything else | is a new service, published as if declared |
+| `port`, `auth` | the overlay wins when it sets them |
+| `viewers` | **always added**, never replaced |
+| `zone` | not accepted here |
+
+Viewers add rather than replace, so somebody the declaration lists never loses
+access because the overlay mentioned the service. `port` and `auth` override,
+because a port that collides with something else running locally is exactly the
+kind of thing that should not require a commit. `docs/adr/0009`.
+
+**`devbox-proxy check` is the only thing that knows the whole answer.** It
+prints which files it merged, every service that will be published, and the
+viewer count for each. Reading the declaration file alone no longer tells you
+what is published or who can reach it — that is the price of the split.
+
+Validation runs on the merged result, so a port collision between the two files
+is caught, and `check` validates exactly what `serve` will enforce.
+
+A service that asks for a login and lists nobody anywhere **starts anyway**, and
+is reported as a warning by `check`, `status` and container startup. Refusing to
+start would take down every other service to protest one empty guest list.
 
 Removing a service is the reverse: delete the block and reload, or
 `devbox-publish unpublish --name llama`. The wildcard record stays — it always
@@ -203,6 +252,8 @@ while the proxy is stopped, too.
 | A certificate warning, or a name that never gets one | `devbox-proxy status` for the last attempt and its reason. Then: is the record grey cloud, and does port 80 reach the box? |
 | `status` says `pending` for a name | nothing has visited it yet, or the first attempt is still running. Normal on a fresh devbox |
 | The login loops back to GitHub | the callback URL in the OAuth App is not exactly `https://auth.<zone>/callback` |
+| "GitHub would not complete the login" | the `client_id` and `client_secret` in `github.yaml` are not a matching pair. Regenerate the secret and copy both from the same page. The log line carries what GitHub said |
+| "This devbox has no GitHub credentials yet" | there is no readable `github.yaml`. The proxy runs without one; only logging in needs it |
 | "You are signed in as X, who is not on the list" | X is the GitHub account you are actually signed in to. Add it to `viewers.logins`, or sign in as someone who is |
 | 502 from a name that used to work | the backend stopped. `devbox-proxy status` is fine, the service behind the port is not |
 | `reload` exits non-zero | the declaration file does not validate, and the message says why. Whatever was running is still running |

@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -179,5 +180,71 @@ func writeTestCert(t *testing.T, path, name string, notAfter time.Time) {
 	defer f.Close()
 	if err := pem.Encode(f, &pem.Block{Type: "CERTIFICATE", Bytes: der}); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// docs/adr/0006 wants every declared name under the renewal loop's eye, not
+// only the ones somebody has visited. certmagic's ManageAsync does not do that
+// when on-demand is configured -- it files the name in an allow-list and
+// returns -- so CertManager primes the cache itself, and this is the check that
+// it covers everything the declaration names.
+func TestManageCoversEveryDeclaredName(t *testing.T) {
+	cfg, err := Parse([]byte(authTestConfig))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var mu sync.Mutex
+	primed := map[string]int{}
+	m := NewCertManager(t.TempDir(), func() *Config { return cfg }, "https://example.invalid/directory")
+	m.primeOne = func(_ context.Context, name string) {
+		mu.Lock()
+		defer mu.Unlock()
+		primed[name]++
+	}
+
+	if err := m.Manage(context.Background(), cfg.Hostnames()); err != nil {
+		t.Fatalf("Manage: %v", err)
+	}
+	m.waitForPriming()
+
+	mu.Lock()
+	defer mu.Unlock()
+	for _, want := range cfg.Hostnames() {
+		if primed[want] == 0 {
+			t.Errorf("%s was never primed", want)
+		}
+	}
+	if len(primed) != len(cfg.Hostnames()) {
+		t.Errorf("primed %v, want exactly %v", primed, cfg.Hostnames())
+	}
+}
+
+// The auth host is in Hostnames() even with nothing published, so it is primed
+// too -- without a certificate there, nobody can log in to anything.
+func TestManageCoversTheAuthHostWithNoServices(t *testing.T) {
+	cfg, err := Parse([]byte("zone: z.dev\nservices: []\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var mu sync.Mutex
+	var primed []string
+	m := NewCertManager(t.TempDir(), func() *Config { return cfg }, "https://example.invalid/directory")
+	m.primeOne = func(_ context.Context, name string) {
+		mu.Lock()
+		defer mu.Unlock()
+		primed = append(primed, name)
+	}
+
+	if err := m.Manage(context.Background(), cfg.Hostnames()); err != nil {
+		t.Fatalf("Manage: %v", err)
+	}
+	m.waitForPriming()
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(primed) != 1 || primed[0] != "auth.z.dev" {
+		t.Errorf("primed %v, want [auth.z.dev]", primed)
 	}
 }

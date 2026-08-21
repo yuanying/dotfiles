@@ -140,11 +140,6 @@ func TestParseRejects(t *testing.T) {
 			want: "maybe",
 		},
 		{
-			name: "authenticated with nobody allowed",
-			yaml: "zone: z.dev\nservices:\n  - name: a\n    port: 1\n    auth: required\n",
-			want: "viewer",
-		},
-		{
 			name: "an unknown key",
 			yaml: "zone: z.dev\nservices:\n  - name: a\n    port: 1\n    auth: none\n    prot: 2\n",
 			want: "prot",

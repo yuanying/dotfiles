@@ -67,8 +67,13 @@ note() {
     echo "$(basename "$0"): $*" >&2
 }
 
+# Read and test in one step. Testing for the file and then reading it leaves a
+# gap the exiting process removes it in, which surfaced as a stray "No such
+# file" from cat while stop was waiting for it to go away.
 running() {
-    [[ -f ${PIDFILE} ]] && kill -0 "$(cat "${PIDFILE}")" 2> /dev/null
+    local pid
+    pid=$(cat "${PIDFILE}" 2> /dev/null) || return 1
+    [[ -n ${pid} ]] && kill -0 "${pid}" 2> /dev/null
 }
 
 have_config() {
@@ -147,7 +152,7 @@ stop() {
         return 0
     fi
     local pid
-    pid=$(cat "${PIDFILE}")
+    pid=$(cat "${PIDFILE}" 2> /dev/null) || return 0
     kill -TERM "${pid}" 2> /dev/null || true
 
     local tries=100

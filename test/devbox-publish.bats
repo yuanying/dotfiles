@@ -190,7 +190,12 @@ called() {
         --github-login yuanying --github-org acme --no-listen-check
     run -0 "${PUBLISH}" publish --name docs --port 8080 --auth none --no-listen-check
 
-    run -0 env -C "${REPO}/devbox/proxy/proxyd" go run . check --config "${CONFIG}"
+    # A state directory of its own: check reads the overlay beside it, and
+    # without this the test would pick up whatever the person running it
+    # publishes privately (docs/adr/0009).
+    run -0 env -C "${REPO}/devbox/proxy/proxyd" \
+        DEVBOX_PROXY_STATE="${BATS_TEST_TMPDIR}/state" \
+        go run . check --config "${CONFIG}"
     [[ "${output}" == *"llama.example.org"* ]]
     [[ "${output}" == *"docs.example.org"* ]]
 }

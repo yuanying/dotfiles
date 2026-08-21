@@ -3,7 +3,8 @@
 - Date: 2026-08-20
 - Status: Accepted
 
-Amended below by [[0005]].
+Amended below by [[0005]]. Narrowed by [[0009]], which lets a second
+declaration outside the repository be merged over this one.
 
 ## Context
 
@@ -148,3 +149,13 @@ writes to the file except a person and the `devbox-publish` skill, which means
 the file is now only ever edited deliberately.
 
 Adding a service is: edit the file, run `devbox-proxy reload`.
+
+[[0009]] later stops this being the *only* file. A second declaration in the
+state directory may add viewers, override a port or an auth mode, and publish
+services this file never mentions — because this file is public, and neither the
+people listed in it nor everything the box runs needs to be.
+
+The decision above still holds in the sense that mattered: there is one place
+per concern, nothing is generated, and adding a service is editing a file and
+reloading. What is no longer true is that reading this file tells you what is
+published. `devbox-proxy check` does.

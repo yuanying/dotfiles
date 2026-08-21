@@ -307,3 +307,51 @@ func TestAuthHostIndexSaysWhatItIs(t *testing.T) {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
 }
+
+// docs/adr/0008: starting is unconditional. Missing GitHub credentials mean
+// nobody can log in, which is not the same as the proxy being unable to run --
+// certificates still arrive and auth: none services still work. So the failure
+// belongs at the login, where it can be explained, not at startup.
+func TestLoginWithoutCredentialsExplainsItself(t *testing.T) {
+	cfg, err := Parse([]byte(authTestConfig))
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := &authHost{
+		signer:   testSigner(t, epoch),
+		github:   NewGitHub("", ""), // nothing configured
+		newNonce: func() string { return "n" },
+	}
+
+	w := httptest.NewRecorder()
+	a.serve(w, authRequest("/login?rd="+url.QueryEscape("https://sd-webui.poissonnerie.dev/")), cfg)
+
+	if w.Code == http.StatusFound {
+		t.Fatal("it sent somebody to GitHub with no client id")
+	}
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("status = %d, want 503", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "github.yaml") {
+		t.Errorf("the message does not say what is missing: %s", w.Body)
+	}
+}
+
+func TestCallbackWithoutCredentialsExplainsItself(t *testing.T) {
+	cfg, _ := Parse([]byte(authTestConfig))
+	a := &authHost{
+		signer:   testSigner(t, epoch),
+		github:   NewGitHub("", ""),
+		newNonce: func() string { return "n" },
+	}
+	state, _ := a.signer.IssueState("n", "sd-webui", "/", epoch.Add(time.Minute))
+
+	r := authRequest("/callback?code=c&state=" + url.QueryEscape(state))
+	r.AddCookie(&http.Cookie{Name: loginCookieName, Value: "n"})
+	w := httptest.NewRecorder()
+	a.serve(w, r, cfg)
+
+	if w.Code == http.StatusFound {
+		t.Fatal("it completed a login with no client id")
+	}
+}

@@ -155,8 +155,20 @@ different expression language and is not a substitute.
 
 Nothing generated is checked in, and nothing secret is either: the GitHub
 client secret and the token-signing key live in `~/.config/devbox-proxy` at
-mode 600, and no API token exists anywhere on the box. The declaration file
-holds GitHub account names, which are public, and is meant to be committed.
+mode 600, and no API token exists anywhere on the box. The declaration file is
+meant to be committed.
+
+It is also no longer the whole configuration.
+`~/.config/devbox-proxy/services.local.yaml` is merged over it and is not
+committed anywhere: it adds viewers, overrides a port or an auth mode, and
+publishes services the repository never mentions (`docs/adr/0009`). The
+repository is public, and neither the people listed in it nor everything the box
+runs needs to be.
+
+So **`devbox-proxy check` is what answers "what is published and who can reach
+it"**, not the declaration file. Anything reasoning about this configuration —
+including the `devbox-publish` skill — has to go through it rather than reading
+the YAML in this repository and concluding.
 
 ## Dependency Updates (Renovate)
 

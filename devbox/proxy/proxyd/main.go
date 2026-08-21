@@ -97,13 +97,28 @@ func defaultState() string {
 	return filepath.Join(home, ".config", "devbox-proxy")
 }
 
+// load reads the declaration and folds in the private guest list beside it.
+// Every subcommand goes through here, so `check` validates what `serve` will
+// actually enforce (docs/adr/0009).
 func (p *paths) load() (*Config, error) {
 	if p.config == "" {
 		return nil, errors.New("no declaration file given; pass --config")
 	}
-	return Load(p.config)
+	cfg, err := Load(p.config)
+	if err != nil {
+		return nil, err
+	}
+	overlay, err := LoadOverlay(p.overlay())
+	if err != nil {
+		return nil, err
+	}
+	if err := cfg.Apply(overlay); err != nil {
+		return nil, fmt.Errorf("%s: %w", p.overlay(), err)
+	}
+	return cfg, nil
 }
 
+func (p *paths) overlay() string     { return filepath.Join(p.state, "services.local.yaml") }
 func (p *paths) sessionKey() string  { return filepath.Join(p.state, "session.key") }
 func (p *paths) credentials() string { return filepath.Join(p.state, "github.yaml") }
 func (p *paths) certs() string       { return filepath.Join(p.state, "certs") }
@@ -122,11 +137,41 @@ func check(args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s: %d service(s) on %s\n", p.config, len(cfg.Services), cfg.Zone)
+	if o, err := LoadOverlay(p.overlay()); err == nil && o != nil {
+		fmt.Printf("%s, merged with %s\n", p.config, p.overlay())
+	} else {
+		fmt.Printf("%s\n", p.config)
+	}
+	fmt.Printf("%d service(s) on %s\n", len(cfg.Services), cfg.Zone)
 	for _, s := range cfg.Services {
-		fmt.Printf("  %s.%s -> 127.0.0.1:%d (auth: %s)\n", s.Name, cfg.Zone, s.Port, s.Auth)
+		fmt.Printf("  %s.%s -> 127.0.0.1:%d (auth: %s)%s\n",
+			s.Name, cfg.Zone, s.Port, s.Auth, viewerSummary(s))
+	}
+	for _, line := range unreachableWarnings(cfg) {
+		fmt.Printf("\n  warning: %s\n", line)
 	}
 	return nil
+}
+
+func viewerSummary(s Service) string {
+	if s.Auth != AuthRequired {
+		return ""
+	}
+	n := len(s.Viewers.Logins) + len(s.Viewers.GitHubOrgs)
+	if n == 0 {
+		return " -- nobody listed"
+	}
+	return fmt.Sprintf(" -- %d viewer(s)", n)
+}
+
+// unreachableWarnings is the price of letting a service start with an empty
+// guest list: nothing stops it, so something has to mention it.
+func unreachableWarnings(cfg *Config) []string {
+	var out []string
+	for _, name := range cfg.Unreachable() {
+		out = append(out, fmt.Sprintf("%s.%s asks for a login but lists nobody, so nobody can get in", name, cfg.Zone))
+	}
+	return out
 }
 
 func status(args []string) error {
@@ -149,11 +194,17 @@ func status(args []string) error {
 		for _, w := range warnings(reports, now) {
 			fmt.Println(w)
 		}
+		for _, w := range unreachableWarnings(cfg) {
+			fmt.Println(w)
+		}
 		return nil
 	}
 
 	pid, running := readPID(p.pidFile())
 	fmt.Print(formatReport(reports, now, running, pid))
+	for _, w := range unreachableWarnings(cfg) {
+		fmt.Printf("\nwarning: %s\n", w)
+	}
 	return nil
 }
 
@@ -274,24 +325,29 @@ func shutdown(servers ...*http.Server) {
 	}
 }
 
-// githubClient is only needed when something asks for a login. A devbox
-// publishing nothing but `auth: none` services should not need credentials it
-// will never use.
+// githubClient reads the OAuth application, if there is one.
+//
+// Not having it never stops the proxy starting (docs/adr/0008). Certificates
+// still arrive, `auth: none` services still work, and the services that do
+// want a login say what is missing when somebody tries -- which is a far more
+// useful place to find out than a container log. A credentials file that
+// exists but cannot be read is different: that is a mistake to fix, not a
+// state to run in.
 func githubClient(p *paths, cfg *Config) (*GitHub, error) {
-	needed := false
-	for _, s := range cfg.Services {
-		if s.Auth == AuthRequired {
-			needed = true
-			break
-		}
-	}
-
 	creds, err := LoadGitHubCredentials(p.credentials())
-	if err != nil {
-		if !needed && errors.Is(err, os.ErrNotExist) {
-			log.Printf("no GitHub credentials at %s, and nothing needs a login", p.credentials())
-			return NewGitHub("", ""), nil
+	if errors.Is(err, os.ErrNotExist) {
+		needed := 0
+		for _, s := range cfg.Services {
+			if s.Auth == AuthRequired {
+				needed++
+			}
 		}
+		if needed > 0 {
+			log.Printf("no GitHub credentials at %s: %d service(s) will refuse to log anyone in", p.credentials(), needed)
+		}
+		return NewGitHub("", ""), nil
+	}
+	if err != nil {
 		return nil, fmt.Errorf("GitHub credentials: %w", err)
 	}
 	return NewGitHub(creds.ClientID, creds.ClientSecret), nil
