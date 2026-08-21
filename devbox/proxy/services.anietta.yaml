@@ -1,39 +1,30 @@
 # Services this devbox publishes on https://<name>.oeilvert.dev.
 #
 # One file per host, the way ~/.zshrc.<hostname> is; boucherie gets its own.
-# Everything here is generated from -- Traefik's routers, the AAAA records and
-# the Access applications -- so adding a service is: add it below, run
-# sync-cloudflare.sh with a token in the environment, run `devbox-proxy reload`.
+# This is the whole configuration -- devbox-proxy reads it directly and nothing
+# is generated from it any more -- so adding a service is: add it below, run
+# `devbox-proxy reload`. Nothing outside this devbox is touched. docs/adr/0004.
 #
-# Nothing in this file is secret. The audience tags are identifiers that name an
-# Access application; the origin key lives under $HOME and the Cloudflare token
-# is passed in the environment for one script run. See docs/adr/0004.
+# Nothing here is secret. Viewers are GitHub account names, which are public;
+# the signing key and the GitHub client secret live under $HOME and never
+# appear in this repository. docs/adr/0007.
 
 zone: oeilvert.dev
 
-# The Cloudflare Zero Trust team domain, without the scheme. Zero Trust >
-# Settings > Custom Pages shows it, and it is the host the login page lives on.
-# Required before any service can use auth: required.
-team_domain: ""
-
-# Where Cloudflare connects: this container's global IPv6, as passed to
-# `docker run --ip6` in start-rocm.
-origin: 2405:6581:8580:310::153
-
 defaults:
-  # Services that do not say otherwise need a Cloudflare Access login.
+  # Services that do not say otherwise ask for a GitHub login.
   auth: required
 
-# A service name is one DNS label -- llama, not llama.gpu. Universal SSL and a
-# wildcard Origin CA certificate both stop at one level (docs/adr/0002).
+# A service name is one DNS label -- llama, not llama.gpu. The wildcard AAAA
+# record covers exactly one level (docs/adr/0006). `auth` is reserved: it is
+# the host the login itself happens on.
 #
 #   - name: llama              # https://llama.oeilvert.dev
 #     port: 8081               # http://127.0.0.1:8081
 #     auth: required           # or `none` for something fine to publish
-#     aud: ""                  # filled in by sync-cloudflare.sh; commit it
-#     viewers:
-#       emails:
-#         - you@example.com
+#     viewers:                 # required when auth is required
+#       logins:
+#         - some-github-user
 #       github_orgs:
 #         - some-org
 services: []

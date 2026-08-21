@@ -17,12 +17,14 @@ The build context is this directory, so nothing outside it goes into the image.
 ## Publishing HTTP servers
 
 `proxy/` puts an HTTP server running in the container on
-`https://<name>.<zone>` behind a Cloudflare Access login, driven by one
-declaration file per host — anietta publishes into `oeilvert.dev`, boucherie
-into `poissonnerie.dev`. `entrypoint.sh` starts it on boot and skips it
-silently when no origin certificate is present, so it is not something the
-container depends on. See `proxy/README.md`, and `docs/adr/0001` to `0004` for
-why it is built the way it is.
+`https://<name>.<zone>` behind a GitHub login, driven by one declaration file
+per host — anietta publishes into `oeilvert.dev`, boucherie into
+`poissonnerie.dev`. One process handles TLS, the login and the proxying;
+certificates come from Let's Encrypt and renew themselves, and the only thing
+outside the devbox is a wildcard DNS record. `entrypoint.sh` starts it on boot
+and skips it silently when the host declares nothing, so it is not something
+the container depends on. See `proxy/README.md`, and `docs/adr/0004` to `0008`
+for why it is built the way it is.
 
 ## License
 
