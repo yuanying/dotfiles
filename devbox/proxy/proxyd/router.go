@@ -39,12 +39,13 @@ type Router struct {
 }
 
 // NewRouter returns a router that proxies to 127.0.0.1.
-func NewRouter(signer *Signer, github *GitHub, authHostName string, cookieTTL time.Duration) *Router {
-	return &Router{
+func NewRouter(signer, apiSigner *Signer, github *GitHub, authHostName string, cookieTTL, apiTTL time.Duration) *Router {
+	rt := &Router{
 		gate: &gate{
 			signer:    signer,
 			authHost:  authHostName,
 			cookieTTL: cookieTTL,
+			apiTTL:    apiTTL,
 		},
 		auth: &authHost{
 			signer:   signer,
@@ -53,7 +54,15 @@ func NewRouter(signer *Signer, github *GitHub, authHostName string, cookieTTL ti
 		},
 		newBackend: reverseProxy,
 	}
+	rt.SetAPISigner(apiSigner)
+	return rt
 }
+
+// SetAPISigner puts an API signing key into force. reload calls it with
+// whatever is on disk at the time, so retiring every API token is deleting the
+// key file and reloading -- and a request already in flight finishes, the same
+// property the routing table has (docs/adr/0008, docs/adr/0010).
+func (rt *Router) SetAPISigner(s *Signer) { rt.gate.setAPISigner(s) }
 
 // Set puts a declaration into force. Everything derived from it is rebuilt
 // here, once, rather than per request.

@@ -11,24 +11,38 @@ import (
 
 func testGate(t *testing.T, now time.Time) *gate {
 	t.Helper()
-	return &gate{
+	g := &gate{
 		signer:    testSigner(t, now),
 		authHost:  "auth.poissonnerie.dev",
 		cookieTTL: 7 * 24 * time.Hour,
+		apiTTL:    90 * 24 * time.Hour,
 	}
+	g.setAPISigner(testAPISigner(t, now))
+	return g
+}
+
+// The API signer holds a different key from the session signer, which is the
+// whole point of docs/adr/0010: rotating one does not disturb the other.
+func testAPISigner(t *testing.T, now time.Time) *Signer {
+	t.Helper()
+	s := NewSigner([]byte("89abcdef0123456789abcdef01234567"))
+	s.now = func() time.Time { return now }
+	return s
 }
 
 // backend records what actually reached it.
 type backend struct {
-	hit  bool
-	user string
-	path string
+	hit   bool
+	user  string
+	path  string
+	authz string
 }
 
 func (b *backend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	b.hit = true
 	b.user = r.Header.Get(userHeader)
 	b.path = r.URL.Path
+	b.authz = r.Header.Get("Authorization")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("backend"))
 }
@@ -309,5 +323,215 @@ func TestRedirectPreservesTheQuery(t *testing.T) {
 	rd := loc.Query().Get("rd")
 	if !strings.Contains(rd, "x=1") || !strings.Contains(rd, "y=2") {
 		t.Errorf("rd = %q, lost the query", rd)
+	}
+}
+
+// docs/adr/0010: a client that presents a valid bearer token gets in, and the
+// backend sees the same identity header a browser session produces.
+func TestABearerTokenReachesTheBackend(t *testing.T) {
+	g := testGate(t, epoch)
+	raw, err := g.apiSigner().Issue(Token{
+		Kind: KindAPI, Subject: "yuanying", Service: "sd-webui",
+		Expires: epoch.Add(90 * 24 * time.Hour),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b := &backend{}
+	r := request("GET", "http://sd-webui.poissonnerie.dev/generate")
+	r.Header.Set("Authorization", "Bearer "+raw)
+	w := httptest.NewRecorder()
+	g.serve(w, r, webui, b)
+
+	if !b.hit {
+		t.Fatalf("a bearer token did not reach the backend; got %d", w.Code)
+	}
+	if b.user != "yuanying" {
+		t.Errorf("the backend saw user %q, want yuanying", b.user)
+	}
+	// The proxy consumed it, so it does not go on to the backend, which may
+	// well want the header for its own API key.
+	if b.authz != "" {
+		t.Errorf("the backend saw Authorization = %q; it should have been consumed", b.authz)
+	}
+}
+
+// The scheme is matched case-insensitively, as RFC 7235 requires.
+func TestBearerSchemeIsCaseInsensitive(t *testing.T) {
+	g := testGate(t, epoch)
+	raw, _ := g.apiSigner().Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+
+	b := &backend{}
+	r := request("GET", "http://sd-webui.poissonnerie.dev/")
+	r.Header.Set("Authorization", "bearer "+raw)
+	w := httptest.NewRecorder()
+	g.serve(w, r, webui, b)
+
+	if !b.hit {
+		t.Fatalf("a lowercase scheme was refused; got %d", w.Code)
+	}
+}
+
+// docs/adr/0010: a request that asked to be authenticated is told it failed,
+// rather than being redirected to a login page it cannot use.
+func TestABadBearerTokenIsRefusedNotRedirected(t *testing.T) {
+	g := testGate(t, epoch)
+	elsewhere, _ := g.apiSigner().Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "docs", Expires: epoch.Add(time.Hour)})
+	expired, _ := g.apiSigner().Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(-time.Second)})
+	// Signed with the session key rather than the API key: this is the pair
+	// the second key exists to keep apart.
+	sessionKeyed, _ := g.signer.Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+	cookie, _ := g.signer.Issue(Token{Kind: KindCookie, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+
+	for name, header := range map[string]string{
+		"nonsense":                   "Bearer not-a-token",
+		"empty":                      "Bearer ",
+		"no scheme":                  "just-a-token",
+		"another scheme":             "Basic eXVhbnlpbmc6aHVudGVyMg==",
+		"for another service":        "Bearer " + elsewhere,
+		"expired":                    "Bearer " + expired,
+		"signed with the cookie key": "Bearer " + sessionKeyed,
+		"a session cookie":           "Bearer " + cookie,
+	} {
+		t.Run(name, func(t *testing.T) {
+			b := &backend{}
+			r := request("GET", "http://sd-webui.poissonnerie.dev/")
+			r.Header.Set("Authorization", header)
+			w := httptest.NewRecorder()
+			g.serve(w, r, webui, b)
+
+			if b.hit {
+				t.Fatal("the backend was reached")
+			}
+			if w.Code != http.StatusUnauthorized {
+				t.Errorf("status = %d, want 401", w.Code)
+			}
+			if !strings.HasPrefix(w.Header().Get("WWW-Authenticate"), "Bearer") {
+				t.Errorf("WWW-Authenticate = %q", w.Header().Get("WWW-Authenticate"))
+			}
+		})
+	}
+}
+
+// The browser is untouched by any of this: no Authorization header still means
+// a redirect to the auth host (0007).
+func TestNoAuthorizationHeaderStillRedirects(t *testing.T) {
+	g := testGate(t, epoch)
+	w := httptest.NewRecorder()
+	g.serve(w, request("GET", "http://sd-webui.poissonnerie.dev/"), webui, &backend{})
+	if w.Code != http.StatusFound {
+		t.Errorf("status = %d, want 302", w.Code)
+	}
+}
+
+// A service the proxy does not authenticate does not have its Authorization
+// header eaten: the backend may be using it for an API key of its own.
+func TestAPublicServiceKeepsItsAuthorizationHeader(t *testing.T) {
+	g := testGate(t, epoch)
+	b := &backend{}
+	r := request("GET", "http://docs.poissonnerie.dev/")
+	r.Header.Set("Authorization", "Bearer the-backends-own-key")
+	w := httptest.NewRecorder()
+	g.serve(w, r, docs, b)
+
+	if !b.hit {
+		t.Fatalf("the backend was not reached; got %d", w.Code)
+	}
+	if b.authz != "Bearer the-backends-own-key" {
+		t.Errorf("the backend saw Authorization = %q, want it passed through", b.authz)
+	}
+}
+
+func TestTokenEndpointMintsForALoggedInVisitor(t *testing.T) {
+	g := testGate(t, epoch)
+	session, _ := g.signer.Issue(Token{Kind: KindCookie, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+
+	b := &backend{}
+	r := request("GET", tokenPath)
+	r.AddCookie(&http.Cookie{Name: cookieName, Value: session})
+	w := httptest.NewRecorder()
+	g.serve(w, r, webui, b)
+
+	if b.hit {
+		t.Fatal("the token endpoint was forwarded to the backend")
+	}
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
+		t.Errorf("Content-Type = %q, want text/plain", ct)
+	}
+
+	raw := strings.TrimSpace(w.Body.String())
+	tok, err := g.apiSigner().Verify(raw, KindAPI, "sd-webui")
+	if err != nil {
+		t.Fatalf("what it handed out does not verify: %v", err)
+	}
+	if tok.Subject != "yuanying" {
+		t.Errorf("Subject = %q, want the logged-in visitor", tok.Subject)
+	}
+	if want := epoch.Add(90 * 24 * time.Hour); !tok.Expires.Equal(want) {
+		t.Errorf("Expires = %v, want %v", tok.Expires, want)
+	}
+}
+
+func TestTokenEndpointNeedsASession(t *testing.T) {
+	g := testGate(t, epoch)
+	w := httptest.NewRecorder()
+	g.serve(w, request("GET", tokenPath), webui, &backend{})
+	if w.Code != http.StatusFound {
+		t.Fatalf("status = %d, want a redirect to log in first", w.Code)
+	}
+}
+
+// An API token cannot mint another one. Otherwise a leaked token renews itself
+// indefinitely and the expiry it carries means nothing (docs/adr/0010).
+func TestAnAPITokenCannotMintAnotherOne(t *testing.T) {
+	g := testGate(t, epoch)
+	raw, _ := g.apiSigner().Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+
+	r := request("GET", tokenPath)
+	r.Header.Set("Authorization", "Bearer "+raw)
+	w := httptest.NewRecorder()
+	g.serve(w, r, webui, &backend{})
+
+	if w.Code == http.StatusOK {
+		t.Fatal("a bearer token was allowed to mint a fresh token")
+	}
+}
+
+// docs/adr/0010: rotation is the only revocation there is, so replacing the
+// API signer has to take effect on the next request.
+func TestRotatingTheAPIKeyRevokesEveryToken(t *testing.T) {
+	g := testGate(t, epoch)
+	old, _ := g.apiSigner().Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+
+	fresh := NewSigner([]byte("ffffffffffffffffffffffffffffffff"))
+	fresh.now = func() time.Time { return epoch }
+	g.setAPISigner(fresh)
+
+	b := &backend{}
+	r := request("GET", "http://sd-webui.poissonnerie.dev/")
+	r.Header.Set("Authorization", "Bearer "+old)
+	w := httptest.NewRecorder()
+	g.serve(w, r, webui, b)
+
+	if b.hit {
+		t.Fatal("a token signed with the retired key still works")
+	}
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("status = %d, want 401", w.Code)
+	}
+
+	// And a session cookie is untouched by the rotation, which is the whole
+	// reason the key is a second one.
+	session, _ := g.signer.Issue(Token{Kind: KindCookie, Subject: "yuanying", Service: "sd-webui", Expires: epoch.Add(time.Hour)})
+	b2 := &backend{}
+	r2 := request("GET", "http://sd-webui.poissonnerie.dev/")
+	r2.AddCookie(&http.Cookie{Name: cookieName, Value: session})
+	g.serve(httptest.NewRecorder(), r2, webui, b2)
+	if !b2.hit {
+		t.Error("rotating the API key signed a browser out")
 	}
 }

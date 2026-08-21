@@ -154,9 +154,9 @@ Go one from `mikefarah/yq`; Ubuntu's `yq` package is a different program with a
 different expression language and is not a substitute.
 
 Nothing generated is checked in, and nothing secret is either: the GitHub
-client secret and the token-signing key live in `~/.config/devbox-proxy` at
-mode 600, and no API token exists anywhere on the box. The declaration file is
-meant to be committed.
+client secret and the two token-signing keys live in `~/.config/devbox-proxy` at
+mode 600, and no Cloudflare credential exists anywhere on the box. The
+declaration file is meant to be committed.
 
 It is also no longer the whole configuration.
 `~/.config/devbox-proxy/services.local.yaml` is merged over it and is not
@@ -169,6 +169,13 @@ So **`devbox-proxy check` is what answers "what is published and who can reach
 it"**, not the declaration file. Anything reasoning about this configuration —
 including the `devbox-publish` skill — has to go through it rather than reading
 the YAML in this repository and concluding.
+
+The keys are two because they are revoked separately (`docs/adr/0010`).
+`session.key` signs browser sessions; `api.key` signs the bearer tokens a client
+without a browser presents, and deleting it plus `devbox-proxy reload` retires
+every one of those without signing anybody out of a browser. Tokens themselves
+are never recorded — there is nothing to list and nothing to revoke
+individually, which is the trade that record documents.
 
 ## Dependency Updates (Renovate)
 

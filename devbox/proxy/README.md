@@ -16,6 +16,7 @@ browser ──TLS──▶ devbox :443 ──▶ 127.0.0.1:<port>
                  ├─ certificate from Let's Encrypt, obtained and renewed here
                  ├─ session cookie checked, or the visitor is sent to
                  │  auth.<zone>, which runs the GitHub login
+                 ├─ or a bearer token, for a client that has no browser
                  └─ one process: devbox-proxyd
 ```
 
@@ -24,15 +25,16 @@ and answers DNS queries for it; that is the entire dependency. There is no
 proxy, no Access application, and no API token anywhere on this machine.
 
 The reasoning is in [`docs/adr/`](../../docs/adr/): 0005 the shape, 0006 the
-certificates, 0007 the login, 0008 the process. Records 0001 to 0003 describe
-the arrangement this replaced and are marked superseded.
+certificates, 0007 the login, 0008 the process, 0010 the bearer token a client
+that is not a browser uses instead. Records 0001 to 0003 describe the
+arrangement this replaced and are marked superseded.
 
 ## What is here
 
 | | |
 |---|---|
 | `services.<hostname>.yaml` | the declaration file — the only thing in here edited by hand |
-| `bin/devbox-proxy` | `start` / `stop` / `restart` / `reload` / `status` / `check` / `build`; `entrypoint.sh` calls `start` |
+| `bin/devbox-proxy` | `start` / `stop` / `restart` / `reload` / `status` / `check` / `build` / `token`; `entrypoint.sh` calls `start` |
 | `proxyd/` | the proxy itself: TLS, the GitHub login, and the reverse proxy |
 | `test/` | `bats devbox/proxy/test` for the wrapper; `go test ./...` in `proxyd/` for the rest |
 
@@ -40,9 +42,9 @@ Adding a service by hand is below. An agent that has just started a server does
 it through the `devbox-publish` skill in `skills/` instead, which is the same
 two steps with the arguments checked first.
 
-Runtime state lives in `~/.config/devbox-proxy` — certificates, the signing key,
-the GitHub credentials, the private half of the guest list (`viewers.yaml`, see
-below), the compiled binary, logs, pid file. It is under
+Runtime state lives in `~/.config/devbox-proxy` — certificates, the two signing
+keys, the GitHub credentials, the private half of the guest list
+(`viewers.yaml`, see below), the compiled binary, logs, pid file. It is under
 `$HOME`, which is the host's, so it survives the container being rebuilt.
 
 ## One-time setup
@@ -211,6 +213,60 @@ Removing a service is the reverse: delete the block and reload, or
 covered every label — but nothing answers on that name, and its certificate
 simply stops being renewed.
 
+## Reaching a service from something that is not a browser
+
+A login is no use to `curl`, or to an OpenAI-compatible client pointed at
+`llama-server`: handed the redirect to `auth.<zone>` it follows it, arrives at
+GitHub, and reports the HTML it got as an error. Such a client sends a bearer
+token instead, and gets a plain `401` if the token is no good rather than a
+redirect it cannot use.
+
+```bash
+curl -H "Authorization: Bearer ${DEVBOX_TOKEN}" \
+    https://llama.poissonnerie.dev/v1/models
+```
+
+There are two ways to get one, and no third: the token is signed on this box,
+so nothing else can issue one.
+
+**In a browser**, once you are logged in to the service itself, open
+`https://llama.poissonnerie.dev/_devbox-auth/token`. It answers with one line —
+the token, good for ninety days, carrying whichever GitHub account you are
+signed in as. Copy it into the client's configuration.
+
+**On the devbox**, for anything that has no browser to log in with:
+
+```bash
+devbox/proxy/bin/devbox-proxy token --service llama --user yuanying
+devbox/proxy/bin/devbox-proxy token --service llama --user ci --ttl 720h
+devbox/proxy/bin/devbox-proxy token --service llama --user agent --ttl 0
+```
+
+`--ttl 0` never expires. `--user` is what the backend is told in
+`X-Devbox-User`; it is **not** checked against the guest list, because whoever
+can read the signing key can already sign anything — so name a token after what
+it is (`ci`, `agent`) when a person's account would be a fiction.
+
+A token opens the one service it names. A service with `auth: none` takes no
+token at all, and its `Authorization` header is passed through to the backend
+untouched, so `llama-server --api-key` still works behind one. Where the proxy
+does check the token, it consumes the header rather than forwarding it, and the
+backend gets `X-Devbox-User` as it does for a browser session.
+
+**Revoking is all of them at once**, because nothing is recorded about a token
+after it is signed:
+
+```bash
+rm ~/.config/devbox-proxy/api.key
+devbox/proxy/bin/devbox-proxy reload
+```
+
+`reload` reads the key again and generates a new one, so every token issued so
+far stops working on the next request — without interrupting a response that is
+already streaming, and without signing anybody out of a browser. Browser
+sessions are signed with the other key (`session.key`) and do not notice. The
+reasoning, and what this costs, is in `docs/adr/0010`.
+
 ## Checking that it works
 
 **The devbox comes up without any of this.** There is no certificate to be
@@ -255,6 +311,10 @@ while the proxy is stopped, too.
 | "GitHub would not complete the login" | the `client_id` and `client_secret` in `github.yaml` are not a matching pair. Regenerate the secret and copy both from the same page. The log line carries what GitHub said |
 | "This devbox has no GitHub credentials yet" | there is no readable `github.yaml`. The proxy runs without one; only logging in needs it |
 | "You are signed in as X, who is not on the list" | X is the GitHub account you are actually signed in to. Add it to `viewers.logins`, or sign in as someone who is |
+| `401` and `this service takes a bearer token` | the client sent an `Authorization` header the proxy could not read. Only `Bearer <token>` counts; a backend's own API key is not one |
+| `401` and `token was issued for X, not Y` | the token opens a different service. Tokens are per service; get one for this name |
+| `401` and `token has expired` | issue another. There is nothing to renew — a token is not extendable by design |
+| `401` on every token at once | `api.key` was replaced or removed. That is what revocation looks like; reissue |
 | 502 from a name that used to work | the backend stopped. `devbox-proxy status` is fine, the service behind the port is not |
 | `reload` exits non-zero | the declaration file does not validate, and the message says why. Whatever was running is still running |
 
