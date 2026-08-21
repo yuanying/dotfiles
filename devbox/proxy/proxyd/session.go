@@ -37,6 +37,9 @@ const (
 	// KindState is the OAuth state parameter: it remembers where the visitor
 	// was going while they are away at GitHub.
 	KindState TokenKind = "s"
+	// KindAPI is a bearer token for a client that is not a browser. It is
+	// signed with a different key from the other three (docs/adr/0010).
+	KindAPI TokenKind = "a"
 )
 
 // keySize is what a fresh key gets, and the minimum an existing one may be.
@@ -47,8 +50,8 @@ type Token struct {
 	Kind    TokenKind
 	Subject string // the GitHub account name
 	Service string
-	Path    string // where to continue; handover only
-	Expires time.Time
+	Path    string    // where to continue; handover only
+	Expires time.Time // zero means it never expires; API tokens only
 }
 
 type payload struct {
@@ -72,7 +75,7 @@ func NewSigner(key []byte) *Signer {
 
 // Issue signs a token.
 func (s *Signer) Issue(t Token) (string, error) {
-	if t.Kind != KindCookie && t.Kind != KindHandover {
+	if t.Kind != KindCookie && t.Kind != KindHandover && t.Kind != KindAPI {
 		return "", fmt.Errorf("unknown token kind %q", t.Kind)
 	}
 	if t.Subject == "" || t.Service == "" {
@@ -83,14 +86,28 @@ func (s *Signer) Issue(t Token) (string, error) {
 			return "", err
 		}
 	}
+	// A session that never ends is a bug; an API token that never ends is a
+	// choice somebody made at the command line (docs/adr/0010).
+	if t.Expires.IsZero() && t.Kind != KindAPI {
+		return "", fmt.Errorf("a %q must say when it expires", t.Kind)
+	}
 
 	return s.issue(payload{
 		Kind:    t.Kind,
 		Subject: t.Subject,
 		Service: t.Service,
 		Path:    t.Path,
-		Expires: t.Expires.Unix(),
+		Expires: expiryOf(t.Expires),
 	})
+}
+
+// expiryOf encodes the expiry, using zero for "never". time.Time's own zero
+// value is far in the past, so it cannot be handed to Unix() unexamined.
+func expiryOf(t time.Time) int64 {
+	if t.IsZero() {
+		return 0
+	}
+	return t.Unix()
 }
 
 func (s *Signer) issue(p payload) (string, error) {
@@ -113,12 +130,16 @@ func (s *Signer) Verify(raw string, kind TokenKind, service string) (*Token, err
 	if p.Service != service {
 		return nil, fmt.Errorf("token was issued for %q, not %q", p.Service, service)
 	}
+	var expires time.Time
+	if p.Expires != 0 {
+		expires = time.Unix(p.Expires, 0)
+	}
 	return &Token{
 		Kind:    p.Kind,
 		Subject: p.Subject,
 		Service: p.Service,
 		Path:    p.Path,
-		Expires: time.Unix(p.Expires, 0),
+		Expires: expires,
 	}, nil
 }
 
@@ -130,6 +151,9 @@ func (s *Signer) Verify(raw string, kind TokenKind, service string) (*Token, err
 func (s *Signer) IssueState(nonce, service, path string, expires time.Time) (string, error) {
 	if err := checkPath(path); err != nil {
 		return "", err
+	}
+	if expires.IsZero() {
+		return "", errors.New("a state parameter must say when it expires")
 	}
 	return s.issue(payload{
 		Kind:    KindState,
@@ -174,7 +198,7 @@ func (s *Signer) parse(raw string, kind TokenKind) (*payload, error) {
 	if p.Kind != kind {
 		return nil, fmt.Errorf("token is a %q, not a %q", p.Kind, kind)
 	}
-	if s.now().After(time.Unix(p.Expires, 0)) {
+	if p.Expires != 0 && s.now().After(time.Unix(p.Expires, 0)) {
 		return nil, errors.New("token has expired")
 	}
 	return &p, nil

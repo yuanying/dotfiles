@@ -376,3 +376,65 @@ YAML
     [[ "$(cat "$(pidfile)")" == "${pid}" ]]
     is_running
 }
+
+# docs/adr/0010: bearer tokens for clients that are not browsers.
+
+guarded_config() {
+    cat > "${CONFIG}" <<'YAML'
+zone: example.test
+services:
+  - name: thing
+    port: 19999
+    auth: none
+  - name: llama
+    port: 19998
+    auth: required
+    viewers:
+      logins:
+        - yuanying
+YAML
+}
+
+@test "token prints a bearer token for a service that asks for a login" {
+    guarded_config
+    run -0 proxy token --service llama --user yuanying
+    [[ "${output}" == *.* ]]
+    [[ "${output}" != *" "* ]]
+}
+
+@test "token refuses a service that asks for no login" {
+    guarded_config
+    run -1 proxy token --service thing --user yuanying
+    [[ "${output}" == *"attest to nothing"* ]]
+}
+
+@test "token refuses a service that is not published" {
+    guarded_config
+    run -1 proxy token --service nowhere --user yuanying
+    [[ "${output}" == *"not published"* ]]
+}
+
+@test "token needs to know who it is for" {
+    guarded_config
+    run -1 proxy token --service llama
+    [[ "${output}" == *"--user"* ]]
+}
+
+# The second key is the whole of docs/adr/0010's revocation story, so it has to
+# be a file of its own that nothing else writes.
+@test "token signs with a key that is not the session key" {
+    guarded_config
+    run -0 proxy token --service llama --user yuanying
+    [[ -f "${STATE}/api.key" ]]
+    run -0 stat -c '%a' "${STATE}/api.key"
+    [[ "${output}" == "600" ]]
+    [[ ! -f "${STATE}/session.key" ]]
+}
+
+@test "two tokens for the same service are not the same token" {
+    guarded_config
+    run -0 proxy token --service llama --user yuanying --ttl 1h
+    local first="${output}"
+    run -0 proxy token --service llama --user yuanying --ttl 2h
+    [[ "${output}" != "${first}" ]]
+}

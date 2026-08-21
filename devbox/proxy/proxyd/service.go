@@ -9,9 +9,12 @@ package main
 // does not.
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -24,6 +27,9 @@ const (
 	// signing key is the only revocation there is -- but it ends this session
 	// in this browser.
 	logoutPath = authPrefix + "logout"
+	// tokenPath hands a logged-in visitor a bearer token for this service, so
+	// that something that is not a browser can reach it (docs/adr/0010).
+	tokenPath = authPrefix + "token"
 
 	cookieName = "devbox_session"
 
@@ -37,7 +43,19 @@ type gate struct {
 	signer    *Signer
 	authHost  string
 	cookieTTL time.Duration
+
+	// api signs bearer tokens, with a key of its own so that retiring every
+	// API token does not sign every browser out (docs/adr/0010). It is held
+	// behind a pointer because reload replaces it, in the same way and for
+	// the same reason the routing table is replaced (docs/adr/0008).
+	api    atomic.Pointer[Signer]
+	apiTTL time.Duration
 }
+
+// setAPISigner puts a signer into force for every request routed from now on.
+func (g *gate) setAPISigner(s *Signer) { g.api.Store(s) }
+
+func (g *gate) apiSigner() *Signer { return g.api.Load() }
 
 // serve either forwards the request to backend or does something else with it.
 func (g *gate) serve(w http.ResponseWriter, r *http.Request, svc Service, backend http.Handler) {
@@ -50,6 +68,8 @@ func (g *gate) serve(w http.ResponseWriter, r *http.Request, svc Service, backen
 			g.spendHandover(w, r, svc)
 		case logoutPath:
 			g.logout(w, r)
+		case tokenPath:
+			g.mintToken(w, r, svc)
 		default:
 			http.NotFound(w, r)
 		}
@@ -57,6 +77,25 @@ func (g *gate) serve(w http.ResponseWriter, r *http.Request, svc Service, backen
 	}
 
 	if svc.Auth == AuthNone {
+		// Nothing was authenticated here, so nothing is consumed: a backend
+		// using Authorization for an API key of its own still receives it.
+		backend.ServeHTTP(w, r)
+		return
+	}
+
+	// docs/adr/0010: a request that presented a credential is told whether it
+	// was good. Only a request that presented none is sent off to log in --
+	// which is every request a browser makes, so nothing about the browser
+	// changes.
+	if authz := r.Header.Get("Authorization"); authz != "" {
+		tok, err := g.bearer(authz, svc)
+		if err != nil {
+			g.unauthorized(w, svc, err)
+			return
+		}
+		// Consumed here, so the backend does not have to wonder whose it was.
+		r.Header.Del("Authorization")
+		r.Header.Set(userHeader, tok.Subject)
 		backend.ServeHTTP(w, r)
 		return
 	}
@@ -71,6 +110,68 @@ func (g *gate) serve(w http.ResponseWriter, r *http.Request, svc Service, backen
 
 	r.Header.Set(userHeader, tok.Subject)
 	backend.ServeHTTP(w, r)
+}
+
+// bearer verifies an Authorization header against the API key.
+func (g *gate) bearer(header string, svc Service) (*Token, error) {
+	// The scheme is case-insensitive (RFC 7235), and only the one.
+	const scheme = "bearer "
+	if len(header) < len(scheme) || !strings.EqualFold(header[:len(scheme)], scheme) {
+		return nil, errors.New("this service takes a bearer token")
+	}
+	raw := strings.TrimSpace(header[len(scheme):])
+
+	signer := g.apiSigner()
+	if signer == nil {
+		return nil, errors.New("this devbox is not issuing API tokens")
+	}
+	return signer.Verify(strings.TrimSpace(raw), KindAPI, svc.Name)
+}
+
+// unauthorized answers a credential that did not hold. The reason is given
+// back: it describes the token the client already has, so it tells them
+// nothing they did not bring with them.
+func (g *gate) unauthorized(w http.ResponseWriter, svc Service, err error) {
+	w.Header().Set("WWW-Authenticate", `Bearer realm="`+svc.Name+`"`)
+	http.Error(w, err.Error(), http.StatusUnauthorized)
+}
+
+// mintToken hands out a bearer token for this service. It takes a session
+// cookie and nothing else: letting an API token mint another one would renew a
+// leaked one forever, and the expiry it carries would mean nothing.
+func (g *gate) mintToken(w http.ResponseWriter, r *http.Request, svc Service) {
+	if svc.Auth != AuthRequired {
+		// Nothing here to authenticate, so a token for it would attest to
+		// nothing.
+		http.NotFound(w, r)
+		return
+	}
+	sess, err := g.session(r, svc)
+	if err != nil {
+		g.toLogin(w, r)
+		return
+	}
+	signer := g.apiSigner()
+	if signer == nil {
+		http.Error(w, "this devbox is not issuing API tokens", http.StatusServiceUnavailable)
+		return
+	}
+
+	raw, err := signer.Issue(Token{
+		Kind:    KindAPI,
+		Subject: sess.Subject,
+		Service: svc.Name,
+		Expires: signer.now().Add(g.apiTTL),
+	})
+	if err != nil {
+		http.Error(w, "could not issue a token", http.StatusInternalServerError)
+		return
+	}
+
+	// One line, so that piping it somewhere is the obvious thing to do. There
+	// is no record of it here: an earlier token stays valid until it expires.
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprintln(w, raw)
 }
 
 func (g *gate) session(r *http.Request, svc Service) (*Token, error) {

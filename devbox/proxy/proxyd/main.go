@@ -29,6 +29,9 @@ import (
 const (
 	// cookieTTL is how long a session lasts before GitHub is consulted again.
 	cookieTTL = 7 * 24 * time.Hour
+	// apiTTL is how long a bearer token issued in a browser lasts. The command
+	// line can ask for anything, including no expiry at all (docs/adr/0010).
+	apiTTL = 90 * 24 * time.Hour
 	// shutdownGrace is how long in-flight requests have to finish.
 	shutdownGrace = 10 * time.Second
 )
@@ -50,6 +53,8 @@ func main() {
 		err = status(os.Args[2:])
 	case "check":
 		err = check(os.Args[2:])
+	case "token":
+		err = token(os.Args[2:])
 	case "-h", "--help", "help":
 		usage()
 		return
@@ -64,11 +69,12 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprint(os.Stderr, `usage: devbox-proxyd {serve|status|check} [options]
+	fmt.Fprint(os.Stderr, `usage: devbox-proxyd {serve|status|check|token} [options]
 
   serve    bind the ports and publish what the declaration file declares
   status   what is running, when certificates expire, what renewal did last
   check    validate the declaration file and stop
+  token    print a bearer token for one service
 
 Options are shared: --config is the declaration file, --state the directory
 holding the signing key, the GitHub credentials and the certificates.
@@ -120,6 +126,7 @@ func (p *paths) load() (*Config, error) {
 
 func (p *paths) overlay() string     { return filepath.Join(p.state, "services.local.yaml") }
 func (p *paths) sessionKey() string  { return filepath.Join(p.state, "session.key") }
+func (p *paths) apiKey() string      { return filepath.Join(p.state, "api.key") }
 func (p *paths) credentials() string { return filepath.Join(p.state, "github.yaml") }
 func (p *paths) certs() string       { return filepath.Join(p.state, "certs") }
 func (p *paths) renewals() string    { return filepath.Join(p.state, "renewal.json") }
@@ -229,12 +236,17 @@ func serve(args []string) error {
 	}
 	signer := NewSigner(key)
 
+	apiSigner, err := apiSignerFrom(&p)
+	if err != nil {
+		return err
+	}
+
 	github, err := githubClient(&p, cfg)
 	if err != nil {
 		return err
 	}
 
-	router := NewRouter(signer, github, cfg.AuthHost(), cookieTTL)
+	router := NewRouter(signer, apiSigner, github, cfg.AuthHost(), cookieTTL, apiTTL)
 	router.Set(cfg)
 
 	certs := NewCertManager(p.state, router.Config, acmeDirectory())
@@ -293,6 +305,72 @@ func serve(args []string) error {
 	}
 }
 
+// apiSignerFrom reads the API signing key, generating one if there is none.
+// It is separate from the session key so that retiring every API token does
+// not sign every browser out (docs/adr/0010).
+func apiSignerFrom(p *paths) (*Signer, error) {
+	key, err := LoadOrCreateKey(p.apiKey())
+	if err != nil {
+		return nil, fmt.Errorf("API signing key: %w", err)
+	}
+	return NewSigner(key), nil
+}
+
+// token prints a bearer token for one service. There is no GitHub round trip
+// here and the name is not checked against the guest list: whoever can read the
+// signing key can already sign anything, so a check would claim a rule the file
+// permissions do not enforce. Naming a token after what it is -- ci, agent --
+// is the useful case (docs/adr/0010).
+func token(args []string) error {
+	var p paths
+	fs := flag.NewFlagSet("token", flag.ExitOnError)
+	p.bind(fs)
+	service := fs.String("service", "", "the service the token opens")
+	user := fs.String("user", "", "what the backend is told the caller is")
+	ttl := fs.Duration("ttl", apiTTL, "how long it lasts; 0 for no expiry")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if *service == "" || *user == "" {
+		return errors.New("token needs both --service and --user")
+	}
+	if *ttl < 0 {
+		return errors.New("--ttl cannot be negative; pass 0 for a token that never expires")
+	}
+
+	cfg, err := p.load()
+	if err != nil {
+		return err
+	}
+	svc, ok := cfg.Lookup(*service + "." + cfg.Zone)
+	if !ok {
+		return fmt.Errorf("%s is not published from this devbox", *service)
+	}
+	if svc.Auth != AuthRequired {
+		return fmt.Errorf("%s does not ask for a login, so a token for it would attest to nothing", *service)
+	}
+
+	signer, err := apiSignerFrom(&p)
+	if err != nil {
+		return err
+	}
+	var expires time.Time
+	if *ttl > 0 {
+		expires = signer.now().Add(*ttl)
+	}
+	raw, err := signer.Issue(Token{
+		Kind:    KindAPI,
+		Subject: *user,
+		Service: svc.Name,
+		Expires: expires,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Println(raw)
+	return nil
+}
+
 // reload puts a new declaration into force without the process going away.
 // docs/adr/0008: a file that does not validate changes nothing.
 func reload(ctx context.Context, p *paths, router *Router, certs *CertManager) {
@@ -309,6 +387,17 @@ func reload(ctx context.Context, p *paths, router *Router, certs *CertManager) {
 	}
 
 	router.Set(next)
+
+	// docs/adr/0010: revoking every API token is deleting api.key and
+	// reloading, so the key is read again here and not only at startup. A
+	// declaration that does not validate leaves the old key in force, which is
+	// the same rule the routing table follows.
+	if signer, err := apiSignerFrom(p); err != nil {
+		log.Printf("reloaded, but the API signing key could not be read, so the old one stays in force: %v", err)
+	} else {
+		router.SetAPISigner(signer)
+	}
+
 	if err := certs.Manage(ctx, next.Hostnames()); err != nil {
 		log.Printf("reloaded, but could not register names for renewal: %v", err)
 	}

@@ -324,3 +324,72 @@ func TestStateRejectsAnUnsafePath(t *testing.T) {
 		t.Error("IssueState accepted a path that leaves the site")
 	}
 }
+
+// docs/adr/0010: an API token is a third kind, carrying the same payload as a
+// cookie and scoped the same way.
+func TestAPITokenRoundTrip(t *testing.T) {
+	s := testSigner(t, epoch)
+	raw, err := s.Issue(Token{
+		Kind:    KindAPI,
+		Subject: "yuanying",
+		Service: "llama",
+		Expires: epoch.Add(90 * 24 * time.Hour),
+	})
+	if err != nil {
+		t.Fatalf("Issue: %v", err)
+	}
+	tok, err := s.Verify(raw, KindAPI, "llama")
+	if err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+	if tok.Subject != "yuanying" {
+		t.Errorf("Subject = %q, want yuanying", tok.Subject)
+	}
+}
+
+func TestAPITokenIsBoundToItsService(t *testing.T) {
+	s := testSigner(t, epoch)
+	raw, _ := s.Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "docs", Expires: epoch.Add(time.Hour)})
+	if _, err := s.Verify(raw, KindAPI, "llama"); err == nil {
+		t.Fatal("a token for docs was accepted for llama")
+	}
+}
+
+// The kind is inside the signature, so the two cannot be swapped even when one
+// key signs both -- which is the barrier that survives if the keys are ever
+// merged again.
+func TestAnAPITokenIsNotACookie(t *testing.T) {
+	s := testSigner(t, epoch)
+	api, _ := s.Issue(Token{Kind: KindAPI, Subject: "yuanying", Service: "llama", Expires: epoch.Add(time.Hour)})
+	if _, err := s.Verify(api, KindCookie, "llama"); err == nil {
+		t.Error("an API token was accepted as a session cookie")
+	}
+	cookie, _ := s.Issue(Token{Kind: KindCookie, Subject: "yuanying", Service: "llama", Expires: epoch.Add(time.Hour)})
+	if _, err := s.Verify(cookie, KindAPI, "llama"); err == nil {
+		t.Error("a session cookie was accepted as an API token")
+	}
+}
+
+// docs/adr/0010: a token issued with no expiry never expires. Only API tokens
+// may ask for that; a cookie or a handover without an expiry is a mistake.
+func TestAnAPITokenMayHaveNoExpiry(t *testing.T) {
+	s := testSigner(t, epoch)
+	raw, err := s.Issue(Token{Kind: KindAPI, Subject: "ci", Service: "llama"})
+	if err != nil {
+		t.Fatalf("Issue: %v", err)
+	}
+
+	later := testSigner(t, epoch.Add(10*365*24*time.Hour))
+	if _, err := later.Verify(raw, KindAPI, "llama"); err != nil {
+		t.Errorf("a token with no expiry stopped working: %v", err)
+	}
+}
+
+func TestOnlyAnAPITokenMayOmitTheExpiry(t *testing.T) {
+	s := testSigner(t, epoch)
+	for _, kind := range []TokenKind{KindCookie, KindHandover} {
+		if _, err := s.Issue(Token{Kind: kind, Subject: "yuanying", Service: "llama", Path: "/"}); err == nil {
+			t.Errorf("a %q was issued without an expiry", kind)
+		}
+	}
+}

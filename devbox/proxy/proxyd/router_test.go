@@ -31,6 +31,7 @@ func testRouter(t *testing.T, cfg *Config) (*Router, map[int]*backend) {
 			return b
 		},
 	}
+	rt.SetAPISigner(testAPISigner(t, epoch))
 	rt.Set(cfg)
 	return rt, backends
 }
@@ -227,4 +228,60 @@ func TestSetIsSafeWhileServing(t *testing.T) {
 	}
 	close(stop)
 	wg.Wait()
+}
+
+// The API signer has to be reachable from a request that went through the
+// whole router, not only from a gate assembled by hand (docs/adr/0010).
+func TestRouterAdmitsABearerToken(t *testing.T) {
+	cfg := routerConfig(t)
+	rt, backends := testRouter(t, cfg)
+
+	raw, err := rt.gate.apiSigner().Issue(Token{
+		Kind: KindAPI, Subject: "yuanying", Service: "sd-webui",
+		Expires: epoch.Add(time.Hour),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := hostRequest("sd-webui.poissonnerie.dev", "/generate")
+	r.Header.Set("Authorization", "Bearer "+raw)
+	w := httptest.NewRecorder()
+	rt.ServeHTTP(w, r)
+
+	b := backends[7860]
+	if b == nil || !b.hit {
+		t.Fatalf("the guarded backend was not reached; status %d", w.Code)
+	}
+	if b.user != "yuanying" {
+		t.Errorf("the backend saw user %q", b.user)
+	}
+}
+
+// Rotation has to survive the trip through the router, because that is what
+// reload actually calls (docs/adr/0010).
+func TestRouterRotatesTheAPIKey(t *testing.T) {
+	cfg := routerConfig(t)
+	rt, backends := testRouter(t, cfg)
+
+	old, _ := rt.gate.apiSigner().Issue(Token{
+		Kind: KindAPI, Subject: "yuanying", Service: "sd-webui",
+		Expires: epoch.Add(time.Hour),
+	})
+
+	fresh := NewSigner([]byte("ffffffffffffffffffffffffffffffff"))
+	fresh.now = func() time.Time { return epoch }
+	rt.SetAPISigner(fresh)
+
+	r := hostRequest("sd-webui.poissonnerie.dev", "/generate")
+	r.Header.Set("Authorization", "Bearer "+old)
+	w := httptest.NewRecorder()
+	rt.ServeHTTP(w, r)
+
+	if b := backends[7860]; b != nil && b.hit {
+		t.Fatal("a token signed with the retired key still reached the backend")
+	}
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("status = %d, want 401", w.Code)
+	}
 }

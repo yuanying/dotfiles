@@ -50,6 +50,7 @@ BINARY=${STATE}/bin/$(checkout_key)/devbox-proxyd
 usage() {
     cat <<EOF
 usage: $(basename "$0") {start|stop|restart|reload|status|check|build}
+       $(basename "$0") token --service NAME --user NAME [--ttl DURATION]
 
   start      build if the sources are newer, then bring the proxy up
   stop       take it down
@@ -58,6 +59,7 @@ usage: $(basename "$0") {start|stop|restart|reload|status|check|build}
   status     what is running, when certificates expire, what renewal did last
   check      validate the declaration file and stop
   build      compile the binary and stop
+  token      print a bearer token for one service (docs/adr/0010)
 
   State lives in ${STATE}; the declaration file is ${CONFIG}.
 EOF
@@ -205,6 +207,14 @@ check() {
     "${BINARY}" check --config "${CONFIG}" --state "${STATE}"
 }
 
+# token needs nothing running: it reads the declaration to check the service
+# asks for a login, and the signing key to sign with (docs/adr/0010).
+token() {
+    build || return 1
+    have_config || return 1
+    "${BINARY}" token --config "${CONFIG}" --state "${STATE}" "$@"
+}
+
 command=${1:-}
 case ${command} in
     start) start ;;
@@ -215,6 +225,10 @@ case ${command} in
     warnings) warnings ;;
     check) check ;;
     build) build ;;
+    token)
+        shift
+        token "$@"
+        ;;
     -h | --help | help) usage ;;
     *)
         usage >&2
