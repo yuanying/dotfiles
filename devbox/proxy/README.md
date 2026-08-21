@@ -43,9 +43,10 @@ it through the `devbox-publish` skill in `skills/` instead, which is the same
 two steps with the arguments checked first.
 
 Runtime state lives in `~/.config/devbox-proxy` — certificates, the two signing
-keys, the GitHub credentials, the private half of the guest list
-(`viewers.yaml`, see below), the compiled binary, logs, pid file. It is under
-`$HOME`, which is the host's, so it survives the container being rebuilt.
+keys, the GitHub credentials, the uncommitted second declaration merged over the
+one here (`services.local.yaml`, see below), the compiled binary, logs, pid
+file. It is under `$HOME`, which is the host's, so it survives the container
+being rebuilt.
 
 ## One-time setup
 
