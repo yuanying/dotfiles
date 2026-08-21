@@ -3,9 +3,12 @@ module github.com/yuanying/dotfiles/devbox/proxy/proxyd
 go 1.27.0
 
 require (
-	github.com/caddyserver/certmagic v0.25.4 // indirect
+	github.com/caddyserver/certmagic v0.25.4
+	github.com/goccy/go-yaml v1.19.2
+)
+
+require (
 	github.com/caddyserver/zerossl v0.1.5 // indirect
-	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/libdns/libdns v1.1.1 // indirect
 	github.com/mholt/acmez/v3 v3.1.6 // indirect
