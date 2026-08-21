@@ -279,6 +279,17 @@ RUN \
    sudo update-alternatives --install /usr/bin/editor editor /usr/bin/nvim 60 && \
    sudo update-alternatives --config editor
 
+# tree-sitter CLI
+# nvim-treesitter は main ブランチからパーサーを自前でビルドする。その
+# コンパイルとパーサー生成を回すのがこの CLI で、無いと :TSInstall が動かない。
+# Mac 側は bin/mac/setup-packages.sh の brew install tree-sitter が担当する。
+# renovate: datasource=github-releases depName=tree-sitter/tree-sitter extractVersion=^v(?<version>.+)$
+ARG TREE_SITTER_VERSION=0.26.12
+RUN \
+    curl -fsSL https://github.com/tree-sitter/tree-sitter/releases/download/v${TREE_SITTER_VERSION}/tree-sitter-linux-x64.gz | \
+        gunzip | sudo tee /usr/local/bin/tree-sitter > /dev/null && \
+    sudo chmod +x /usr/local/bin/tree-sitter
+
 # herdr
 # renovate: datasource=github-releases depName=herdrdev/herdr extractVersion=^v(?<version>.+)$
 ARG HERDR_VERSION=0.8.2
