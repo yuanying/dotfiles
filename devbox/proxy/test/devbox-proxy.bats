@@ -395,9 +395,14 @@ services:
 YAML
 }
 
+# The token goes to stdout and the wrapper's diagnostics go to stderr, which is
+# what lets `TOKEN=$(devbox-proxy token ...)` work. `run` merges the two by
+# default, so anything reading the token back has to ask for them separately --
+# otherwise the "building the proxy from ..." of a first build is part of the
+# value under test.
 @test "token prints a bearer token for a service that asks for a login" {
     guarded_config
-    run -0 proxy token --service llama --user yuanying
+    run -0 --separate-stderr proxy token --service llama --user yuanying
     [[ "${output}" == *.* ]]
     [[ "${output}" != *" "* ]]
 }
@@ -431,10 +436,13 @@ YAML
     [[ ! -f "${STATE}/session.key" ]]
 }
 
+# Separated for the reason above, and here it is the difference between a real
+# check and a vacuous one: only the first run builds, so with the streams merged
+# the two values differ by the build note whether or not the tokens do.
 @test "two tokens for the same service are not the same token" {
     guarded_config
-    run -0 proxy token --service llama --user yuanying --ttl 1h
+    run -0 --separate-stderr proxy token --service llama --user yuanying --ttl 1h
     local first="${output}"
-    run -0 proxy token --service llama --user yuanying --ttl 2h
+    run -0 --separate-stderr proxy token --service llama --user yuanying --ttl 2h
     [[ "${output}" != "${first}" ]]
 }
