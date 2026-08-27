@@ -174,7 +174,7 @@ RUN go install github.com/asdf-vm/asdf/cmd/asdf@v${ASDF_VERSION}
 # node builder
 # The bookworm variant is deliberate: its glibc is older than Ubuntu 24.04's, so
 # the binaries copied out of this stage keep working in the final image.
-FROM node:24.19.0-bookworm AS node_builder
+FROM node:24.20.0-bookworm AS node_builder
 
 # herdr navigator plugin builder
 # Plugins declare their own build commands, and this one is Rust, so it gets a
