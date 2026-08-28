@@ -83,6 +83,30 @@ if [[ -x ${proxy} ]]; then
     done
 fi
 
+echo "Setup moshi-hook"
+# 端末アプリ Moshi へエージェントの状態を届けるデーモン。イメージに入っている
+# のはバイナリだけで、ペアリング (トークンは Moshi の Settings → Hooks) は
+# 手作業で 1 回だけ:
+#
+#   moshi-hook pair --token <token> --store file
+#   moshi-hook install
+#
+# --store file なのは、この箱にキーリングが無いため。ペアリングの成果は
+# ~/.config/moshi に残り、$HOME はホストのものなのでコンテナを作り直しても
+# 生き残る。だからここは「設定があれば起動する」だけにして、無ければ何も
+# しない。proxy と同じで、この箱が上がる条件にはしない。
+#
+# systemd がいないので `moshi-hook service install` は使えず、serve を直接
+# 起動する。フォアグラウンドで動くプロセスなので背後に置く。
+# 出力は捨てる。デーモンは同じ行を ~/.local/state/moshi/hook.log にも書いて
+# いて (`moshi-hook logs -f` が読むのはそちら、パーミッションも 600)、拾って
+# もログが 2 本になるだけだから。起動そのものが転んだかどうかは
+# `moshi-hook status` が答える。
+if [[ -d ~/.config/moshi ]] && command -v moshi-hook > /dev/null; then
+    nohup moshi-hook serve > /dev/null 2>&1 &
+    echo "moshi-hook serve を起動した"
+fi
+
 echo "Starting sshd..."
 # sudo は env_reset で Dockerfile の ENV を捨て、OpenSSH もセッションの環境を
 # 作り直すため、そのままでは EDITOR がログインセッションに残らない。zshrc は

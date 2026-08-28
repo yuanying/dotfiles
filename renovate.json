@@ -6,6 +6,13 @@
   ],
   "timezone": "Asia/Tokyo",
   "dependencyDashboard": true,
+  "customDatasources": {
+    "moshi-hook": {
+      "description": "moshi-hook は GitHub リリースを持たず、CDN の version.txt が最新版の正",
+      "defaultRegistryUrlTemplate": "https://cdn.getmoshi.app/hook/latest/version.txt",
+      "format": "plain"
+    }
+  },
   "customManagers": [
     {
       "description": "Update `ARG <NAME>_VERSION=` in devbox/Dockerfile via `# renovate:` annotations",

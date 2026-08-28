@@ -73,6 +73,7 @@ list never wanted the recommends of podman and virtinst. Moving the copy changes
 - **Go**: gopls, goimports, ghq (installed with `@latest`)
 - **Terminal**: herdr (prebuilt binary)
 - **Diff viewer**: hunk (prebuilt binary, extracted to `/opt/hunk`)
+- **Phone integration**: moshi-hook (prebuilt binary; see below)
 - **Node.js**: system-wide `node` / `npm` / `npx` / `corepack`, from `node_builder`
 - **herdr plugins**: herdr-hunk-diff, herdr-navigator (see below)
 - **Search**: ripgrep, ag, fd, fzf
@@ -127,6 +128,43 @@ links by it and the dotfiles keybindings name it. The fork releases itself when 
 repository is where that lands as a Renovate PR. To go back to upstream, restore the plain
 annotation and clone URL and set the ARG to an upstream version — Renovate cannot make that hop
 because the versioning scheme changes. The fork's FORK.md has the details.
+
+## Moshi
+
+`moshi-hook` is what the Moshi terminal app on the phone talks to: it registers hooks with the
+agents installed here, serves a gateway on `127.0.0.1:24543`, and holds a WebSocket back to Moshi
+for approvals, notifications and the in-app diff view. Three places share the work, split the way
+the proxy and the herdr plugins are — the image carries the binary, `$HOME` carries the state.
+
+- The `Dockerfile` installs the binary into `/usr/local/bin`, with the `moshi` symlink the upstream
+  installer also makes. It is root-owned, so `moshi-hook update` cannot rewrite it; the pinned
+  `ARG` is the only version there is, and it comes from a `custom` Renovate datasource because the
+  binary ships from a CDN rather than GitHub releases.
+- `entrypoint.sh` starts `moshi-hook serve` in the background before sshd. This container has no
+  systemd, so `moshi-hook service install` is not an option and the daemon has to be started here.
+- `bin/setup.sh` runs `moshi-hook install`, which writes the hook entries — for Claude Code into
+  `~/.claude/settings.json`, next to the ones `herdr integration install` puts there. The Claude
+  settings merge further down that script only overwrites keys the repository tracks, so neither
+  installer's hooks are lost.
+
+Pairing is the one step nothing here automates: it needs a token from the app
+(Settings → Hooks) and is done once per box.
+
+```bash
+moshi-hook pair --token <token> --store file
+moshi-hook install
+```
+
+`--store file` because the container has no keyring. What that writes lands in `~/.config/moshi`,
+which is the host's `$HOME` and outlives the container. That directory is also the switch the two
+runtime steps read: without it the daemon is not started and no hooks are installed, so a box that
+never paired stays untouched — the same "no configuration, nothing happens" rule the proxy follows.
+`moshi-hook status` reports whether the daemon is up and paired.
+
+Two things follow from where the binaries sit. herdr is on the default `PATH` at
+`/usr/local/bin/herdr`, so the daemon finds it and the `MOSHI_HERDR_PATH` override in Moshi's docs
+is not needed here. And the gateway stays on the loopback interface: the app reaches it through the
+SSH connection it already has, so it is not a service in `services.<hostname>.yaml`.
 
 ## Public HTTP Proxy
 
@@ -188,6 +226,10 @@ repository root, because that is the only place Renovate reads it from:
   Their `managerFilePatterns` name these two files by their `devbox/` paths, so a file moved out of
   this directory stops being tracked.
 - Ubuntu is intentionally held at 24.04 (disabled by a package rule).
+- A tool with no release feed Renovate knows about gets a `customDatasources` entry in
+  `renovate.json` and is named as `datasource=custom.<key>` in the annotation. moshi-hook is the
+  one so far: it ships from its own CDN, whose `hook/latest/version.txt` is read with
+  `format: plain`.
 
 When adding a new pinned tool, follow the same annotation + `ARG` naming convention so Renovate
 picks it up automatically. Validate changes from the repository root with:
@@ -197,7 +239,7 @@ npx --package renovate renovate-config-validator
 npx --package renovate renovate --platform=local --dry-run=extract
 ```
 
-The second command should report eighteen dependencies across `devbox/Dockerfile` and
+The second command should report nineteen dependencies across `devbox/Dockerfile` and
 `devbox/Makefile`; a manager whose pattern stopped matching shows up as a missing file there.
 
 ## Container Runtime Notes
