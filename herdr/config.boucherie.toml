@@ -111,8 +111,8 @@ accent = "#87afaf"
 # zsh.d/extentions/herdr.zsh の herdr_auto_tab_name が行う。
 prompt_new_tab_name = false
 
-# エージェントパネルはスペース単位でまとめる。
-agent_panel_sort = "spaces"
+# エージェントパネルはスペースでまとめず、優先度順に並べる。
+agent_panel_sort = "priority"
 
 # Claude Code はターミナルタイトルにセッション名を出すので、それを
 # エージェント行に表示する。既定の行は state_icon/workspace/tab と agent

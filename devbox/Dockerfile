@@ -307,6 +307,25 @@ RUN \
         sudo tar zx --strip-components 1 -C /opt/hunk && \
     sudo ln -s /opt/hunk/hunk /usr/local/bin/hunk
 
+# moshi-hook
+# 端末アプリ Moshi (getmoshi.app) との連携デーモン。各エージェントの設定
+# ファイルへフックを登録し、127.0.0.1:24543 のゲートウェイと Moshi への
+# WebSocket を持つ。ペアリングと起動は runtime 側の仕事で、entrypoint.sh と
+# bin/setup.sh が受け持つ。
+#
+# バイナリは GitHub ではなく自前の CDN で配られていて、最新版は
+# /hook/latest/version.txt に置かれている。Renovate はそこを custom
+# datasource として読む (renovate.json の customDatasources)。
+# ここに置く実体は root 所有なので `moshi-hook update` の自己更新は効かない。
+# 版はこの ARG が正で、更新はイメージの作り直しで入る。
+# renovate: datasource=custom.moshi-hook depName=moshi-hook extractVersion=^v(?<version>.+)$
+ARG MOSHI_HOOK_VERSION=0.3.10
+RUN \
+    curl -fsSL https://cdn.getmoshi.app/hook/v${MOSHI_HOOK_VERSION}/moshi-hook_Linux_x86_64.tar.gz | \
+        sudo tar zx -C /usr/local/bin moshi-hook && \
+    sudo chmod +x /usr/local/bin/moshi-hook && \
+    sudo ln -s moshi-hook /usr/local/bin/moshi
+
 # node
 # asdf-managed versions still win on PATH; this is the fallback the herdr
 # plugins below run on.
