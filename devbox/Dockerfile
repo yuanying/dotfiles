@@ -248,7 +248,12 @@ COPY --from=docker_builder /usr/local/libexec/docker/cli-plugins /usr/local/lib/
 
 # Install go tools
 ENV GOPATH="/go"
-ENV PATH="$GOPATH/bin:$PATH"
+# go 本体は /usr/local/go に COPY されるだけで PATH には載らないため、ここで
+# 足す。zshrc も同じ行を持っているが、あれは対話 zsh にしか効かない。
+# entrypoint.sh は #!/bin/bash でこの ENV をそのまま使うので、ここに無いと
+# devbox-proxy の build() が `go is not installed` で失敗し、Go ソースが更新
+# された次のブートでプロキシが上がらなくなる。
+ENV PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
 
 # Set default environment variables
 # vi/vim/editor はいずれも update-alternatives で nvim に向けてあるが、
