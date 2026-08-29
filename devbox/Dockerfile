@@ -305,7 +305,7 @@ RUN \
 
 # hunk
 # renovate: datasource=github-releases depName=modem-dev/hunk extractVersion=^v(?<version>.+)$
-ARG HUNK_VERSION=0.20.0
+ARG HUNK_VERSION=0.20.1
 RUN \
     sudo mkdir -p /opt/hunk && \
     curl -fsSL https://github.com/modem-dev/hunk/releases/download/v${HUNK_VERSION}/hunkdiff-linux-x64.tar.gz | \
