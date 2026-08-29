@@ -35,6 +35,14 @@ RUN set -x -e && \
         libncurses-dev \
         pkg-config
 
+# The ROCm 10 base image (built with TheRock) ships /opt/rocm but no
+# ld.so.conf entry for it, unlike the 7.x deb-based images, so binaries
+# linked against libamdhip64 fail to load without LD_LIBRARY_PATH.
+RUN set -x -e && \
+    if [ -d /opt/rocm/lib ]; then \
+        echo /opt/rocm/lib > /etc/ld.so.conf.d/10-rocm.conf && ldconfig; \
+    fi
+
 # Everything below is for the person using the container, not for the build.
 # This stage is pushed on its own (see the Makefile), so it carries the user
 # account and the whole package set; main only adds tools that are not apt
