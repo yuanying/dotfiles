@@ -79,6 +79,7 @@ list never wanted the recommends of podman and virtinst. Moving the copy changes
 - **Search**: ripgrep, ag, fd, fzf
 - **Navigation**: zoxide (`z`; also feeds herdr-navigator's zoxide source)
 - **K8s**: kubectx, kubens
+- **Secrets**: sops, age (the tarball's `age-keygen` comes along, for making keys)
 - **Version manager**: asdf
 
 Pinned versions live in `ARG <NAME>_VERSION` declarations in the `Dockerfile`; do not hardcode

@@ -390,6 +390,25 @@ RUN \
     sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx && \
     sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
 
+# sops / age
+# ルーター設定のリポジトリは PPPoE の認証情報や DUID を sops + age で暗号化した
+# まま git に置いていて、apply のたびに復号する。手元でも devbox でも叩くので
+# イメージに入れる。Mac 側は bin/mac/setup-packages.sh の brew が担当する。
+# renovate: datasource=github-releases depName=getsops/sops extractVersion=^v(?<version>.+)$
+ARG SOPS_VERSION=3.13.3
+RUN \
+    sudo curl -fsSL -o /usr/local/bin/sops \
+        https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64 && \
+    sudo chmod +x /usr/local/bin/sops
+
+# tarball は age/ 以下に本体と age-keygen 他を並べている。鍵を作るのは
+# age-keygen なので、その 2 つを取り出す。
+# renovate: datasource=github-releases depName=FiloSottile/age extractVersion=^v(?<version>.+)$
+ARG AGE_VERSION=1.3.2
+RUN \
+    curl -fsSL https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz | \
+        sudo tar zx --strip-components 1 -C /usr/local/bin age/age age/age-keygen
+
 COPY entrypoint.sh /bin/entrypoint.sh
 RUN sudo chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]
