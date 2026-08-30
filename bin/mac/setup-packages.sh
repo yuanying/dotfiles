@@ -28,6 +28,12 @@ brew install node
 # zoxide ソースがこの履歴を候補に使う。
 brew install zoxide
 
+# ルーター設定の秘密を sops + age で暗号化して git に置いている。復号は Mac の
+# 手元でも走る。age の formula は age-keygen も持つ。バージョンは brew 任せ
+# (ピンの正は devbox/Dockerfile の ARG で、あれは Linux イメージ用)。
+brew install sops
+brew install age
+
 brew tap homebrew/cask-fonts
 brew install --cask font-hack-nerd-font
 
