@@ -295,7 +295,7 @@ RUN \
 # tree-sitter CLI
 # nvim-treesitter は main ブランチからパーサーを自前でビルドする。その
 # コンパイルとパーサー生成を回すのがこの CLI で、無いと :TSInstall が動かない。
-# Mac 側は bin/mac/setup-packages.sh の brew install tree-sitter が担当する。
+# Mac 側は bin/mac/setup-packages.sh の brew install tree-sitter-cli が担当する。
 # renovate: datasource=github-releases depName=tree-sitter/tree-sitter extractVersion=^v(?<version>.+)$
 ARG TREE_SITTER_VERSION=0.26.13
 RUN \

@@ -5,7 +5,9 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 brew install ripgrep
 brew install fd
 brew install mosh
-brew install tree-sitter
+# nvim の tree-sitter パーサーのビルドに CLI が要る。tree-sitter formula は
+# ライブラリ (libtree-sitter) だけになったので CLI は別 formula で入れる。
+brew install tree-sitter-cli
 brew install gojq
 # statusline-command.sh が jq を呼ぶ。gojq とは別物なので両方入れる。
 brew install jq
