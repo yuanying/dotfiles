@@ -224,7 +224,7 @@ FROM node_builder AS herdr_plugin_builder
 # The directory name stays `jhochenbaum.hunkdiff` -- that is the plugin id, which
 # entrypoint.sh links by and dotfiles binds keys against.
 # renovate: datasource=github-releases depName=yuanying/herdr-hunk-diff versioning=regex:^v?(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)-fork\.(?<build>\d+)$ extractVersion=^v(?<version>.+)$
-ARG HERDR_HUNK_DIFF_VERSION=0.1.0-fork.1
+ARG HERDR_HUNK_DIFF_VERSION=0.2.0-fork.1
 # This plugin depends on the `hunkdiff` npm package only to get a hunk binary,
 # and that package weighs ~500 MB because it ships Bun. Drop it after the build
 # and point the path the plugin resolves at the hunk the main stage installs.
