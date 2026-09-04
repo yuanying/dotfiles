@@ -332,7 +332,7 @@ RUN \
 # ここに置く実体は root 所有なので `moshi-hook update` の自己更新は効かない。
 # 版はこの ARG が正で、更新はイメージの作り直しで入る。
 # renovate: datasource=custom.moshi-hook depName=moshi-hook extractVersion=^v(?<version>.+)$
-ARG MOSHI_HOOK_VERSION=0.3.18
+ARG MOSHI_HOOK_VERSION=0.3.19
 RUN \
     curl -fsSL https://cdn.getmoshi.app/hook/v${MOSHI_HOOK_VERSION}/moshi-hook_Linux_x86_64.tar.gz | \
         sudo tar zx -C /usr/local/bin moshi-hook && \
