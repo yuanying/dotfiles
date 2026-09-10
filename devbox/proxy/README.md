@@ -11,7 +11,7 @@ hostname. So a name means something different on each box instead of clashing:
 boucherie's zone; substitute your own.
 
 ```
-browser ──TLS──▶ devbox :443 ──▶ 127.0.0.1:<port>
+browser ──TLS──▶ devbox :443 ──▶ <host>:<port>   (host: 127.0.0.1 unless declared)
                  │
                  ├─ certificate from Let's Encrypt, obtained and renewed here
                  ├─ session cookie checked, or the visitor is sent to
@@ -26,7 +26,7 @@ proxy, no Access application, and no API token anywhere on this machine.
 
 The reasoning is in [`docs/adr/`](../../docs/adr/): 0005 the shape, 0006 the
 certificates, 0007 the login, 0008 the process, 0010 the bearer token a client
-that is not a browser uses instead. Records 0001 to 0003 describe the
+that is not a browser uses instead, 0011 a backend in another container. Records 0001 to 0003 describe the
 arrangement this replaced and are marked superseded.
 
 ## What is here
@@ -157,6 +157,49 @@ wildcard `AAAA` record covers exactly one level. Namespace in the name
 Viewers are **GitHub account names**, not email addresses. A login is what the
 account is; an address can be unverified, one of several, or changed quietly.
 
+## A backend in another container
+
+A service is forwarded to `127.0.0.1:<port>` unless it names a `host`. A server
+running in a container of its own — one that should keep running when the
+devbox is recreated — is reached by the container's name instead:
+
+```yaml
+services:
+  - name: sd-webui
+    host: sd-webui       # a container name docker's DNS answers for
+    port: 7860
+    auth: required
+    viewers:
+      logins:
+        - yuanying
+```
+
+What that needs, and what it means:
+
+- **The devbox and the container share a docker network.** A user-defined
+  network, because only those have the DNS that turns a container name into an
+  address. The name is looked up each time a connection is made, so a container
+  that was recreated with a new address is found again without a reload.
+- **`host` is a hostname or a bare IP address, and nothing else.** An IPv6
+  address is written without brackets. A host with a port (`sd-webui:7860`), a
+  scheme (`http://sd-webui`), brackets, a path or an interface zone is refused
+  by `check`, with the reason. Leaving `host` out, or writing `127.0.0.1`, is the
+  loopback.
+- **Ports collide only on the same host.** Two containers can both listen on
+  `:8080`; two services pointing at the same `host:port` are still an error.
+- **The backend sees the public name in `Host`**, exactly as a loopback backend
+  does. A server with an allowed-hosts list needs `<name>.<zone>` on it.
+- **The container can be reached without the proxy** by anything else on that
+  network, and by nothing else. A backend on the loopback was only reachable
+  from inside the devbox. Keep the network to the containers that need it, and
+  do not let a backend treat `X-Devbox-User` as proof when a neighbour could
+  send it directly.
+
+`devbox-publish publish --host sd-webui ...` writes the same thing, and checks
+that `sd-webui:<port>` is listening rather than `127.0.0.1:<port>`.
+`devbox-proxy check` and `devbox-publish list` both print where each name goes,
+host included. `docs/adr/0011`.
+
 ## Publishing without publishing it
 
 This repository is public, so everything in `services.<hostname>.yaml` is on the
@@ -188,18 +231,19 @@ Then `devbox-proxy reload`. The rules, in full:
 |---|---|
 | an entry naming a declared service | updates it |
 | an entry naming anything else | is a new service, published as if declared |
-| `port`, `auth` | the overlay wins when it sets them |
+| `host`, `port`, `auth` | the overlay wins when it sets them |
 | `viewers` | **always added**, never replaced |
 | `zone` | not accepted here |
 
 Viewers add rather than replace, so somebody the declaration lists never loses
-access because the overlay mentioned the service. `port` and `auth` override,
-because a port that collides with something else running locally is exactly the
-kind of thing that should not require a commit. `docs/adr/0009`.
+access because the overlay mentioned the service. `host`, `port` and `auth`
+override, because a port that collides with something else running locally is
+exactly the kind of thing that should not require a commit. `docs/adr/0009`,
+and `docs/adr/0011` for `host`.
 
 **`devbox-proxy check` is the only thing that knows the whole answer.** It
-prints which files it merged, every service that will be published, and the
-viewer count for each. Reading the declaration file alone no longer tells you
+prints which files it merged, every service that will be published, the
+`host:port` it is forwarded to, and the viewer count for each. Reading the declaration file alone no longer tells you
 what is published or who can reach it — that is the price of the split.
 
 Validation runs on the merged result, so a port collision between the two files
@@ -317,6 +361,7 @@ while the proxy is stopped, too.
 | `401` and `token has expired` | issue another. There is nothing to renew — a token is not extendable by design |
 | `401` on every token at once | `api.key` was replaced or removed. That is what revocation looks like; reissue |
 | 502 from a name that used to work | the backend stopped. `devbox-proxy status` is fine, the service behind the port is not |
+| 502 from a service with a `host` | `proxy.log` says why. `no such host`: the container is not running, or not on a network the devbox is on (`docker network connect`). `connection refused`: it is up but not listening on that port on its network interface — `127.0.0.1` inside the container is not reachable from outside it |
 | `reload` exits non-zero | the declaration file does not validate, and the message says why. Whatever was running is still running |
 
 ## Tests
