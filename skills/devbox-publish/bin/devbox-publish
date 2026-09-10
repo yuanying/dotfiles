@@ -3,6 +3,7 @@
 # Publish an HTTP server running in this devbox, permanently.
 #
 #   devbox-publish publish --name llama --port 8081 --github-login yuanying
+#   devbox-publish publish --name sd-webui --host sd-webui --port 7860 --github-login yuanying
 #   devbox-publish unpublish --name llama
 #   devbox-publish list
 #   devbox-publish where
@@ -41,6 +42,8 @@ usage() {
 usage: $(basename "$0") <command> [options]
 
   publish --name NAME --port PORT [options]
+      --host HOST             where the server listens: a container name or an
+                              IP address; default: 127.0.0.1
       --auth required|none    default: required
       --github-login ACCOUNT  may be repeated
       --github-org ORG        may be repeated
@@ -83,11 +86,21 @@ zone_of() {
     yq -r '.zone // ""' "${CONFIG}"
 }
 
-# The proxy connects to 127.0.0.1:<port>, so that is the address worth checking.
-# A server bound only to the container's global IPv6 would answer the outside
-# world and not the proxy, and this is where that is caught.
+# The proxy connects to <host>:<port> -- 127.0.0.1 unless the service names a
+# host (docs/adr/0011) -- so that is the address worth checking. A server bound
+# only to the container's global IPv6 would answer the outside world and not the
+# proxy, and this is where that is caught.
 port_is_open() {
-    (exec 3<> "/dev/tcp/127.0.0.1/$1") 2> /dev/null
+    (exec 3<> "/dev/tcp/$1/$2") 2> /dev/null
+}
+
+# host:port as a URL writes it, with an IPv6 address in brackets.
+upstream() {
+    if [[ $1 == *:* ]]; then
+        echo "[$1]:$2"
+    else
+        echo "$1:$2"
+    fi
 }
 
 json_array() {
@@ -126,12 +139,13 @@ commit_hint() {
 # ---------------------------------------------------------------------------
 
 cmd_publish() {
-    local name= port= auth=required listen_check=yes
+    local name= host= port= auth=required listen_check=yes
     local logins=() orgs=()
 
     while [[ $# -gt 0 ]]; do
         case $1 in
             --name) name=$2; shift 2 ;;
+            --host) host=$2; shift 2 ;;
             --port) port=$2; shift 2 ;;
             --auth) auth=$2; shift 2 ;;
             --github-login) logins+=("$2"); shift 2 ;;
@@ -160,6 +174,22 @@ cmd_publish() {
     [[ ${port} =~ ^[0-9]+$ ]] || die "--port must be a number, not ${port}"
     [[ ${port} -ge 1 && ${port} -le 65535 ]] || die "--port must be between 1 and 65535"
 
+    # The obvious mistakes, caught before anything is written. The parser is
+    # the authority on the rest, and reload reports what it refuses.
+    if [[ -n ${host} ]]; then
+        local colons=${host//[^:]/}
+        [[ ${host} == *://* ]] &&
+            die "--host ${host} has a scheme; give only the host, the proxy always speaks http to it"
+        [[ ${host} == *[\[\]]* ]] &&
+            die "--host ${host} has brackets; give an IPv6 address without them"
+        [[ ${#colons} -eq 1 ]] &&
+            die "--host ${host} carries a port; the port goes in --port"
+        [[ ${host} =~ ^[A-Za-z0-9._:-]+$ ]] ||
+            die "--host ${host} is neither a hostname nor an IP address"
+    fi
+    local address
+    address=$(upstream "${host:-127.0.0.1}" "${port}")
+
     [[ ${auth} == required || ${auth} == none ]] ||
         die "--auth is 'required' or 'none', not ${auth}"
 
@@ -174,8 +204,8 @@ cmd_publish() {
         die "a service with auth: required needs at least one viewer (--github-login or --github-org)"
     fi
 
-    if [[ -n ${listen_check} ]] && ! port_is_open "${port}"; then
-        die "nothing is listening on 127.0.0.1:${port}; start the server first, or pass --no-listen-check"
+    if [[ -n ${listen_check} ]] && ! port_is_open "${host:-127.0.0.1}" "${port}"; then
+        die "nothing is listening on ${address}; start the server first, or pass --no-listen-check"
     fi
 
     local existed
@@ -185,15 +215,20 @@ cmd_publish() {
     zone=$(zone_of)
     [[ -n ${zone} ]] || die "${CONFIG} does not name a zone"
 
-    step "Publishing ${name}.${zone} -> http://127.0.0.1:${port}"
+    step "Publishing ${name}.${zone} -> http://${address}"
 
+    # host is written only when given, so a service on the loopback reads the
+    # way it always has.
     ENTRY=$(jq -n \
         --arg name "${name}" \
+        --arg host "${host}" \
         --argjson port "${port}" \
         --arg auth "${auth}" \
         --argjson logins "${logins_json}" \
         --argjson orgs "${orgs_json}" '
-        {name: $name, port: $port, auth: $auth}
+        {name: $name}
+        + (if $host != "" then {host: $host} else {} end)
+        + {port: $port, auth: $auth}
         + (if ($logins | length) > 0 or ($orgs | length) > 0
            then {viewers: (
                    (if ($logins | length) > 0 then {logins: $logins} else {} end)
@@ -285,11 +320,16 @@ cmd_list() {
     fi
 
     step "Published from ${CONFIG}"
-    ZONE=${zone} yq -r '
-        (.services // [])[] |
-        "    https://" + .name + "." + strenv(ZONE) +
-        "  ->  127.0.0.1:" + (.port | tostring) +
-        "  (auth: " + (.auth // "required") + ")"' "${CONFIG}"
+    # jq rather than yq for the formatting: bracketing an IPv6 host needs a
+    # conditional, which not every yq release has.
+    yq -o=json '.services // []' "${CONFIG}" | jq -r --arg zone "${zone}" '
+        .[] |
+        (.host // "127.0.0.1") as $host |
+        "    https://" + .name + "." + $zone +
+        "  ->  " +
+        (if ($host | test(":")) then "[" + $host + "]" else $host end) +
+        ":" + (.port | tostring) +
+        "  (auth: " + (.auth // "required") + ")"'
 }
 
 cmd_where() {

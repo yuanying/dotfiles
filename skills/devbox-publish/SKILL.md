@@ -12,7 +12,7 @@ devbox で立てた HTTP サーバーを、GitHub ログイン越しに `https:/
 で公開する。**恒久登録**であり、一時的なトンネルではない。宣言ファイルへの
 追記とプロキシのリロードまでを行う。
 
-仕組みと設計理由は `devbox/proxy/README.md` と `docs/adr/0004`〜`0008` にある。
+仕組みと設計理由は `devbox/proxy/README.md` と `docs/adr/0004`〜`0011` にある。
 このスキルはその運用手順を実行するだけで、判断は変えない。
 
 ## 使うコマンド
@@ -37,6 +37,13 @@ dotfiles チェックアウトを割り出し、`devbox/proxy/services.$(hostnam
 - サーバーが **`127.0.0.1:<port>` で listen している**こと。プロキシはそこへ
   繋ぐ。グローバル IPv6 だけに bind されたサーバーは公開できない。
   `publish` は既定でこれを検査し、繋がらなければ何も書かずに止まる。
+- **別コンテナで動くサーバー**は `--host <コンテナ名>` で転送先を指定する
+  （`docs/adr/0011`）。そのコンテナが devbox と同じ docker ネットワークに居て、
+  docker の DNS でその名前が引けることが前提。IP アドレス（IPv6 は角括弧なし）
+  でもよい。listen の検査もそのホストに対して行う。`--host` にポートや
+  `http://` を含めると拒否される。
+- `--host` を付けずに同じ名前を `publish` し直すと、転送先は `127.0.0.1` に戻る
+  （エントリは丸ごと置き換わる）。
 - 公開名は **DNS ラベル 1 つ**。`llama` は可、`llama.gpu` は不可
   （ワイルドカードの AAAA レコードが 1 階層までしかカバーしないため。
   `docs/adr/0006`）。名前空間が欲しければ `gpu-llama` のようにする。
@@ -100,6 +107,7 @@ services:
 
 ```bash
 bin/devbox-publish publish --name llama --port 8081 --github-org acme
+bin/devbox-publish publish --name sd-webui --host sd-webui --port 7860 --github-login yuanying
 ```
 
 やることは宣言ファイルへの追記とプロキシのリロードだけ。**API トークンも
@@ -151,3 +159,4 @@ bin/devbox-publish list
   答える。** 宣言ファイルと `services.local.yaml` をマージした結果を出す。
   宣言ファイルだけを読んで「このサービスは無い」「この人は入れない」と判断
   しないこと。`list` は宣言ファイルしか見ないので、全体を知るには `check`。
+  どちらも転送先を `<host>:<port>` で表示する。

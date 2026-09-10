@@ -201,6 +201,86 @@ called() {
 }
 
 # ---------------------------------------------------------------------------
+# A backend somewhere other than the loopback (docs/adr/0011)
+# ---------------------------------------------------------------------------
+
+@test "publish writes no host when none is given" {
+    run -0 "${PUBLISH}" publish --name llama --port 8081 \
+        --github-login yuanying --no-listen-check
+
+    [ "$(service llama | yq -r '.host // "absent"')" = absent ]
+}
+
+@test "publish writes the host it is given" {
+    run -0 "${PUBLISH}" publish --name sd-webui --host sd-webui --port 7860 \
+        --github-login yuanying --no-listen-check
+
+    [ "$(service sd-webui | yq -r '.host')" = sd-webui ]
+    [[ "${output}" == *"http://sd-webui:7860"* ]]
+}
+
+@test "publish brackets an IPv6 host when it says where it forwards to" {
+    run -0 "${PUBLISH}" publish --name v6 --host fd00:5d::2 --port 80 \
+        --auth none --no-listen-check
+
+    [ "$(service v6 | yq -r '.host')" = "fd00:5d::2" ]
+    [[ "${output}" == *"http://[fd00:5d::2]:80"* ]]
+}
+
+@test "a host with a port in it is refused" {
+    run -1 "${PUBLISH}" publish --name sd-webui --host sd-webui:7860 --port 7860 \
+        --github-login yuanying --no-listen-check
+    [[ "${output}" == *"--port"* ]]
+    [ "$(yq -r '.services | length' "${CONFIG}")" = 0 ]
+}
+
+@test "a host with a scheme is refused" {
+    run -1 "${PUBLISH}" publish --name sd-webui --host http://sd-webui --port 7860 \
+        --github-login yuanying --no-listen-check
+    [[ "${output}" == *"scheme"* ]]
+    [ "$(yq -r '.services | length' "${CONFIG}")" = 0 ]
+}
+
+@test "a bracketed host is refused" {
+    run -1 "${PUBLISH}" publish --name v6 --host '[fd00:5d::2]' --port 80 \
+        --auth none --no-listen-check
+    [[ "${output}" == *"brackets"* ]]
+    [ "$(yq -r '.services | length' "${CONFIG}")" = 0 ]
+}
+
+# The listen check asks the host the proxy will connect to, not the loopback.
+@test "the listen check goes to the host that was given" {
+    local port
+    port=$(start_server)
+
+    run -1 "${PUBLISH}" publish --name llama --host 127.0.0.2 --port "${port}" --github-login yuanying
+    [[ "${output}" == *"127.0.0.2:${port}"* ]]
+    [ "$(yq -r '.services | length' "${CONFIG}")" = 0 ]
+
+    run -0 "${PUBLISH}" publish --name llama --host 127.0.0.1 --port "${port}" --github-login yuanying
+}
+
+# Re-publishing without --host is how a service comes back to the loopback,
+# so an update replaces the host rather than keeping an old one.
+@test "republishing without a host drops the old one" {
+    run -0 "${PUBLISH}" publish --name llama --host box --port 8081 --github-login yuanying --no-listen-check
+    run -0 "${PUBLISH}" publish --name llama --port 8081 --github-login yuanying --no-listen-check
+
+    [ "$(service llama | yq -r '.host // "absent"')" = absent ]
+}
+
+@test "a host that publish writes is accepted by the real parser" {
+    require go
+    run -0 "${PUBLISH}" publish --name sd-webui --host sd-webui --port 7860 \
+        --github-login yuanying --no-listen-check
+
+    run -0 env -C "${REPO}/devbox/proxy/proxyd" \
+        DEVBOX_PROXY_STATE="${BATS_TEST_TMPDIR}/state" \
+        go run . check --config "${CONFIG}"
+    [[ "${output}" == *"sd-webui.example.org -> sd-webui:7860"* ]]
+}
+
+# ---------------------------------------------------------------------------
 # What it refuses
 # ---------------------------------------------------------------------------
 
@@ -344,6 +424,23 @@ called() {
 
     [[ "${output}" == *"llama.example.org"* ]]
     [[ "${output}" == *"8081"* ]]
+}
+
+@test "list says the loopback for a service that names no host" {
+    run -0 "${PUBLISH}" publish --name llama --port 8081 --github-login yuanying --no-listen-check
+    run -0 "${PUBLISH}" list
+
+    [[ "${output}" == *"127.0.0.1:8081"* ]]
+}
+
+@test "list says the host a service declares" {
+    run -0 "${PUBLISH}" publish --name sd-webui --host sd-webui --port 7860 --github-login yuanying --no-listen-check
+    run -0 "${PUBLISH}" publish --name v6 --host fd00:5d::2 --port 80 --auth none --no-listen-check
+    run -0 "${PUBLISH}" list
+
+    [[ "${output}" == *"sd-webui:7860"* ]]
+    [[ "${output}" == *"[fd00:5d::2]:80"* ]]
+    [[ "${output}" != *"127.0.0.1"* ]]
 }
 
 @test "list on an empty declaration file says so and succeeds" {
