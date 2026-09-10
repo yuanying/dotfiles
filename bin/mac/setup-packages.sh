@@ -36,7 +36,9 @@ brew install zoxide
 brew install sops
 brew install age
 
-brew tap homebrew/cask-fonts
+# font-hack-nerd-font は homebrew/cask 本体に移行済み。かつて要った
+# homebrew/cask-fonts の tap は deprecated になり、叩くとエラーになるだけなの
+# で張らない。
 brew install --cask font-hack-nerd-font
 
 # herdr のプラグイン本体。Linux 側は devbox イメージがビルド済みのツリーを
