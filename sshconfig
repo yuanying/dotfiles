@@ -1,6 +1,12 @@
+Host boucherie.oeilvert.org
+  HostName boucherie.oeilvert.org
+  StrictHostKeyChecking accept-new
+  Port 3222
+  User yuanying
+
 Host anietta.oeilvert.org
   HostName anietta.oeilvert.org
-  StrictHostKeyChecking no
+  StrictHostKeyChecking accept-new
   Port 3222
   User yuanying
 
