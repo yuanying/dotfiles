@@ -8,7 +8,7 @@ FROM ghcr.io/astral-sh/uv:0.10.6 AS uv
 # so this has to be 24.04 too for the glibc and libraries it was linked with.
 # torch brings its own CUDA libraries in the venv; the base supplies the rest
 # of what the NVIDIA runtime expects.
-FROM nvidia/cuda:13.1.0-runtime-ubuntu24.04
+FROM nvidia/cuda:13.3.1-runtime-ubuntu24.04
 
 # The first line is what the asdf-built Python links against, the second what
 # opencv, torch and the webui itself load, git included for its version check.
