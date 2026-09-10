@@ -92,7 +92,8 @@ In the Cloudflare dashboard, on the zone:
 |---|---|---|---|
 | `AAAA` | `*` | the devbox's global IPv6 | **DNS only (grey cloud)** |
 
-The address is the one `start-cuda` / `start-rocm` pass to `docker run --ip6`.
+The address is `DEVBOX_IP6` in `devbox/network/hosts/<hostname>.env`, which
+`start-cuda` / `start-rocm` give the devbox on `v6net`.
 
 **Grey cloud matters.** With the orange cloud on, Cloudflare intercepts port 80
 and the ACME challenge never reaches the devbox, so no certificate is ever

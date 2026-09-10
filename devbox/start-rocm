@@ -3,11 +3,16 @@
 set -e
 
 ROOT=$(dirname "${BASH_SOURCE}")
+HOST=anietta
+
+# The network layout, and this host's IPv6 values (devbox/network/README.md).
+source "${ROOT}/network/networks.env"
+source "${ROOT}/network/hosts/${HOST}.env"
 
 exec docker run \
     -d \
     --name devbox \
-    --hostname="anietta" \
+    --hostname="${HOST}" \
     --privileged \
     --cap-add=SYS_PTRACE \
     --security-opt seccomp=unconfined \
@@ -22,8 +27,8 @@ exec docker run \
     -v /usr/share/ca-certificates:/usr/share/ca-certificates \
     -v /etc/ssl/certs:/etc/ssl/certs \
     --mount type=bind,source=/home/yuanying,target=/home/yuanying,bind-propagation=slave \
-    --network v6net \
-    --ip6 2405:6581:8580:310::153 \
+    --network "name=${V6NET_NAME},ip6=${DEVBOX_IP6}" \
+    --network "name=${SDNET_NAME},gw-priority=-1" \
     -w /home/yuanying \
     --add-host braque:192.168.1.131 \
     --add-host chirico:192.168.1.83 \
