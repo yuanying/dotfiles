@@ -29,7 +29,9 @@ which runs in the devbox, forwards to them, and `SDCTL_URL` in
 
 - `sdnet` exists and the devbox is on it — `devbox/network/README.md`.
 - The checkouts are ready to run as they would be in the devbox: the webui has
-  its `venv/` (made by running `./webui.sh` from the devbox once), and
+  its `venv/` (made by running `./webui-user.sh` from the devbox once and
+  stopping it when it is up; `./webui.sh` alone misses the `COMMANDLINE_ARGS`
+  that `webui-user.sh` exports, `--uv` among them), and
   tageditor has `backend/.venv` (`uv sync`) and `frontend/node_modules`
   (`npm install`). The containers only run what is there; they do not set it
   up.

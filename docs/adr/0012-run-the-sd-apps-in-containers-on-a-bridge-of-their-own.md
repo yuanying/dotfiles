@@ -89,10 +89,12 @@ were started from, and a worktree is deleted once its branch is merged.
 remove it, and the devbox is attached to it. The network belongs to the host,
 so `setup-networks` makes it and compose declares it external.
 
-**Start sd-webui through its `webui.sh`.** The script sources `webui-user.sh`,
-whose `COMMANDLINE_ARGS` would override what the container passes, and with no
-venv it makes one from whatever Python it finds. The entrypoint runs
-`launch.py` with the existing venv and fails if there is none.
+**Start sd-webui through its `webui.sh`.** It adds nothing the arguments need:
+the checkout's own are in `webui-user.sh`, which exports `COMMANDLINE_ARGS` and
+then runs `webui.sh`, while `webui.sh` itself sources only `webui.settings.sh`.
+What it does add is venv handling: it upgrades pip in the venv at every start,
+and with no venv it makes one from whatever Python it finds. The entrypoint
+runs `launch.py` with the existing venv and fails if there is none.
 
 **A subnet in `10.0.0.0/8`.** It sits outside Docker's default pools, but that
 range is what Kubernetes clusters and VPNs tend to use, and this box works with
