@@ -1,0 +1,19 @@
+# Ghostty の設定。
+# キーの一覧は `ghostty +show-config --default --docs` か
+# https://ghostty.org/docs/config を参照。
+
+clipboard-read = allow
+clipboard-write = allow
+# theme = chalk
+theme = Ayu
+window-padding-x = 20
+window-padding-y = 5
+window-padding-balance = true
+window-theme = ghostty
+background-opacity = 0.85
+background-blur-radius = 20
+macos-titlebar-style = transparent
+keybind = global:ctrl+tab=toggle_visibility
+
+font-family = Hack Nerd Font Mono
+font-thicken = true

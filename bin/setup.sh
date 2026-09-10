@@ -111,6 +111,16 @@ else
         ${HUNK_HOST_SETTINGS}
 fi
 
+# Ghostty (端末アプリ) の設定。Ghostty は設定ファイルを書き戻さないので
+# symlink でよい。GUI アプリなので macOS だけ。読み込み先は
+# ~/Library/Application Support/com.mitchellh.ghostty/config
+# (XDG 側の ~/.config/ghostty/config も読むが、既存の設定がこちらにある)。
+if [[ "$(uname)" == "Darwin" ]]; then
+    GHOSTTY_DIR="${HOME}/Library/Application Support/com.mitchellh.ghostty"
+    mkdir -p "${GHOSTTY_DIR}"
+    ln -sfn ${ROOT}/../ghostty/config "${GHOSTTY_DIR}/config"
+fi
+
 # Claude Code のカスタムテーマ。どのホストでも両方選べるように全部張る。
 # 実際にどれを使うかは各ホストの ~/.claude/settings.json の theme で決める
 # (このファイルは machine local で dotfiles 管理外)。
