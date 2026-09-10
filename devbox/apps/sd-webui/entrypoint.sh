@@ -3,15 +3,18 @@
 # Starts sd-webui from the checkout in the working directory, with the venv
 # already in it. The arguments are the webui's own, passed by compose.
 #
-# webui.sh is not used. It sources webui-user.sh, whose COMMANDLINE_ARGS would
-# win over the arguments given here, and with no venv it makes one from
-# whichever python it finds -- in this image, none that the venv was built for.
+# webui.sh is not used. It would bring nothing the arguments need: the
+# checkout's own are in webui-user.sh, which exports COMMANDLINE_ARGS and then
+# runs webui.sh, while webui.sh itself sources only webui.settings.sh. What it
+# would bring is venv handling: it upgrades pip in the venv at every start, and
+# with no venv it makes one from whichever python it finds -- in this image,
+# none that the venv was built for.
 
 set -euo pipefail
 
 venv=${PWD}/venv
 if [[ ! -x ${venv}/bin/python ]]; then
-    echo "sd-webui: no venv at ${venv}; set it up from the devbox with ./webui.sh first" >&2
+    echo "sd-webui: no venv at ${venv}; set it up from the devbox with ./webui-user.sh first" >&2
     exit 1
 fi
 
