@@ -27,18 +27,21 @@ defaults:
 #         - some-org
 services:
   - name: sd-viewer
+    host: sd-viewer
     port: 8189
     auth: required
     viewers:
       logins:
         - yuanying
   - name: sd-webui
+    host: sd-webui
     port: 7860
     auth: required
     viewers:
       logins:
         - yuanying
   - name: tageditor
+    host: tageditor
     port: 5173
     auth: required
     viewers:

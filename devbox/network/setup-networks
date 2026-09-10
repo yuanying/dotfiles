@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+#
+# setup-networks [--dry-run] [<hostname>]
+#
+# Creates the docker networks a devbox host needs -- v6net and sdnet -- in the
+# shape networks.env and hosts/<hostname>.env describe. The host defaults to
+# this machine's short hostname.
+#
+# A network that already exists is compared with that shape and never changed:
+# recreating one means disconnecting every container on it, the devbox
+# included, so a difference is reported and the exit status is non-zero. What
+# to do about it is in README.md. --dry-run prints the create commands instead
+# of running them; the comparison still happens, since it only reads.
+#
+# DEVBOX_NETWORK_HOSTS overrides where the host files are looked up.
+
+set -euo pipefail
+
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+HOSTS=${DEVBOX_NETWORK_HOSTS:-${ROOT}/hosts}
+
+dry_run=
+if [[ ${1:-} == --dry-run ]]; then
+    dry_run=1
+    shift
+fi
+host=${1:-$(hostname -s)}
+
+host_file=${HOSTS}/${host}.env
+if [[ ! -f ${host_file} ]]; then
+    echo "setup-networks: no network file for ${host}: ${host_file}" >&2
+    exit 1
+fi
+
+# shellcheck source=networks.env
+source "${ROOT}/networks.env"
+# shellcheck disable=SC1090
+source "${host_file}"
+
+# What docker is asked about a network, one property per line. The expected
+# shapes below are written in the same format, so comparing is a diff.
+INSPECT_FORMAT='driver={{.Driver}}{{"\n"}}ipv6={{.EnableIPv6}}{{"\n"}}internal={{.Internal}}{{range .IPAM.Config}}{{"\n"}}subnet={{.Subnet}} gateway={{.Gateway}}{{end}}'
+
+status=0
+
+# ensure <name> <expected shape> <docker network create options...>
+ensure() {
+    local name=$1 expected=$2 actual
+    shift 2
+
+    if ! actual=$(docker network inspect --format "${INSPECT_FORMAT}" "${name}" 2> /dev/null); then
+        if [[ -n ${dry_run} ]]; then
+            echo "docker network create $* ${name}"
+        else
+            echo "${name}: creating"
+            docker network create "$@" "${name}" > /dev/null
+        fi
+        return 0
+    fi
+
+    if diff -q <(sort <<< "${expected}") <(sort <<< "${actual}") > /dev/null; then
+        echo "${name}: ok"
+        return 0
+    fi
+
+    echo "${name}: exists but differs from the standard (- standard, + actual); left as it is" >&2
+    diff -u --label standard --label "${name}" \
+        <(sort <<< "${expected}") <(sort <<< "${actual}") | tail -n +3 >&2 || true
+    status=1
+}
+
+ensure "${V6NET_NAME}" "driver=bridge
+ipv6=true
+internal=false
+subnet=${V6NET_SUBNET} gateway=${V6NET_GATEWAY}
+subnet=${V6NET_IPV4_SUBNET} gateway=${V6NET_IPV4_GATEWAY}" \
+    --driver bridge --ipv6 \
+    --subnet "${V6NET_SUBNET}" --gateway "${V6NET_GATEWAY}" \
+    --subnet "${V6NET_IPV4_SUBNET}" --gateway "${V6NET_IPV4_GATEWAY}"
+
+ensure "${SDNET_NAME}" "driver=bridge
+ipv6=false
+internal=false
+subnet=${SDNET_SUBNET} gateway=${SDNET_GATEWAY}" \
+    --driver bridge \
+    --subnet "${SDNET_SUBNET}" --gateway "${SDNET_GATEWAY}"
+
+exit "${status}"

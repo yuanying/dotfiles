@@ -36,6 +36,21 @@ Base image tags are defined as `*_IMAGE` variables at the top of the `Makefile`.
 ./scripts/run-workspace.sh  # Ephemeral isolated workspace
 ```
 
+`start-cuda` and `start-rocm` put the devbox on two Docker networks, `v6net` and
+`sdnet`, which have to exist first: `network/setup-networks` creates them. Their
+layout is the same on every host except the IPv6 values, which are in
+`network/hosts/<hostname>.env` and nowhere else — the devbox's `--ip6` included.
+`network/README.md` covers setting up a host.
+
+## Apps Next to the Devbox
+
+`apps/` runs web apps as containers of their own beside the devbox, declared per
+host in `apps/compose.<hostname>.yaml`; `apps/README.md` covers operating them
+and `docs/adr/0012` covers why. Two things constrain edits there. The images are
+runtimes only — source, venvs and languages come from the `$HOME` mount — and
+nothing a container runs may point back into this checkout, which is why each
+entrypoint is copied into its image rather than mounted.
+
 ## Dockerfile Architecture
 
 Multi-stage build with these named targets:
@@ -225,7 +240,8 @@ repository root, because that is the only place Renovate reads it from:
 - `ARG <NAME>_VERSION=` in the `Dockerfile` and `<NAME>_IMAGE :=` in the `Makefile` are picked up by
   custom regex managers, driven by a preceding `# renovate: datasource=... depName=...` comment.
   Their `managerFilePatterns` name these two files by their `devbox/` paths, so a file moved out of
-  this directory stops being tracked.
+  this directory stops being tracked. The `ARG` manager also reads `apps/*/Dockerfile`, whose base
+  images the `dockerfile` manager picks up like the ones here.
 - Ubuntu is intentionally held at 24.04 (disabled by a package rule).
 - A tool with no release feed Renovate knows about gets a `customDatasources` entry in
   `renovate.json` and is named as `datasource=custom.<key>` in the annotation. moshi-hook is the

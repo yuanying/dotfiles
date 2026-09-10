@@ -3,12 +3,17 @@
 set -e
 
 ROOT=$(dirname "${BASH_SOURCE}")
+HOST=boucherie
+
+# The network layout, and this host's IPv6 values (devbox/network/README.md).
+source "${ROOT}/network/networks.env"
+source "${ROOT}/network/hosts/${HOST}.env"
 
 exec docker run \
     -d \
     --name devbox \
     --gpus all \
-    --hostname="boucherie" \
+    --hostname="${HOST}" \
     --privileged \
     --userns=host \
     --cap-add=SYS_PTRACE \
@@ -26,8 +31,8 @@ exec docker run \
     -v /etc/ssl/certs:/etc/ssl/certs \
     --mount type=bind,source=/home/yuanying,target=/home/yuanying,bind-propagation=slave \
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=slave \
-    --network v6net \
-    --ip6 2405:6581:8580:302::151 \
+    --network "name=${V6NET_NAME},ip6=${DEVBOX_IP6}" \
+    --network "name=${SDNET_NAME},gw-priority=-1" \
     -w /home/yuanying \
     --add-host braque:192.168.1.131 \
     --add-host chirico:192.168.1.83 \
