@@ -1,0 +1,70 @@
+# The web apps boucherie runs next to its devbox, each in a container of its
+# own. Operating them is in README.md next to this file; why they are shaped
+# like this is docs/adr/0012.
+#
+# The project name is fixed so that whichever checkout runs `docker compose`
+# manages the same containers. Nothing below points into the checkout at run
+# time: the entrypoints are baked into the images, and the only mounts are
+# $HOME and /mnt, at the same paths the devbox sees them.
+
+name: devbox-apps
+
+x-app: &app
+  restart: always
+  init: true
+  # yuanying:staff, as in the devbox, so what the apps write is the user's.
+  user: "501:50"
+  volumes:
+    - /home/yuanying:/home/yuanying
+    - /mnt:/mnt
+  networks:
+    sdnet: {}
+
+services:
+  sd-webui:
+    <<: *app
+    container_name: sd-webui
+    build: sd-webui
+    working_dir: /home/yuanying/src/github.com/Haoming02/sd-webui-forge-classic
+    command:
+      - --listen
+      - --port
+      - "7860"
+      - --api
+      - --uv
+      - --model-ref
+      - /mnt/data/sd-webui/models
+    # As in the devbox it used to run in.
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  sd-viewer:
+    <<: *app
+    container_name: sd-viewer
+    build: sd-viewer
+    working_dir: /home/yuanying/src/github.com/yuanying/sd-viewer
+    # Everything else comes from ~/.config/sd-viewer/config.toml, which the
+    # devbox shares; only the address of sd-webui differs in here.
+    command:
+      - --webui-url
+      - http://sd-webui:7860
+
+  tageditor:
+    <<: *app
+    container_name: tageditor
+    build: tageditor
+    working_dir: /home/yuanying/src/github.com/iwaco/tageditor
+    environment:
+      TAGEDITOR_ALLOWED_HOSTS: tageditor.poissonnerie.dev
+
+networks:
+  # Created by devbox/network/setup-networks, not by compose: the devbox is on
+  # it too, and must not lose it to a `docker compose down`.
+  sdnet:
+    external: true

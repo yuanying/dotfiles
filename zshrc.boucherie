@@ -17,4 +17,9 @@ export AIRLINE_THEME=base16_tomorrow_night
 # 色を出す。claude/statusline-command.sh がこの値でパレットを選ぶ。
 export CLAUDE_STATUSLINE_THEME=tokyonight
 
+# sdctl (sd-generate スキル) の既定の接続先は localhost:7860 だが、sd-webui は
+# devbox の外のコンテナで動いている。devbox も参加している sdnet 上の
+# コンテナ名で届ける (devbox/apps/README.md)。
+export SDCTL_URL=http://sd-webui:7860
+
 # vim: set ft=zsh :

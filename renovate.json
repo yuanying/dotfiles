@@ -18,7 +18,8 @@
       "description": "Update `ARG <NAME>_VERSION=` in devbox/Dockerfile via `# renovate:` annotations",
       "customType": "regex",
       "managerFilePatterns": [
-        "devbox/Dockerfile"
+        "devbox/Dockerfile",
+        "devbox/apps/*/Dockerfile"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: packageName=(?<packageName>\\S+))?(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s+ARG \\w+_VERSION=(?<currentValue>\\S+)"

@@ -32,8 +32,13 @@
 詳細は `devbox/CLAUDE.md` にある。以下はこのディレクトリを越えて効く取り決め。
 
 - ピン留めしたバージョンの正は `devbox/Dockerfile` の `ARG <NAME>_VERSION`。
-  Renovate が追うのはそこだけなので、他のどこにも書き写さない。
+  Renovate が追わない場所には書き写さない。
   `bin/mac/setup-packages.sh` は必要な ARG をあのファイルから読み出している。
+- 例外は `devbox/apps/<name>/Dockerfile`。devbox の横で動かすアプリの別イメージで、
+  自分のベースイメージのタグを自分で持つ (Renovate の dockerfile マネージャが追う)。
+  Go や Node は devbox と同じものを使うが、タグはそれぞれのファイルに書く。
+  ツールを `ARG <NAME>_VERSION` でピンするときは devbox と同じ注釈の書式にする
+  (`renovate.json` のパターンに入れてある)。
 - Renovate の設定 `renovate.json` はリポジトリのルートに置く (Renovate が
   ルートしか読まないため)。`devbox/` 配下のファイルはパス付きで指定してある。
 - `devbox/LICENSE` は MIT。リポジトリ全体の Apache-2.0 とは別なので消さない。
