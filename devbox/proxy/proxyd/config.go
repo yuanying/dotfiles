@@ -11,8 +11,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -27,6 +29,11 @@ const (
 	// AuthNone publishes the service to anyone who finds it. docs/adr/0007.
 	AuthNone AuthMode = "none"
 )
+
+// defaultHost is where a backend is when its service does not say: the
+// loopback address, which is what every declaration meant before `host` was
+// added. docs/adr/0011.
+const defaultHost = "127.0.0.1"
 
 // authLabel is the one hostname a service may not claim: it is where the login
 // flow lives, and GitHub is configured to send people back to it.
@@ -43,10 +50,18 @@ func (v Viewers) empty() bool { return len(v.Logins) == 0 && len(v.GitHubOrgs) =
 
 // Service is one published backend.
 type Service struct {
-	Name    string   `yaml:"name"`
+	Name string `yaml:"name"`
+	// Host is where the backend listens: a hostname docker's DNS answers
+	// for, such as a container name, or an IP address. docs/adr/0011.
+	Host    string   `yaml:"host"`
 	Port    int      `yaml:"port"`
 	Auth    AuthMode `yaml:"auth"`
 	Viewers Viewers  `yaml:"viewers"`
+}
+
+// Upstream is the address the proxy connects to, with an IPv6 host bracketed.
+func (s Service) Upstream() string {
+	return net.JoinHostPort(s.Host, strconv.Itoa(s.Port))
 }
 
 type defaults struct {
@@ -96,9 +111,12 @@ func Parse(data []byte) (*Config, error) {
 
 // applyDefaults folds `defaults` into each service, so that nothing downstream
 // has to consult them again. A service that says nothing anywhere asks for a
-// login, because that is the safe direction.
+// login, because that is the safe direction, and is on the loopback address.
 func (c *Config) applyDefaults() {
 	for i := range c.Services {
+		if c.Services[i].Host == "" {
+			c.Services[i].Host = defaultHost
+		}
 		if c.Services[i].Auth == "" {
 			c.Services[i].Auth = c.Defaults.Auth
 		}
@@ -119,7 +137,9 @@ func (c *Config) validate() error {
 	}
 
 	seenName := map[string]bool{}
-	seenPort := map[int]string{}
+	// A port is only taken on one host: two containers can both listen on
+	// :8080. Hostnames are case-insensitive, so the key is lowercased.
+	seenPort := map[string]string{}
 	for i := range c.Services {
 		s := &c.Services[i]
 
@@ -138,12 +158,22 @@ func (c *Config) validate() error {
 			seenName[s.Name] = true
 		}
 
+		hostOK := true
+		if problem := hostProblem(s.Host); problem != "" {
+			hostOK = false
+			problems = append(problems, fmt.Errorf("service %q: host %q %s", s.Name, s.Host, problem))
+		}
+
+		key := strings.ToLower(s.Upstream())
 		if s.Port < 1 || s.Port > 65535 {
 			problems = append(problems, fmt.Errorf("service %q: port %d is not a port a backend can be listening on", s.Name, s.Port))
-		} else if other, dup := seenPort[s.Port]; dup {
-			problems = append(problems, fmt.Errorf("port %d is claimed by both %q and %q", s.Port, other, s.Name))
+		} else if !hostOK {
+			// Already reported; a collision on a host that is not one would
+			// only be noise.
+		} else if other, dup := seenPort[key]; dup {
+			problems = append(problems, fmt.Errorf("port %d on %s is claimed by both %q and %q", s.Port, s.Host, other, s.Name))
 		} else {
-			seenPort[s.Port] = s.Name
+			seenPort[key] = s.Name
 		}
 
 		switch s.Auth {
@@ -210,6 +240,46 @@ func removedKeys(data []byte) error {
 		return errors.Join(problems...)
 	}
 	return nil
+}
+
+// hostProblem says what is wrong with a service's host, or "" when nothing is.
+//
+// A host is where to connect and nothing else. The port has a key of its own
+// and the scheme is always http, so a host that carries either is a mistake
+// worth naming rather than a string to pass to the resolver and fail on later.
+func hostProblem(h string) string {
+	switch {
+	case strings.TrimSpace(h) == "":
+		return "is blank; leave host out for 127.0.0.1"
+	case strings.Contains(h, "://"):
+		return "has a scheme; write only the host, the proxy always speaks http to it"
+	case strings.ContainsAny(h, "[]"):
+		return "has brackets; write an IPv6 address without them"
+	case net.ParseIP(h) != nil:
+		return ""
+	case strings.Count(h, ":") == 1:
+		return "carries a port; the port goes in `port`"
+	case strings.Contains(h, ":"):
+		return "is not an IP address (a zone such as %eth0 is not accepted either)"
+	case len(h) > 253:
+		return "is longer than a hostname can be"
+	}
+	for _, label := range strings.Split(h, ".") {
+		if label == "" {
+			return "has an empty label; a hostname has no leading, trailing or doubled dots"
+		}
+		if len(label) > 63 {
+			return "has a label longer than 63 characters"
+		}
+		for _, r := range label {
+			switch {
+			case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '_':
+			default:
+				return "is neither an IP address nor a hostname: a hostname is letters, digits, hyphens and underscores, in labels separated by dots"
+			}
+		}
+	}
+	return ""
 }
 
 func validLabel(s string) bool {
