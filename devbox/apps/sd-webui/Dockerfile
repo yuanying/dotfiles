@@ -2,7 +2,7 @@
 # the Python the venv was made from are all under $HOME, which compose mounts
 # at the same path, so an edit in the devbox is one restart away.
 
-FROM ghcr.io/astral-sh/uv:0.10.6 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.13 AS uv
 
 # The venv's Python is built by asdf inside the devbox, which is Ubuntu 24.04,
 # so this has to be 24.04 too for the glibc and libraries it was linked with.
