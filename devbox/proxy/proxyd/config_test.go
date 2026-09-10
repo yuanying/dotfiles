@@ -162,6 +162,131 @@ func TestParseRejects(t *testing.T) {
 	}
 }
 
+// A service that does not say where it lives is on the loopback address, which
+// is what every declaration meant before `host` existed (docs/adr/0011).
+func TestHostDefaultsToLoopback(t *testing.T) {
+	c, err := Parse([]byte(goodConfig))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	for _, s := range c.Services {
+		if s.Host != "127.0.0.1" {
+			t.Errorf("%s: host = %q, want 127.0.0.1", s.Name, s.Host)
+		}
+	}
+	if got := c.Services[0].Upstream(); got != "127.0.0.1:8189" {
+		t.Errorf("Upstream() = %q, want 127.0.0.1:8189", got)
+	}
+}
+
+// A container on a network the devbox shares, found by docker's DNS.
+func TestHostNamesWhereTheBackendIs(t *testing.T) {
+	for _, tc := range []struct{ host, want string }{
+		{"sd-webui", "sd-webui:7860"},
+		{"sd_webui_1", "sd_webui_1:7860"},
+		{"gpu.internal", "gpu.internal:7860"},
+		{"172.30.0.2", "172.30.0.2:7860"},
+		{"fd00:5d::2", "[fd00:5d::2]:7860"},
+		{"::1", "[::1]:7860"},
+	} {
+		t.Run(tc.host, func(t *testing.T) {
+			c, err := Parse([]byte("zone: z.dev\nservices:\n  - name: a\n    host: \"" + tc.host + "\"\n    port: 7860\n    auth: none\n"))
+			if err != nil {
+				t.Fatalf("Parse: %v", err)
+			}
+			if got := c.Services[0].Host; got != tc.host {
+				t.Errorf("Host = %q, want %q", got, tc.host)
+			}
+			if got := c.Services[0].Upstream(); got != tc.want {
+				t.Errorf("Upstream() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// `host` is where to connect, and nothing else: the port has its own key, the
+// scheme is always http, and a path would be silently dropped.
+func TestHostRejects(t *testing.T) {
+	for _, tc := range []struct{ name, host, want string }{
+		{"a scheme", "http://sd-webui", "scheme"},
+		{"a port", "sd-webui:7860", "port"},
+		{"an IPv4 address with a port", "172.30.0.2:7860", "port"},
+		{"brackets", "[fd00:5d::2]", "brackets"},
+		{"a path", "sd-webui/api", "sd-webui/api"},
+		{"a space", "sd webui", "sd webui"},
+		{"an empty label", "sd..webui", "sd..webui"},
+		{"a trailing dot", "sd-webui.", "sd-webui."},
+		{"an IPv6 zone", "fe80::1%eth0", "fe80::1%eth0"},
+		{"only whitespace", "  ", "host"},
+		{"a label that is too long", strings.Repeat("a", 64), "63"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Parse([]byte("zone: z.dev\nservices:\n  - name: a\n    host: \"" + tc.host + "\"\n    port: 7860\n    auth: none\n"))
+			if err == nil {
+				t.Fatalf("Parse accepted host %q", tc.host)
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error %q does not mention %q", err, tc.want)
+			}
+			if !strings.Contains(err.Error(), `"a"`) {
+				t.Errorf("error %q does not name the service", err)
+			}
+		})
+	}
+}
+
+// Two backends can listen on the same port as long as they are not on the
+// same host -- two containers each on :8080 is the ordinary case.
+func TestPortsCollideOnlyOnTheSameHost(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		services string
+		want     string // "" when it is valid
+	}{
+		{
+			name:     "same port, different hosts",
+			services: "  - name: a\n    host: one\n    port: 8080\n    auth: none\n  - name: b\n    host: two\n    port: 8080\n    auth: none\n",
+		},
+		{
+			name:     "same port, one on the loopback and one elsewhere",
+			services: "  - name: a\n    port: 8080\n    auth: none\n  - name: b\n    host: two\n    port: 8080\n    auth: none\n",
+		},
+		{
+			name:     "same port on the same host",
+			services: "  - name: a\n    host: one\n    port: 8080\n    auth: none\n  - name: b\n    host: one\n    port: 8080\n    auth: none\n",
+			want:     "port 8080",
+		},
+		{
+			// Hostnames are case-insensitive; docker's DNS agrees.
+			name:     "same port on the same host spelled twice",
+			services: "  - name: a\n    host: one\n    port: 8080\n    auth: none\n  - name: b\n    host: ONE\n    port: 8080\n    auth: none\n",
+			want:     "port 8080",
+		},
+		{
+			// The default is 127.0.0.1, so writing it out changes nothing.
+			name:     "the default host and the loopback written out",
+			services: "  - name: a\n    port: 8080\n    auth: none\n  - name: b\n    host: 127.0.0.1\n    port: 8080\n    auth: none\n",
+			want:     "port 8080",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Parse([]byte("zone: z.dev\nservices:\n" + tc.services))
+			if tc.want == "" {
+				if err != nil {
+					t.Errorf("Parse: %v", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatal("Parse accepted it; want an error")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error %q does not mention %q", err, tc.want)
+			}
+		})
+	}
+}
+
 // The keys 0005 removed. Someone updating an old declaration file should be
 // told what to do, not just that the key is unknown.
 func TestParseExplainsRemovedKeys(t *testing.T) {

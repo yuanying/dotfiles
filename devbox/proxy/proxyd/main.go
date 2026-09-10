@@ -151,13 +151,18 @@ func check(args []string) error {
 	}
 	fmt.Printf("%d service(s) on %s\n", len(cfg.Services), cfg.Zone)
 	for _, s := range cfg.Services {
-		fmt.Printf("  %s.%s -> 127.0.0.1:%d (auth: %s)%s\n",
-			s.Name, cfg.Zone, s.Port, s.Auth, viewerSummary(s))
+		fmt.Println(checkLine(s, cfg.Zone))
 	}
 	for _, line := range unreachableWarnings(cfg) {
 		fmt.Printf("\n  warning: %s\n", line)
 	}
 	return nil
+}
+
+// checkLine is one service as `check` lists it: the public name, where it is
+// forwarded to, and who may reach it.
+func checkLine(s Service, zone string) string {
+	return fmt.Sprintf("  %s.%s -> %s (auth: %s)%s", s.Name, zone, s.Upstream(), s.Auth, viewerSummary(s))
 }
 
 func viewerSummary(s Service) string {

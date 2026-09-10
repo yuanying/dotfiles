@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httputil"
 	"strings"
 	"sync"
 	"testing"
@@ -25,9 +26,9 @@ func testRouter(t *testing.T, cfg *Config) (*Router, map[int]*backend) {
 			github:   newTestGitHub(t, &fakeGitHub{code: "c", token: "t", login: "yuanying"}),
 			newNonce: func() string { return "n" },
 		},
-		newBackend: func(port int) http.Handler {
+		newBackend: func(s Service) http.Handler {
 			b := &backend{}
-			backends[port] = b
+			backends[s.Port] = b
 			return b
 		},
 	}
@@ -167,6 +168,70 @@ func TestConfigReturnsWhatIsInForce(t *testing.T) {
 	}
 }
 
+// Each backend is built for where its service says it is, not for the loopback
+// (docs/adr/0011).
+func TestBackendsAreBuiltForTheDeclaredHost(t *testing.T) {
+	cfg, err := Parse([]byte("zone: z.dev\nservices:\n  - name: webui\n    host: sd-webui\n    port: 7860\n    auth: none\n  - name: local\n    port: 8080\n    auth: none\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	upstreams := map[string]string{}
+	rt := &Router{
+		gate: &gate{signer: testSigner(t, epoch), authHost: cfg.AuthHost(), cookieTTL: time.Hour},
+		auth: &authHost{signer: testSigner(t, epoch), newNonce: func() string { return "n" }},
+		newBackend: func(s Service) http.Handler {
+			upstreams[s.Name] = s.Upstream()
+			return &backend{}
+		},
+	}
+	rt.Set(cfg)
+
+	if got := upstreams["webui"]; got != "sd-webui:7860" {
+		t.Errorf("webui built for %q, want sd-webui:7860", got)
+	}
+	if got := upstreams["local"]; got != "127.0.0.1:8080" {
+		t.Errorf("local built for %q, want 127.0.0.1:8080", got)
+	}
+}
+
+// roundTripper records where the proxy would have connected.
+type roundTripper struct{ req *http.Request }
+
+func (rt *roundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+	rt.req = r
+	return &http.Response{StatusCode: http.StatusOK, Body: http.NoBody, Header: http.Header{}, Request: r}, nil
+}
+
+// The connection goes to the declared host, and the backend still sees the
+// name the visitor used.
+func TestReverseProxyConnectsToTheUpstream(t *testing.T) {
+	for _, upstream := range []string{"sd-webui:7860", "127.0.0.1:8080", "[fd00:5d::2]:80"} {
+		t.Run(upstream, func(t *testing.T) {
+			rp := reverseProxy(upstream).(*httputil.ReverseProxy)
+			rec := &roundTripper{}
+			rp.Transport = rec
+
+			rp.ServeHTTP(httptest.NewRecorder(), hostRequest("sd-webui.poissonnerie.dev", "/sdapi/v1/txt2img?x=1"))
+
+			if rec.req == nil {
+				t.Fatal("nothing was sent")
+			}
+			if rec.req.URL.Host != upstream {
+				t.Errorf("connected to %q, want %q", rec.req.URL.Host, upstream)
+			}
+			if rec.req.URL.Scheme != "http" {
+				t.Errorf("scheme = %q, want http", rec.req.URL.Scheme)
+			}
+			if rec.req.URL.Path != "/sdapi/v1/txt2img" || rec.req.URL.RawQuery != "x=1" {
+				t.Errorf("forwarded %s", rec.req.URL)
+			}
+			if rec.req.Host != "sd-webui.poissonnerie.dev" {
+				t.Errorf("Host = %q; the backend should see the public name", rec.req.Host)
+			}
+		})
+	}
+}
+
 // A backend is built once per Set, not once per request.
 func TestBackendsAreNotRebuiltPerRequest(t *testing.T) {
 	cfg := routerConfig(t)
@@ -174,7 +239,7 @@ func TestBackendsAreNotRebuiltPerRequest(t *testing.T) {
 	rt := &Router{
 		gate: &gate{signer: testSigner(t, epoch), authHost: cfg.AuthHost(), cookieTTL: time.Hour},
 		auth: &authHost{signer: testSigner(t, epoch), newNonce: func() string { return "n" }},
-		newBackend: func(port int) http.Handler {
+		newBackend: func(Service) http.Handler {
 			built++
 			return &backend{}
 		},

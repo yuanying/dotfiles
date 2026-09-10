@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -34,11 +33,12 @@ type Router struct {
 	auth *authHost
 
 	// newBackend builds the handler for one service, so the tests can put
-	// something other than a network connection behind a port.
-	newBackend func(port int) http.Handler
+	// something other than a network connection behind it.
+	newBackend func(s Service) http.Handler
 }
 
-// NewRouter returns a router that proxies to 127.0.0.1.
+// NewRouter returns a router that proxies to wherever each service says its
+// backend is: 127.0.0.1 unless it names a host (docs/adr/0011).
 func NewRouter(signer, apiSigner *Signer, github *GitHub, authHostName string, cookieTTL, apiTTL time.Duration) *Router {
 	rt := &Router{
 		gate: &gate{
@@ -52,7 +52,7 @@ func NewRouter(signer, apiSigner *Signer, github *GitHub, authHostName string, c
 			github:   github,
 			newNonce: newNonce,
 		},
-		newBackend: reverseProxy,
+		newBackend: func(s Service) http.Handler { return reverseProxy(s.Upstream()) },
 	}
 	rt.SetAPISigner(apiSigner)
 	return rt
@@ -69,7 +69,7 @@ func (rt *Router) SetAPISigner(s *Signer) { rt.gate.setAPISigner(s) }
 func (rt *Router) Set(cfg *Config) {
 	backends := make(map[string]http.Handler, len(cfg.Services))
 	for _, s := range cfg.Services {
-		backends[s.Name] = rt.newBackend(s.Port)
+		backends[s.Name] = rt.newBackend(s)
 	}
 	rt.current.Store(&routes{cfg: cfg, backends: backends})
 }
@@ -117,14 +117,16 @@ func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rt.gate.serve(w, r, svc, backend)
 }
 
-// reverseProxy forwards to a backend on the loopback address.
-func reverseProxy(port int) http.Handler {
-	target := &url.URL{Scheme: "http", Host: "127.0.0.1:" + strconv.Itoa(port)}
+// reverseProxy forwards to a backend at upstream, a host:port. The host is
+// resolved when a connection is made, not here, so a container that has been
+// recreated with a new address is found again without a reload.
+func reverseProxy(upstream string) http.Handler {
+	target := &url.URL{Scheme: "http", Host: upstream}
 	return &httputil.ReverseProxy{
 		Rewrite: func(pr *httputil.ProxyRequest) {
 			pr.SetURL(target)
 			// Backends that build absolute links need the name the visitor
-			// used, not 127.0.0.1.
+			// used, not the address the proxy connected to.
 			pr.Out.Host = pr.In.Host
 			pr.SetXForwarded()
 		},

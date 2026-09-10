@@ -90,6 +90,60 @@ func TestOverlayOverridesPortAndAuth(t *testing.T) {
 	}
 }
 
+// `host` is overridden like `port`: where a backend runs is exactly the kind of
+// thing that differs from one box to the next (docs/adr/0011).
+func TestOverlayOverridesHost(t *testing.T) {
+	c := overlaid(t, overlayConfig, "services:\n  - name: sd-webui\n    host: sd-webui-dev\n")
+
+	webui, _ := c.Lookup("sd-webui.poissonnerie.dev")
+	if webui.Host != "sd-webui-dev" {
+		t.Errorf("host = %q, want the overlay's sd-webui-dev", webui.Host)
+	}
+	if webui.Port != 7860 {
+		t.Errorf("port = %d; the overlay said nothing about it", webui.Port)
+	}
+
+	viewer, _ := c.Lookup("sd-viewer.poissonnerie.dev")
+	if viewer.Host != "127.0.0.1" {
+		t.Errorf("sd-viewer host = %q; it was not mentioned", viewer.Host)
+	}
+}
+
+// An overlay that says nothing about the host leaves the declaration's.
+func TestOverlayKeepsTheDeclaredHost(t *testing.T) {
+	declared := "zone: z.dev\nservices:\n  - name: a\n    host: box\n    port: 80\n    auth: none\n"
+	c := overlaid(t, declared, "services:\n  - name: a\n    port: 81\n")
+
+	svc, _ := c.Lookup("a.z.dev")
+	if svc.Host != "box" || svc.Port != 81 {
+		t.Errorf("got %s, want box:81", svc.Upstream())
+	}
+}
+
+// Moving a service to another host is what makes its port free again.
+func TestOverlayHostResolvesAPortCollision(t *testing.T) {
+	c := overlaid(t, overlayConfig, "services:\n  - name: private\n    host: elsewhere\n    port: 7860\n    auth: none\n")
+
+	svc, ok := c.Lookup("private.poissonnerie.dev")
+	if !ok || svc.Upstream() != "elsewhere:7860" {
+		t.Errorf("got %+v", svc)
+	}
+}
+
+func TestOverlayHostIsValidated(t *testing.T) {
+	c, err := Parse([]byte(overlayConfig))
+	if err != nil {
+		t.Fatal(err)
+	}
+	o, err := ParseOverlay([]byte("services:\n  - name: sd-webui\n    host: http://sd-webui\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Apply(o); err == nil || !strings.Contains(err.Error(), "scheme") {
+		t.Errorf("Apply = %v, want the host refused", err)
+	}
+}
+
 // The reason this exists: a service the repository never hears about.
 func TestOverlayDefinesANewService(t *testing.T) {
 	c := overlaid(t, overlayConfig, "services:\n  - name: private\n    port: 9000\n    auth: required\n    viewers:\n      logins: [yuanying]\n")

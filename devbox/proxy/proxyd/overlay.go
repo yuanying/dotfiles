@@ -63,8 +63,8 @@ func ParseOverlay(data []byte) (*Overlay, error) {
 
 // Apply folds an overlay into the declaration and revalidates the result.
 //
-// An entry naming a service the declaration already has updates it: a port or
-// an auth mode that is set wins, and viewers are added to whoever is already
+// An entry naming a service the declaration already has updates it: a host, a
+// port or an auth mode that is set wins, and viewers are added to whoever is already
 // listed rather than replacing them. An entry naming anything else is a new
 // service, published exactly as if the declaration had said so.
 func (c *Config) Apply(o *Overlay) error {
@@ -79,6 +79,9 @@ func (c *Config) Apply(o *Overlay) error {
 			continue
 		}
 
+		if entry.Host != "" {
+			c.Services[i].Host = entry.Host
+		}
 		if entry.Port != 0 {
 			c.Services[i].Port = entry.Port
 		}
