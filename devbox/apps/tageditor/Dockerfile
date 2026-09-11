@@ -2,7 +2,7 @@
 # dev server for the frontend, both reading the checkout compose mounts from
 # $HOME. The image is only the two toolchains.
 
-FROM ghcr.io/astral-sh/uv:0.10.6 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.13 AS uv
 
 # The Node the devbox has (node_builder in devbox/Dockerfile). The backend's
 # Python is not in the image: uv keeps the one its venv uses under $HOME.
