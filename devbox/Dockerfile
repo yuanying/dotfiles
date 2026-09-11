@@ -226,16 +226,20 @@ FROM node_builder AS herdr_plugin_builder
 # renovate: datasource=github-releases depName=yuanying/herdr-hunk-diff versioning=regex:^v?(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)-fork\.(?<build>\d+)$ extractVersion=^v(?<version>.+)$
 ARG HERDR_HUNK_DIFF_VERSION=0.2.0-fork.1
 # This plugin depends on the `hunkdiff` npm package only to get a hunk binary,
-# and that package weighs ~500 MB because it ships Bun. Drop it after the build
-# and point the path the plugin resolves at the hunk the main stage installs.
+# and that package weighs ~500 MB because it pulls in Bun. Drop it after the
+# build but keep its launcher: the plugin runs
+# `node node_modules/hunkdiff/bin/hunk.cjs`, and HUNK_BIN_PATH in the main stage
+# points that launcher at the hunk installed there.
 RUN git clone --depth 1 --branch v${HERDR_HUNK_DIFF_VERSION} \
         https://github.com/yuanying/herdr-hunk-diff \
         /opt/herdr/plugins/jhochenbaum.hunkdiff && \
     cd /opt/herdr/plugins/jhochenbaum.hunkdiff && \
     npm ci && \
     npm run build && \
+    cp node_modules/hunkdiff/bin/hunk.cjs /tmp/hunk.cjs && \
     npm uninstall hunkdiff --no-save --omit=dev && \
-    ln -sfn /usr/local/bin/hunk node_modules/.bin/hunk && \
+    mkdir -p node_modules/hunkdiff/bin && \
+    mv /tmp/hunk.cjs node_modules/hunkdiff/bin/hunk.cjs && \
     rm -rf .git
 
 # Jump to any workspace, agent, session or directory from one fuzzy picker.
@@ -355,6 +359,23 @@ RUN \
 # herdr registers plugins under ~/.config/herdr, which the host $HOME mount
 # hides, so entrypoint.sh links these trees in at runtime instead.
 COPY --from=herdr_plugin_builder /opt/herdr/plugins /opt/herdr/plugins
+# The hunkdiff launcher kept above runs whatever this names.
+ENV HUNK_BIN_PATH=/usr/local/bin/hunk
+# Launch hunk the way herdr-hunk-diff resolves it with its default config, and
+# fail unless it is the hunk installed above. A plugin release that resolves
+# hunk some other way breaks the build here instead of the review pane.
+RUN cd /opt/herdr/plugins/jhochenbaum.hunkdiff && \
+    /usr/local/bin/node --input-type=module -e ' \
+        import { spawnSync } from "node:child_process"; \
+        import { DEFAULTS } from "./dist/config.js"; \
+        import { resolveHunkLauncher } from "./dist/herdr.js"; \
+        const l = resolveHunkLauncher(DEFAULTS, process.cwd()); \
+        const r = spawnSync(l.bin, [...l.prefix, "--version"], { encoding: "utf8" }); \
+        if (r.status !== 0 || r.stdout.trim() !== process.env.HUNK_VERSION) { \
+            console.error("herdr-hunk-diff does not reach hunk " + process.env.HUNK_VERSION + ":", \
+                [l.bin, ...l.prefix].join(" "), r.status, r.stdout, r.stderr, r.error ?? ""); \
+            process.exit(1); \
+        }'
 
 # docker
 COPY --from=docker_builder /usr/local/bin/docker /usr/local/bin/
