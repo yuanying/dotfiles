@@ -31,3 +31,15 @@ setup() {
 @test "the build launches hunk the way the plugin resolves it" {
     grep -q 'resolveHunkLauncher' "${DOCKERFILE}"
 }
+
+# herdr runs under an ssh (mosh) session, and sshd hands a session only what
+# entrypoint.sh lists in SetEnv, so a Dockerfile ENV alone never reaches the
+# review pane.
+@test "the ssh session carries HUNK_BIN_PATH to herdr" {
+    local init
+    init=$(grep '^SESSION_ENV=(' "${REPO}/devbox/entrypoint.sh")
+    [ -n "${init}" ]
+    HUNK_BIN_PATH=/usr/local/bin/hunk
+    eval "${init}"
+    printf '%s\n' "${SESSION_ENV[@]}" | grep -qx 'HUNK_BIN_PATH=/usr/local/bin/hunk'
+}
