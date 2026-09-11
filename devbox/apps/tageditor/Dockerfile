@@ -6,7 +6,7 @@ FROM ghcr.io/astral-sh/uv:0.12.13 AS uv
 
 # The Node the devbox has (node_builder in devbox/Dockerfile). The backend's
 # Python is not in the image: uv keeps the one its venv uses under $HOME.
-FROM node:24.20.0-bookworm-slim
+FROM node:24.21.0-bookworm-slim
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 
