@@ -119,7 +119,10 @@ Three things to keep in mind:
   built already. Plugin config and state live under `$HOME`, so the tree itself stays read-only.
 - Plugins may vendor large binaries that this image already ships. herdr-hunk-diff, for instance,
   depends on the `hunkdiff` npm package (~500 MB, it bundles Bun) purely to obtain a hunk binary;
-  it is dropped after the build and the path the plugin resolves points at `/opt/hunk` instead.
+  it is dropped after the build except for its launcher (`node_modules/hunkdiff/bin/hunk.cjs`,
+  which the plugin runs with node), and `HUNK_BIN_PATH` points that launcher at `/usr/local/bin/hunk`.
+  The main stage then launches hunk through the plugin's own resolver and fails the build unless
+  it reports `HUNK_VERSION`, so a plugin release that resolves hunk differently shows up there.
 - `herdr_plugin_builder` is a Node stage because plugin manifests usually declare npm builds. A
   plugin on another toolchain gets its own stage and is copied in at the end of
   `herdr_plugin_builder`, so the main stage keeps copying `/opt/herdr/plugins` as one directory.
