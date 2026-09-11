@@ -121,6 +121,8 @@ Three things to keep in mind:
   depends on the `hunkdiff` npm package (~500 MB, it bundles Bun) purely to obtain a hunk binary;
   it is dropped after the build except for its launcher (`node_modules/hunkdiff/bin/hunk.cjs`,
   which the plugin runs with node), and `HUNK_BIN_PATH` points that launcher at `/usr/local/bin/hunk`.
+  herdr runs under an ssh session, and sshd gives a session only what `entrypoint.sh` passes to
+  `SetEnv`, so `HUNK_BIN_PATH` is listed there as well as in the Dockerfile's `ENV`.
   The main stage then launches hunk through the plugin's own resolver and fails the build unless
   it reports `HUNK_VERSION`, so a plugin release that resolves hunk differently shows up there.
 - `herdr_plugin_builder` is a Node stage because plugin manifests usually declare npm builds. A

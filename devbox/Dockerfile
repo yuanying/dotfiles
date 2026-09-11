@@ -359,7 +359,9 @@ RUN \
 # herdr registers plugins under ~/.config/herdr, which the host $HOME mount
 # hides, so entrypoint.sh links these trees in at runtime instead.
 COPY --from=herdr_plugin_builder /opt/herdr/plugins /opt/herdr/plugins
-# The hunkdiff launcher kept above runs whatever this names.
+# The hunkdiff launcher kept above runs whatever this names. herdr runs under an
+# ssh session, which only gets what entrypoint.sh passes to sshd's SetEnv, so
+# this name is listed there too.
 ENV HUNK_BIN_PATH=/usr/local/bin/hunk
 # Launch hunk the way herdr-hunk-diff resolves it with its default config, and
 # fail unless it is the hunk installed above. A plugin release that resolves

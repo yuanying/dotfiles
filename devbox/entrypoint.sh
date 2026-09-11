@@ -113,15 +113,17 @@ echo "Starting sshd..."
 # 対話シェルしか読まないので、ログインシェルを経由せずに起動されるプロセス
 # (mosh から直接 exec される herdr と、その子として動く hunk) には何も届かない。
 # hunk は $EDITOR を直接見て無ければ編集を拒否し、nvim は $NVIM_COLORSCHEME が
-# 無いと既定の配色に落ちる。必要なものだけ SetEnv で渡す。
+# 無いと既定の配色に落ちる。herdr-hunk-diff が起動する hunkdiff の launcher は
+# $HUNK_BIN_PATH が無いと hunk を見つけられず、レビューペインが開いた直後に
+# 閉じる。必要なものだけ SetEnv で渡す。
 #
-# 値の定義元は 1 箇所に保つ。EDITOR/VISUAL は Dockerfile の ENV、ホスト固有の
-# 設定は dotfiles の ~/.zshrc.<hostname>。ここには変数名を持たない。
+# 値の定義元は 1 箇所に保つ。EDITOR/VISUAL/HUNK_BIN_PATH は Dockerfile の ENV、
+# ホスト固有の設定は dotfiles の ~/.zshrc.<hostname>。ここには変数名を持たない。
 #
 # 注意: sshd の引数は ps に出るので、~/.zshrc.<hostname> が export したものは
 # そのまま全ユーザーから見える。秘密はこのファイルではなく ~/.zsh_private
 # (zshrc が読む、リポジトリ管理外) に置くこと。
-SESSION_ENV=("EDITOR=${EDITOR}" "VISUAL=${VISUAL}" "NVIM_NOTTYFAST=${NVIM_NOTTYFAST}")
+SESSION_ENV=("EDITOR=${EDITOR}" "VISUAL=${VISUAL}" "NVIM_NOTTYFAST=${NVIM_NOTTYFAST}" "HUNK_BIN_PATH=${HUNK_BIN_PATH}")
 
 # ホスト別設定が export した変数をそのまま渡す。zsh 構文なので zsh に読ませ、
 # source の前後で export 済みの一覧を比べて、このファイルが足した分だけを拾う。
