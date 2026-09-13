@@ -2,12 +2,15 @@
 
 set -e
 
-ROOT=$(dirname "${BASH_SOURCE}")
 HOST=anietta
 
-# The network layout, and this host's IPv6 values (devbox/network/README.md).
-source "${ROOT}/network/networks.env"
-source "${ROOT}/network/hosts/${HOST}.env"
+# simone's v6net is a regied bridge that net-fraction-private makes, with IPv4
+# only (docs/adr/0012, revision of 2026-09-13). The devbox keeps IPv6 on its
+# eth0 with the driver option below -- docker turns it off otherwise, and the
+# network's own options do not reach the endpoint -- and its address is the
+# RA's prefix with this token, which entrypoint.sh sets on every start. The
+# token is the one value chosen here; the prefix is net-fraction-private's.
+IP6_TOKEN=::153
 
 exec docker run \
     -d \
@@ -27,8 +30,8 @@ exec docker run \
     -v /usr/share/ca-certificates:/usr/share/ca-certificates \
     -v /etc/ssl/certs:/etc/ssl/certs \
     --mount type=bind,source=/home/yuanying,target=/home/yuanying,bind-propagation=slave \
-    --network "name=${V6NET_NAME},ip6=${DEVBOX_IP6}" \
-    --network "name=${SDNET_NAME},gw-priority=-1" \
+    --network "name=v6net,driver-opt=com.docker.network.endpoint.sysctls=net.ipv6.conf.IFNAME.disable_ipv6=0" \
+    -e "DEVBOX_IP6_TOKEN=${IP6_TOKEN}" \
     -w /home/yuanying \
     --add-host braque:192.168.1.131 \
     --add-host chirico:192.168.1.83 \
