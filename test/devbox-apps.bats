@@ -71,10 +71,17 @@ q() {
 @test "every service builds from a directory whose image carries its entrypoint" {
     local s context
     for s in $(q '.services | keys | .[]'); do
-        context="${REPO}/devbox/apps/$(q ".services.\"${s}\".build")"
+        context="${REPO}/devbox/apps/$(q ".services.\"${s}\".build.context")"
         [ -f "${context}/Dockerfile" ] || { echo "${s}: Dockerfile"; return 1; }
         [ -x "${context}/entrypoint.sh" ] || { echo "${s}: entrypoint"; return 1; }
         grep -q '^COPY entrypoint.sh ' "${context}/Dockerfile" || { echo "${s}: COPY"; return 1; }
+    done
+}
+
+@test "every image builds on the host's network, since docker0 reaches nothing on a regied host" {
+    local s
+    for s in $(q '.services | keys | .[]'); do
+        [ "$(q ".services.\"${s}\".build.network")" = "host" ] || { echo "${s}"; return 1; }
     done
 }
 

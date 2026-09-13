@@ -240,6 +240,9 @@ Consequences:
 - poissonnerie's regied firewall has to keep the apps' ports (7860, 8189, 5173)
   closed to the LAN while it opens the devbox's; that is in
   `net-fraction-private`, not here.
+- The apps' images build with `network: host`. The default bridge a build
+  uses is in none of regied's zones and reaches nothing outside, the same
+  reason `make cuda` and `make rocm` build with `--network host`.
 - Recreating boucherie for this change also recreates the app containers, since
   they move from `sdnet` to `v6net`. `sdnet` itself is removed on the host once
   nothing is attached to it.

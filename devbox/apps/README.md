@@ -58,6 +58,10 @@ run from: a worktree used to try a change and `~/dotfiles` manage the same
 containers. The checkout is read only while building; nothing a container runs
 comes from it afterwards.
 
+The builds run with `network: host`, as `make cuda` does with `--network host`.
+On a regied host docker's iptables is off, so the default bridge a build would
+otherwise use reaches nothing outside, and `apt-get update` fails.
+
 | To | Run |
 |---|---|
 | see what is running | `docker compose -f … ps` |

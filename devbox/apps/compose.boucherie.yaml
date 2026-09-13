@@ -9,6 +9,11 @@
 
 name: devbox-apps
 
+# Builds run on the host's network: with docker's iptables off on a regied
+# host, the default bridge (docker0) a build would use reaches nothing outside.
+x-build: &build
+  network: host
+
 x-app: &app
   restart: always
   init: true
@@ -26,7 +31,9 @@ services:
   sd-webui:
     <<: *app
     container_name: sd-webui
-    build: sd-webui
+    build:
+      <<: *build
+      context: sd-webui
     working_dir: /home/yuanying/src/github.com/Haoming02/sd-webui-forge-classic
     command:
       - --listen
@@ -49,7 +56,9 @@ services:
   sd-viewer:
     <<: *app
     container_name: sd-viewer
-    build: sd-viewer
+    build:
+      <<: *build
+      context: sd-viewer
     working_dir: /home/yuanying/src/github.com/yuanying/sd-viewer
     # Everything else comes from ~/.config/sd-viewer/config.toml, which the
     # devbox shares; only the address of sd-webui differs in here.
@@ -60,7 +69,9 @@ services:
   tageditor:
     <<: *app
     container_name: tageditor
-    build: tageditor
+    build:
+      <<: *build
+      context: tageditor
     working_dir: /home/yuanying/src/github.com/iwaco/tageditor
     environment:
       TAGEDITOR_ALLOWED_HOSTS: tageditor.poissonnerie.dev
