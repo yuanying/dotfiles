@@ -3,7 +3,8 @@
 - Date: 2026-09-10
 - Status: Accepted
 
-Revised below (2026-09-13) for hosts whose network is declared with regied.
+Revised below (2026-09-13) for hosts whose network is declared with regied,
+and again the same day when poissonnerie moved too.
 
 ## Context
 
@@ -209,3 +210,36 @@ host.
   in `net-fraction-private`.
 - The Cloudflare `AAAA` record for the devbox still carries the prefix by hand
   ([[0005]]). Deriving it is outside this revision.
+
+## Revision (2026-09-13): poissonnerie moves as well
+
+poissonnerie's network is now declared with regied too, in
+`net-fraction-private` (`hosts/poissonnerie/`), in the same shape as simone's:
+`br-v6net` holds the container `/64` and advertises it, and `v6net` is made on
+it with IPv4 only (`172.18.151.0/24`). Every devbox host is now a regied host,
+so what the revision above left for later is done:
+
+- **`start-cuda` joins `v6net` only**, with the same driver option as
+  `start-rocm` and the token `::151`, which `entrypoint.sh` sets on `eth0` as it
+  does for anietta.
+- **`sdnet` is gone in practice as well as in the decision.** The apps in
+  `devbox/apps/compose.boucherie.yaml` declare `v6net` as their external
+  network and ask for no IPv6; proxyd and `sdctl` reach them by container name
+  as before. `test/devbox-apps.bats` requires `v6net` now, since no host has
+  `sdnet`.
+- **`devbox/network/` is removed**, with `setup-networks` and
+  `test/devbox-network.bats`. No host's docker makes its own `v6net` any more,
+  so "both networks are defined once for every host" and the `setup-networks`
+  alternatives above describe a layout that no longer exists. No Docker
+  network is defined in this repository.
+
+Consequences:
+
+- The devbox's IPv6 address on either host is written in two places: the
+  token in the start script, and the prefix in `net-fraction-private`.
+- poissonnerie's regied firewall has to keep the apps' ports (7860, 8189, 5173)
+  closed to the LAN while it opens the devbox's; that is in
+  `net-fraction-private`, not here.
+- Recreating boucherie for this change also recreates the app containers, since
+  they move from `sdnet` to `v6net`. `sdnet` itself is removed on the host once
+  nothing is attached to it.
