@@ -36,20 +36,15 @@ Base image tags are defined as `*_IMAGE` variables at the top of the `Makefile`.
 ./scripts/run-workspace.sh  # Ephemeral isolated workspace
 ```
 
-`start-cuda` and `start-rocm` put the devbox on a Docker network called `v6net`,
-which has to exist first. Who makes it depends on the host (`docs/adr/0012` and its revision):
-
-- `start-cuda` (boucherie, on poissonnerie): docker still owns `v6net`, and the
-  devbox also joins `sdnet`. `network/setup-networks` creates both. The layout
-  is the same on every such host except the IPv6 values, which are in
-  `network/hosts/<hostname>.env` and nowhere else — the devbox's `ip6=`
-  included. `network/README.md` covers setting up such a host.
-- `start-rocm` (anietta, on simone): `v6net` is a regied bridge that
-  `net-fraction-private` makes, IPv4 only, and there is no `sdnet`. The start
-  line keeps IPv6 on with the endpoint sysctl driver option and passes
-  `DEVBOX_IP6_TOKEN`; `entrypoint.sh` sets that token on `eth0` on every start,
-  and the address is the RA's prefix with it. The prefix is not written in
-  this repository.
+`start-cuda` (boucherie, on poissonnerie) and `start-rocm` (anietta, on simone)
+put the devbox on a Docker network called `v6net`, which has to exist first.
+On both hosts it is a regied bridge that `net-fraction-private` declares and
+creates, IPv4 only, and there is no `sdnet` (`docs/adr/0012` and its revision).
+No Docker network is defined in this repository. The start line keeps IPv6 on
+with the endpoint sysctl driver option and passes `DEVBOX_IP6_TOKEN` (`::151`
+and `::153`); `entrypoint.sh` sets that token on `eth0` on every start, and the
+address is the RA's prefix with it. The prefix is not written in this
+repository.
 
 ## Apps Next to the Devbox
 

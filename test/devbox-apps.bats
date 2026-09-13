@@ -55,21 +55,33 @@ q() {
     [ -z "${output}" ]
 }
 
-@test "every service is on sdnet only, and sdnet is made outside compose" {
+@test "every service is on v6net only, and v6net is made outside compose" {
     local s
     for s in $(q '.services | keys | .[]'); do
-        [ "$(q ".services.\"${s}\".networks | keys | join(\" \")")" = "sdnet" ] || { echo "${s}"; return 1; }
+        [ "$(q ".services.\"${s}\".networks | keys | join(\" \")")" = "v6net" ] || { echo "${s}"; return 1; }
     done
-    [ "$(q '.networks.sdnet.external')" = "true" ]
+    [ "$(q '.networks | keys | join(" ")')" = "v6net" ]
+    [ "$(q '.networks.v6net.external')" = "true" ]
+}
+
+@test "no service asks for IPv6, so none is reachable around proxyd by it" {
+    ! grep -qiE 'ipv6|ip6|sysctl|driver_opts' "${COMPOSE}"
 }
 
 @test "every service builds from a directory whose image carries its entrypoint" {
     local s context
     for s in $(q '.services | keys | .[]'); do
-        context="${REPO}/devbox/apps/$(q ".services.\"${s}\".build")"
+        context="${REPO}/devbox/apps/$(q ".services.\"${s}\".build.context")"
         [ -f "${context}/Dockerfile" ] || { echo "${s}: Dockerfile"; return 1; }
         [ -x "${context}/entrypoint.sh" ] || { echo "${s}: entrypoint"; return 1; }
         grep -q '^COPY entrypoint.sh ' "${context}/Dockerfile" || { echo "${s}: COPY"; return 1; }
+    done
+}
+
+@test "every image builds on the host's network, since docker0 reaches nothing on a regied host" {
+    local s
+    for s in $(q '.services | keys | .[]'); do
+        [ "$(q ".services.\"${s}\".build.network")" = "host" ] || { echo "${s}"; return 1; }
     done
 }
 

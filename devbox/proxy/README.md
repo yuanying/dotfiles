@@ -92,11 +92,10 @@ In the Cloudflare dashboard, on the zone:
 |---|---|---|---|
 | `AAAA` | `*` | the devbox's global IPv6 | **DNS only (grey cloud)** |
 
-The address is the devbox's on `v6net`. For boucherie it is `DEVBOX_IP6` in
-`devbox/network/hosts/<hostname>.env`, which `start-cuda` gives it. For
-anietta it is the prefix `net-fraction-private` declares for simone's
-container bridge with the token in `start-rocm` (`::153`), set by
-`entrypoint.sh` (`docs/adr/0012`).
+The address is the devbox's on `v6net`: the prefix `net-fraction-private`
+declares for the host's container bridge, with the token in the start script —
+`::151` in `start-cuda` for boucherie, `::153` in `start-rocm` for anietta —
+set by `entrypoint.sh` (`docs/adr/0012`).
 
 **Grey cloud matters.** With the orange cloud on, Cloudflare intercepts port 80
 and the ACME challenge never reaches the devbox, so no certificate is ever
