@@ -1,12 +1,58 @@
 #!/bin/bash
+#
+# The devbox's first process. $HOME is the host's, bind-mounted, so what this
+# writes under it outlives the container -- and so does what it breaks.
+#
+# The steps that must not fail badly are functions above the guard below.
+# Sourcing the script defines them and stops there, which is how
+# test/devbox-entrypoint.bats reaches them; executing it runs everything.
+
+# The devbox's IPv6 address on a host whose v6net is a regied bridge: docker
+# holds no IPv6 there, and the address is the RA's prefix with this token
+# (docs/adr/0012, revision of 2026-09-13). The token is runtime state of eth0,
+# gone with every restart, so it is set on every start. It needs NET_ADMIN,
+# which the image's user gets through sudo in a --privileged container.
+# Without DEVBOX_IP6_TOKEN nothing happens: docker gives the address itself.
+set_ip6_token() {
+    [[ -n ${DEVBOX_IP6_TOKEN:-} ]] || return 0
+    echo "Setting IPv6 token ${DEVBOX_IP6_TOKEN} on eth0"
+    if ! sudo ip token set "${DEVBOX_IP6_TOKEN}" dev eth0; then
+        echo "could not set IPv6 token ${DEVBOX_IP6_TOKEN} on eth0; carrying on without it" >&2
+    fi
+    return 0
+}
+
+# ~/.ssh/authorized_keys is the host's file. It is replaced only by a download
+# that succeeded and is not empty: redirecting curl into it, as this once did,
+# emptied it on a host that could not resolve github.com, and locked the host
+# out along with the container (2026-09-13). The temporary file is next to the
+# real one so that mv replaces it in one step.
+install_authorized_keys() {
+    local keys="${HOME}/.ssh/authorized_keys" tmp
+    mkdir -p "${HOME}/.ssh"
+    chmod 700 "${HOME}/.ssh"
+    if ! tmp=$(mktemp "${keys}.XXXXXX"); then
+        echo "could not make a temporary file next to ${keys}; left it as it was" >&2
+        return 0
+    fi
+    if curl -fsL https://github.com/yuanying.keys -o "${tmp}" && [[ -s ${tmp} ]]; then
+        chmod 600 "${tmp}"
+        mv -f "${tmp}" "${keys}"
+    else
+        rm -f "${tmp}"
+        echo "could not fetch keys from GitHub; left ${keys} as it was" >&2
+    fi
+    return 0
+}
+
+[[ ${BASH_SOURCE[0]} == "$0" ]] || return 0
 
 set -x
 
+set_ip6_token
+
 echo "Setup ssh"
-mkdir -p ~/.ssh
-curl -fsL https://github.com/yuanying.keys > ~/.ssh/authorized_keys
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/authorized_keys
+install_authorized_keys
 
 echo "Setup env"
 mkdir -p ~/.zsh
