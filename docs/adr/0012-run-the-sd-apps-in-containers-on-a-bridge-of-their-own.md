@@ -3,6 +3,8 @@
 - Date: 2026-09-10
 - Status: Accepted
 
+Revised below (2026-09-13) for hosts whose network is declared with regied.
+
 ## Context
 
 boucherie runs three web apps that are used every day: sd-webui (Forge Neo),
@@ -127,3 +129,83 @@ first, and a subnet in use is skipped by Docker's own allocation anyway.
   runs; `devbox-proxy check` is still what is published.
 - The apps' repositories no longer say how to start them; this repository
   does.
+
+## Revision (2026-09-13): hosts whose network is declared with regied
+
+simone's network is now declared with regied, in `net-fraction-private`
+(`hosts/simone/`, and its `docs/adr/0003` for the docker side). poissonnerie
+has not moved yet. On a host that has:
+
+- The bridge under `v6net` is a regied `Interface` (`br-v6net` on simone). It
+  holds the host's container `/64` and sends router advertisements for it.
+- The docker network `v6net` is made by `net-fraction-private`'s bootstrap on
+  that bridge, with **IPv4 only**: `172.18.<last octet of the host's LAN
+  IPv4>.0/24`. Docker knows nothing about the IPv6 prefix.
+- Docker turns IPv6 off on the `eth0` of a container on an IPv6-less network. A
+  container keeps it only when its own `--network` carries
+  `driver-opt=com.docker.network.endpoint.sysctls=net.ipv6.conf.IFNAME.disable_ipv6=0`
+  (the network's options do not reach the endpoint), and its address is then
+  the RA's prefix with a token set inside the container.
+- Docker's `iptables` is turned off in regied's stage 2, so docker masquerades
+  no bridge; regied is the only firewall and NAT on the host.
+
+What that changes in the decision above, on such a host:
+
+**`v6net` is not defined in this repository.** "Both networks are defined once
+for every host" holds only for hosts whose docker still makes `v6net`.
+`devbox/network/` keeps those hosts' files — boucherie's, today — and says so
+at the top of its README; it goes when the last of them moves. The devbox's
+value on a regied host is the token alone (`::153` for anietta, in
+`start-rocm`), which `entrypoint.sh` sets on `eth0` on every start from
+`DEVBOX_IP6_TOKEN`. The prefix is written only in `net-fraction-private`.
+
+**There is no `sdnet` on a regied host. The apps join `v6net`, and proxyd
+reaches them by container name as before.** Not implemented yet: simone runs no
+apps, and poissonnerie keeps `sdnet` until it moves.
+
+- `sdnet` worked because docker masqueraded it. With docker's `iptables` off it
+  would have to be a second regied bridge with a `SourceNAT` of its own, a
+  segment kept only to separate the apps from their neighbours.
+- The reason `v6net` was rejected for the apps above was that they would get a
+  global IPv6 address and be reachable around proxyd. On a regied host a
+  container has no IPv6 unless its own start line asks for it, and the apps'
+  compose files do not. Their IPv4 is routed, not NATed, so it is reachable
+  from the home LAN; what keeps them behind proxyd is the host's regied
+  firewall, which names containers and ports, rather than a separate segment.
+- A second network on the devbox for the apps also stops being needed: the
+  devbox, proxyd with it, is already on `v6net`.
+
+### Alternatives considered for the revision
+
+**Fold boucherie's values into `start-cuda` and remove `devbox/network/`
+now.** The prefix would move from one file in this repository to another,
+still outside `net-fraction-private`, and `setup-networks`, which poissonnerie
+still needs for both networks, would have nowhere to read them. Keeping the
+directory as it is, marked as covering the hosts that have not moved, changes
+nothing for boucherie and is removed in one step when poissonnerie moves.
+
+**Keep `sdnet` on a regied host, declared in regied as a second bridge.** It
+restores the separation by segment, at the cost of a second prefix, a second
+`SourceNAT` and a second network on the devbox, on every host, for a guarantee
+the host firewall already has to give for `v6net`.
+
+**Keep docker's `iptables` on for `sdnet` alone.** It is one switch for the
+whole daemon, and turning it off is what makes regied the only firewall on the
+host.
+
+### Consequences of the revision
+
+- `start-rocm` joins `v6net` only, with the driver option and the token;
+  `start-cuda` is unchanged.
+- A compose file for a regied host declares `v6net` as its external network
+  instead of `sdnet`, and `test/devbox-apps.bats`, which requires `sdnet`,
+  has to learn the difference when the first one is written.
+- **Whatever is on `v6net` can reach the apps**, and set `X-Devbox-User`
+  itself ([[0011]]). On a regied host that is every container on the bridge,
+  not only the sd containers and the devbox. The rule above for an app that
+  starts reading the header holds more strongly.
+- The host's regied firewall has to leave the apps' ports closed to the LAN
+  when it opens the devbox's; that belongs to the firewall stage of that host,
+  in `net-fraction-private`.
+- The Cloudflare `AAAA` record for the devbox still carries the prefix by hand
+  ([[0005]]). Deriving it is outside this revision.

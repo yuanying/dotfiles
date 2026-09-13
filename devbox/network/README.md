@@ -1,7 +1,14 @@
 # Docker networks on a devbox host
 
-Every devbox host has the same two user-defined bridge networks. Why they are
-shaped like this is `docs/adr/0012`.
+> **Only for hosts whose docker still makes `v6net`: poissonnerie (boucherie)
+> today.** simone (anietta) moved on 2026-09-13. There `v6net` sits on a
+> regied bridge that `net-fraction-private` declares and creates (its
+> `hosts/simone/`), with IPv4 only; the devbox takes its IPv6 address from the
+> RA and a token, and there is no `sdnet`. That is the revision in
+> `docs/adr/0012`. When poissonnerie moves the same way, this directory goes.
+
+Every devbox host on this layout has the same two user-defined bridge networks.
+Why they are shaped like this is `docs/adr/0012`.
 
 | | `v6net` | `sdnet` |
 |---|---|---|
@@ -35,10 +42,11 @@ kind makes for itself.
    with `--dry-run` first: that prints the `docker network create` commands for
    whatever is missing and changes nothing.
 3. Start the devbox with the start script for the host's backend. `start-cuda`
-   and `start-rocm` each name their host at the top, read that host's file and
-   put the devbox on both networks; a new host needs its name there, or a
-   script of its own. Run step 2 first — `docker run` fails if either network
-   is missing.
+   names its host at the top, reads that host's file and puts the devbox on
+   both networks; a new host needs its name there, or a script of its own.
+   Run step 2 first — `docker run` fails if either network is missing.
+   (`start-rocm` is not on this layout any more; see the note at the top.)
+   A new host is better set up the way simone is than this way.
 
 `setup-networks` is safe to run again. A network that is already there and
 matches is reported as `ok`. One that is there but differs is reported with the

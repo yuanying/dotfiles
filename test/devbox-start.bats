@@ -1,8 +1,15 @@
 #!/usr/bin/env bats
 
-# The start scripts put the devbox on v6net at its fixed address and on sdnet
-# as a second network. The address comes from the host file, not from the
-# script, and sdnet must not take the default route away from v6net.
+# The start scripts put the devbox on v6net.
+#
+# start-cuda (boucherie, on poissonnerie) is on a host whose v6net docker still
+# makes from devbox/network: a fixed address from the host file, and sdnet as a
+# second network that must not take the default route away from v6net.
+#
+# start-rocm (anietta, on simone) is on a host whose v6net is regied's bridge,
+# made by net-fraction-private with IPv4 only. The devbox keeps IPv6 on eth0
+# with a driver option and takes its address from the RA and a token, which the
+# entrypoint sets (docs/adr/0012, revision of 2026-09-13).
 #
 # docker is a stand-in that records one argument per line.
 
@@ -61,13 +68,22 @@ name=sdnet,gw-priority=-1" ]
     ! grep -q '2405:' "${REPO}/devbox/start-cuda"
 }
 
-@test "start-rocm does the same for anietta" {
+@test "start-rocm puts anietta on v6net with IPv6 kept on, and nothing else" {
     run "${REPO}/devbox/start-rocm"
     [ "${status}" -eq 0 ]
     arg "--hostname=anietta"
-    [ "$(host_value anietta DEVBOX_IP6)" = "2405:6581:8580:310::153" ]
     run network_args
-    [ "${output}" = "name=v6net,ip6=2405:6581:8580:310::153
-name=sdnet,gw-priority=-1" ]
+    [ "${output}" = "name=v6net,driver-opt=com.docker.network.endpoint.sysctls=net.ipv6.conf.IFNAME.disable_ipv6=0" ]
+}
+
+@test "start-rocm hands the entrypoint the token, not an address" {
+    run "${REPO}/devbox/start-rocm"
+    [ "${status}" -eq 0 ]
+    arg "DEVBOX_IP6_TOKEN=::153"
     ! grep -q '2405:' "${REPO}/devbox/start-rocm"
+    ! grep -q 'ip6=' "${REPO}/devbox/start-rocm"
+}
+
+@test "start-rocm does not read devbox/network" {
+    ! grep -q 'network/' "${REPO}/devbox/start-rocm"
 }

@@ -188,7 +188,7 @@ created_anything() {
     done
 }
 
-@test "both devbox hosts have a file" {
+@test "boucherie has a file; anietta's v6net is net-fraction-private's now" {
     [ -f "${REPO}/devbox/network/hosts/boucherie.env" ]
-    [ -f "${REPO}/devbox/network/hosts/anietta.env" ]
+    [ ! -e "${REPO}/devbox/network/hosts/anietta.env" ]
 }
