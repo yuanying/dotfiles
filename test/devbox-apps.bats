@@ -55,12 +55,17 @@ q() {
     [ -z "${output}" ]
 }
 
-@test "every service is on sdnet only, and sdnet is made outside compose" {
+@test "every service is on v6net only, and v6net is made outside compose" {
     local s
     for s in $(q '.services | keys | .[]'); do
-        [ "$(q ".services.\"${s}\".networks | keys | join(\" \")")" = "sdnet" ] || { echo "${s}"; return 1; }
+        [ "$(q ".services.\"${s}\".networks | keys | join(\" \")")" = "v6net" ] || { echo "${s}"; return 1; }
     done
-    [ "$(q '.networks.sdnet.external')" = "true" ]
+    [ "$(q '.networks | keys | join(" ")')" = "v6net" ]
+    [ "$(q '.networks.v6net.external')" = "true" ]
+}
+
+@test "no service asks for IPv6, so none is reachable around proxyd by it" {
+    ! grep -qiE 'ipv6|ip6|sysctl|driver_opts' "${COMPOSE}"
 }
 
 @test "every service builds from a directory whose image carries its entrypoint" {

@@ -17,8 +17,10 @@ x-app: &app
   volumes:
     - /home/yuanying:/home/yuanying
     - /mnt:/mnt
+  # Nothing here keeps v6net's other address family on, so the apps are
+  # IPv4 only and behind proxyd (docs/adr/0012, revision of 2026-09-13).
   networks:
-    sdnet: {}
+    v6net: {}
 
 services:
   sd-webui:
@@ -64,7 +66,8 @@ services:
       TAGEDITOR_ALLOWED_HOSTS: tageditor.poissonnerie.dev
 
 networks:
-  # Created by devbox/network/setup-networks, not by compose: the devbox is on
-  # it too, and must not lose it to a `docker compose down`.
-  sdnet:
+  # Created on poissonnerie's regied bridge by net-fraction-private, not by
+  # compose: the devbox is on it too, and must not lose it to a
+  # `docker compose down`.
+  v6net:
     external: true

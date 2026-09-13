@@ -19,15 +19,19 @@ path as in the devbox, and the containers run as the devbox user (UID 501,
 group `staff`). What the apps write belongs to the same user as everything
 else, and a checkout edited in the devbox is the one the container runs.
 
-Each container is on `sdnet` only (`devbox/network/README.md`). The devbox is
-on it too, so from the devbox the apps are `http://sd-webui:7860`,
+Each container is on `v6net` only, with IPv4 alone: `v6net` is the host's
+regied bridge, which `net-fraction-private` declares and creates, and nothing
+in the compose file keeps IPv6 on for the apps (`docs/adr/0012`). The host's
+regied firewall keeps their ports closed to the LAN. The devbox is on `v6net`
+too, so from the devbox the apps are `http://sd-webui:7860`,
 `http://sd-viewer:8189` and `http://tageditor:5173`. That is also how proxyd,
 which runs in the devbox, forwards to them, and `SDCTL_URL` in
 `~/.zshrc.boucherie` points `sdctl` at the first one.
 
 ## Before the first start
 
-- `sdnet` exists and the devbox is on it — `devbox/network/README.md`.
+- `v6net` exists and the devbox is on it — `net-fraction-private` makes the
+  network, and `devbox/start-cuda` puts the devbox on it.
 - The checkouts are ready to run as they would be in the devbox: the webui has
   its `venv/` (made by running `./webui-user.sh` from the devbox once and
   stopping it when it is up; `./webui.sh` alone misses the `COMMANDLINE_ARGS`
