@@ -1,3 +1,15 @@
+[sandbox_workspace_write]
+# workspace-write のサンドボックスから書き込める場所と、ネットワークの許可。
+# ホスト別の設定でキーごと上書きできる。
+writable_roots = [
+    "/home/yuanying/src",
+    "/home/yuanying/.cache",
+    "/home/yuanying/.npm",
+    "/home/yuanying/.local/share",
+    "/home/yuanying/.local/state/herdr-tasks",
+]
+network_access = true
+
 [tui]
 # ホスト別設定が無いマシンのデフォルト。
 theme = "solarized-dark"

@@ -79,6 +79,36 @@ def find_section_end(lines: list[str], section_start: int) -> int:
     )
 
 
+def find_value_end(lines: list[str], index: int) -> int:
+    # 配列は複数行に分かれていることがある。文字列とコメントの中の括弧は
+    # 数えずに、閉じ括弧が揃う行までを 1 つの値とみなす。
+    depth = 0
+    quote = None
+    text = lines[index].split("=", 1)[1]
+    while True:
+        position = 0
+        while position < len(text):
+            char = text[position]
+            if quote:
+                if char == "\\" and quote == '"':
+                    position += 1
+                elif char == quote:
+                    quote = None
+            elif char in "\"'":
+                quote = char
+            elif char == "#":
+                break
+            elif char in "[{":
+                depth += 1
+            elif char in "]}":
+                depth -= 1
+            position += 1
+        if depth <= 0 or index + 1 >= len(lines):
+            return index
+        index += 1
+        text = lines[index]
+
+
 def replace_in_range(
     lines: list[str], start: int, end: int, name: str, value: str
 ) -> bool:
@@ -86,8 +116,9 @@ def replace_in_range(
     for index in range(start, end):
         match = pattern.match(lines[index])
         if match:
-            newline = "\n" if lines[index].endswith("\n") else ""
-            lines[index] = f"{match.group(1)}{name} = {value}{newline}"
+            last = find_value_end(lines, index)
+            newline = "\n" if lines[last].endswith("\n") else ""
+            lines[index : last + 1] = [f"{match.group(1)}{name} = {value}{newline}"]
             return True
     return False
 
