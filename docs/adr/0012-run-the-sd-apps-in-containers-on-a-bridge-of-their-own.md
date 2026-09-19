@@ -4,7 +4,8 @@
 - Status: Accepted
 
 Revised below (2026-09-13) for hosts whose network is declared with regied,
-and again the same day when poissonnerie moved too.
+again the same day when poissonnerie moved too, and on 2026-09-19 when builds
+stopped needing the host's network.
 
 ## Context
 
@@ -246,3 +247,26 @@ Consequences:
 - Recreating boucherie for this change also recreates the app containers, since
   they move from `sdnet` to `v6net`. `sdnet` itself is removed on the host once
   nothing is attached to it.
+
+## Revision (2026-09-19): builds no longer need the host's network
+
+`net-fraction-private`'s ADR 0004 moved docker's default bridge off `docker0`
+and onto `br-build`, a bridge regied declares and puts in the `containers`
+firewall zone, with jumelle routing the subnet back. A build now reaches the
+network from the bridge it would use anyway, and `daemon.json` hands it an
+IPv4 resolver, because BuildKit passes the host's own `resolv.conf` to a build
+and these hosts resolve over IPv6 only.
+
+So the builds here drop `network: host`, and `make cuda` drops `--network
+host`. (`make rocm` never carried the flag: simone's builds went through the
+buildx `multiarch` builder, which sits on `v6net`.)
+
+- Verified on both hosts on 2026-09-19: a build installs packages, reaches
+  `https://github.com` and resolves a house name, with nothing on the host's
+  network namespace.
+- The host side of this lives in `net-fraction-private`. What this repository
+  may assume is that the default bridge reaches the network and can resolve;
+  if a host is not declared with regied, `docker0` is back to being docker's
+  own and the flag is not needed there either.
+- The buildx builder `multiarch` on simone stays as it is. Nothing here
+  depends on where it sits, and a plain `docker build` no longer needs it.
