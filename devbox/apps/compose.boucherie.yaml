@@ -9,11 +9,6 @@
 
 name: devbox-apps
 
-# Builds run on the host's network: with docker's iptables off on a regied
-# host, the default bridge (docker0) a build would use reaches nothing outside.
-x-build: &build
-  network: host
-
 x-app: &app
   restart: always
   init: true
@@ -32,7 +27,6 @@ services:
     <<: *app
     container_name: sd-webui
     build:
-      <<: *build
       context: sd-webui
     working_dir: /home/yuanying/src/github.com/Haoming02/sd-webui-forge-classic
     command:
@@ -57,7 +51,6 @@ services:
     <<: *app
     container_name: sd-viewer
     build:
-      <<: *build
       context: sd-viewer
     working_dir: /home/yuanying/src/github.com/yuanying/sd-viewer
     # Everything else comes from ~/.config/sd-viewer/config.toml, which the
@@ -70,7 +63,6 @@ services:
     <<: *app
     container_name: tageditor
     build:
-      <<: *build
       context: tageditor
     working_dir: /home/yuanying/src/github.com/iwaco/tageditor
     environment:

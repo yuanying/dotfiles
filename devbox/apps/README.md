@@ -58,9 +58,11 @@ run from: a worktree used to try a change and `~/dotfiles` manage the same
 containers. The checkout is read only while building; nothing a container runs
 comes from it afterwards.
 
-The builds run with `network: host`, as `make cuda` does with `--network host`.
-On a regied host docker's iptables is off, so the default bridge a build would
-otherwise use reaches nothing outside, and `apt-get update` fails.
+The builds run on the default bridge, with nothing special in the compose
+file. On a regied host that bridge is `br-build`, which the declaration puts in
+a firewall zone and jumelle routes back, so a build reaches the network and can
+resolve names (`net-fraction-private`'s ADR 0004). Before that it was `docker0`,
+which reached nothing outside, and the builds here carried `network: host`.
 
 | To | Run |
 |---|---|

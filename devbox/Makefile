@@ -26,6 +26,5 @@ rocm:
 cuda:
 		docker build \
 			--build-arg BASE_IMAGE=$(CUDA_IMAGE) \
-			--network host \
 			--target user_base -t $(IMAGE)-cuda:user_base \
 			--target main -t $(IMAGE)-cuda .
