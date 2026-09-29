@@ -87,6 +87,35 @@ EOF
     [ ! -e "${STUB_DIR}/viewer.args" ]
 }
 
+# --- llama-server ----------------------------------------------------------
+
+@test "llama-server runs the build named by LLAMA_SERVER with the given arguments" {
+    mkdir -p build/bin
+    cat > build/bin/llama-server <<'EOF'
+#!/bin/bash
+printf '%s\n' "$@" > "${STUB_DIR}/llama.args"
+EOF
+    chmod +x build/bin/llama-server
+    LLAMA_SERVER=build/bin/llama-server run "${APPS}/llama-server/entrypoint.sh" -m model.gguf --port 8082
+    [ "${status}" -eq 0 ]
+    [ "$(cat "${STUB_DIR}/llama.args")" = "-m
+model.gguf
+--port
+8082" ]
+}
+
+@test "llama-server without a build fails and says where it looked" {
+    LLAMA_SERVER=build/bin/llama-server run "${APPS}/llama-server/entrypoint.sh" --port 8082
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *build/bin/llama-server* ]]
+}
+
+@test "llama-server without LLAMA_SERVER fails" {
+    run env -u LLAMA_SERVER "${APPS}/llama-server/entrypoint.sh" --port 8082
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *LLAMA_SERVER* ]]
+}
+
 # --- tageditor -------------------------------------------------------------
 
 # A process that stays up: records where and how it was started, then sleeps

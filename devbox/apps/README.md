@@ -13,6 +13,19 @@ On boucherie:
 | `sd-viewer` | 8189 | `~/src/github.com/yuanying/sd-viewer` | `docker restart sd-viewer` — it is built again at every start |
 | `tageditor` | 5173 | `~/src/github.com/iwaco/tageditor` | nothing — uvicorn and vite reload on their own |
 
+On anietta:
+
+| Container | Port | Source | After editing the source |
+|---|---|---|---|
+| `llama-server` | 8082 | `~/src/github.com/halo-box/strix-prefill-opt` (`build-hip-rocm10/`) | `docker restart llama-server` after a rebuild |
+
+It serves Qwen3.8-Flash-Next from `~/models`. Its image is the ROCm base the
+devbox is built on, so a llama.cpp built with HIP in the devbox runs in it
+unchanged; the devices are `/dev/kfd` and `/dev/dri`, with simone's `video`
+and `render` GIDs. Where it is published is not in this repository: the
+`qwen38` entry in `~/.config/devbox-proxy/services.local.yaml`
+(`docs/adr/0009`) forwards to `llama-server:8082`.
+
 The images hold only runtimes and toolchains. The source, the venvs and the
 languages they were built with are the ones under `$HOME`, mounted at the same
 path as in the devbox, and the containers run as the devbox user (UID 501,
