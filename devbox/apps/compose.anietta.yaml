@@ -1,0 +1,99 @@
+# The web apps anietta runs next to its devbox, each in a container of its own.
+# Operating them is in README.md next to this file; why they are shaped like
+# this is docs/adr/0012.
+#
+# The project name is the one boucherie's file uses: each host has its own
+# Docker, so the two never meet, and the commands in README.md are the same on
+# both. Nothing below points into the checkout at run time: the entrypoint is
+# baked into the image, and the only mount is $HOME, at the same path the
+# devbox sees it.
+
+name: devbox-apps
+
+x-app: &app
+  restart: always
+  init: true
+  # yuanying:staff, as in the devbox, so what the apps write is the user's.
+  user: "501:50"
+  volumes:
+    - /home/yuanying:/home/yuanying
+  # Nothing here keeps v6net's other address family on, so the apps are
+  # IPv4 only and behind proxyd (docs/adr/0012, revision of 2026-09-13).
+  networks:
+    v6net: {}
+
+services:
+  llama-server:
+    <<: *app
+    container_name: llama-server
+    build:
+      context: llama-server
+    # halo-box's llama.cpp with the Strix Halo prefill work, built with HIP in
+    # the devbox. A rebuild there is picked up by `docker restart llama-server`.
+    working_dir: /home/yuanying/src/github.com/halo-box/strix-prefill-opt
+    environment:
+      LLAMA_SERVER: build-hip-rocm10/bin/llama-server
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    # simone's video and render groups, which own the devices above. They are
+    # the host's GIDs, not names: the image has no groups by those numbers.
+    group_add:
+      - "44"
+      - "993"
+    ipc: host
+    command:
+      - -m
+      - /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf
+      - --mmproj
+      - /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.mmproj-f16.gguf
+      - --spec-type
+      - draft-mtp
+      - -md
+      - /home/yuanying/models/qwen3.8-flash-next-mtp/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf
+      - -ngl
+      - "999"
+      - -ot
+      - per_layer_token_embd\.weight=CPU
+      - -lm
+      - none
+      - -c
+      - "393216"
+      - --override-kv
+      - qwen4exp.context_length=int:393216
+      - --rope-scaling
+      - yarn
+      - --rope-scale
+      - "2"
+      - --yarn-orig-ctx
+      - "262144"
+      - -np
+      - "2"
+      - -kvu
+      - --kv-unified-per-slot
+      - "262144"
+      - -fa
+      - "on"
+      - -ctk
+      - q8_0
+      - -ctv
+      - q8_0
+      - -b
+      - "4096"
+      - -ub
+      - "4096"
+      - --min-p
+      - "0"
+      - --jinja
+      - --alias
+      - qwen3.8-flash-next
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8082"
+
+networks:
+  # Created on simone's regied bridge by net-fraction-private, not by compose:
+  # the devbox is on it too, and must not lose it to a `docker compose down`.
+  v6net:
+    external: true

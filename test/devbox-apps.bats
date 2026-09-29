@@ -115,7 +115,7 @@ q() {
 
 @test "no base image floats on latest or goes untagged" {
     local f
-    [ "$(ls "${REPO}"/devbox/apps/*/Dockerfile | wc -l)" -eq 3 ]
+    [ "$(ls "${REPO}"/devbox/apps/*/Dockerfile | wc -l)" -eq 4 ]
     for f in "${REPO}"/devbox/apps/*/Dockerfile; do
         awk '$1 == "FROM" { print $2 }' "${f}" | while read -r image; do
             [[ ${image} == *:* && ${image} != *:latest ]] || { echo "${f}: ${image}"; exit 1; }
