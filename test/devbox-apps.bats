@@ -27,8 +27,8 @@ q() {
     [ "$(q '.name')" = "devbox-apps" ]
 }
 
-@test "boucherie runs sd-webui, sd-viewer and tageditor" {
-    [ "$(q '.services | keys | sort | join(" ")')" = "sd-viewer sd-webui tageditor" ]
+@test "boucherie runs sd-webui, sd-viewer, tageditor and lora-compare" {
+    [ "$(q '.services | keys | sort | join(" ")')" = "lora-compare sd-viewer sd-webui tageditor" ]
 }
 
 @test "every service is named after itself, restarts always and runs as the devbox user" {
@@ -89,6 +89,7 @@ q() {
     [ "$(q '.services.sd-webui.working_dir')" = "/home/yuanying/src/github.com/Haoming02/sd-webui-forge-classic" ]
     [ "$(q '.services.sd-viewer.working_dir')" = "/home/yuanying/src/github.com/yuanying/sd-viewer" ]
     [ "$(q '.services.tageditor.working_dir')" = "/home/yuanying/src/github.com/iwaco/tageditor" ]
+    [ "$(q '.services.lora-compare.working_dir')" = "/home/yuanying/src/github.com/kohya-ss/sd-scripts/outputs/images" ]
 }
 
 @test "sd-webui gets the GPU" {
@@ -115,7 +116,7 @@ q() {
 
 @test "no base image floats on latest or goes untagged" {
     local f
-    [ "$(ls "${REPO}"/devbox/apps/*/Dockerfile | wc -l)" -eq 4 ]
+    [ "$(ls "${REPO}"/devbox/apps/*/Dockerfile | wc -l)" -eq 5 ]
     for f in "${REPO}"/devbox/apps/*/Dockerfile; do
         awk '$1 == "FROM" { print $2 }' "${f}" | while read -r image; do
             [[ ${image} == *:* && ${image} != *:latest ]] || { echo "${f}: ${image}"; exit 1; }

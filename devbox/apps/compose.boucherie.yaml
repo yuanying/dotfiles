@@ -68,6 +68,15 @@ services:
     environment:
       TAGEDITOR_ALLOWED_HOSTS: tageditor.poissonnerie.dev
 
+  # Static pages comparing LoRA versions, written by sd-scripts'
+  # outputs/compare/build.py.
+  lora-compare:
+    <<: *app
+    container_name: lora-compare
+    build:
+      context: lora-compare
+    working_dir: /home/yuanying/src/github.com/kohya-ss/sd-scripts/outputs/images
+
 networks:
   # Created on poissonnerie's regied bridge by net-fraction-private, not by
   # compose: the devbox is on it too, and must not lose it to a

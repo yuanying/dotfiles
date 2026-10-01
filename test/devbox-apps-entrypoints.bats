@@ -173,3 +173,39 @@ EOF
     [ "${status}" -ne 124 ]
     ! alive "$(cat "${STUB_DIR}/uv.pid")"
 }
+
+# --- lora-compare ----------------------------------------------------------
+
+@test "lora-compare serves the working directory with nginx in the foreground on 8080" {
+    stub nginx <<'EOF2'
+#!/bin/bash
+printf '%s\n' "$@" > "${STUB_DIR}/nginx.args"
+while (( $# )); do
+    [[ $1 == -c ]] && cp "$2" "${STUB_DIR}/nginx.conf"
+    shift
+done
+EOF2
+    TMPDIR="${BATS_TEST_TMPDIR}" run "${APPS}/lora-compare/entrypoint.sh"
+    [ "${status}" -eq 0 ]
+    [ "$(sed -n 1p "${STUB_DIR}/nginx.args")" = "-c" ]
+    [ "$(sed -n 3,4p "${STUB_DIR}/nginx.args")" = "-g
+daemon off;" ]
+    grep -qE "^ *root +${WORK};" "${STUB_DIR}/nginx.conf"
+    grep -qE '^ *listen +8080;' "${STUB_DIR}/nginx.conf"
+}
+
+@test "lora-compare keeps everything nginx writes under TMPDIR, since it runs as the devbox user" {
+    stub nginx <<'EOF2'
+#!/bin/bash
+while (( $# )); do
+    [[ $1 == -c ]] && cp "$2" "${STUB_DIR}/nginx.conf"
+    shift
+done
+EOF2
+    TMPDIR="${BATS_TEST_TMPDIR}" run "${APPS}/lora-compare/entrypoint.sh"
+    [ "${status}" -eq 0 ]
+    local d
+    for d in pid client_body_temp_path proxy_temp_path fastcgi_temp_path uwsgi_temp_path scgi_temp_path; do
+        grep -qE "^ *${d} +${BATS_TEST_TMPDIR}/" "${STUB_DIR}/nginx.conf" || { echo "${d}"; return 1; }
+    done
+}
