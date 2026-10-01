@@ -166,7 +166,7 @@ USER "$USER"
 ENV HOME="/home/$USER"
 
 # docker builder
-FROM docker:28-cli AS docker_builder
+FROM docker:29-cli AS docker_builder
 
 # golang builder
 FROM golang:1.27 AS golang_builder
