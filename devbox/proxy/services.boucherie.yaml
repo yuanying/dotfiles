@@ -47,3 +47,10 @@ services:
     viewers:
       logins:
         - yuanying
+  - name: lora-compare
+    host: lora-compare
+    port: 8080
+    auth: required
+    viewers:
+      logins:
+        - yuanying

@@ -12,6 +12,7 @@ On boucherie:
 | `sd-webui` | 7860 | `~/src/github.com/Haoming02/sd-webui-forge-classic` | `docker restart sd-webui` |
 | `sd-viewer` | 8189 | `~/src/github.com/yuanying/sd-viewer` | `docker restart sd-viewer` — it is built again at every start |
 | `tageditor` | 5173 | `~/src/github.com/iwaco/tageditor` | nothing — uvicorn and vite reload on their own |
+| `lora-compare` | 8080 | `~/src/github.com/kohya-ss/sd-scripts/outputs/images` | nothing — nginx serves the files as they are |
 
 On anietta:
 
