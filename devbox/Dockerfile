@@ -189,7 +189,7 @@ FROM node:24.21.0-bookworm AS node_builder
 # stage of its own; herdr_plugin_builder folds the result back in so the main
 # stage still copies /opt/herdr/plugins as a single directory. Bookworm for the
 # same glibc reason as node_builder.
-FROM rust:1.98-bookworm AS herdr_navigator_builder
+FROM rust:1.99-bookworm AS herdr_navigator_builder
 
 # renovate: datasource=github-releases depName=thanhdat77/herdr-navigator extractVersion=^v(?<version>.+)$
 ARG HERDR_NAVIGATOR_VERSION=0.3.6
