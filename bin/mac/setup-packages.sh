@@ -36,6 +36,21 @@ brew install zoxide
 brew install sops
 brew install age
 
+# sshfs は FUSE-T のものを使う。FUSE-T はカーネル拡張を使わず、手元に立てた
+# NFS サーバーを macOS の NFS クライアントでマウントする。以前の gromgit/fuse
+# tap の sshfs-mac は upstream で deprecated になり、macFUSE と組み合わせた
+# sshfs 3.x はディレクトリを読んだ瞬間に assert で落ちた (cleanup-packages.sh
+# が古いものを消す)。fuse-t は homebrew/cask 本体にあるが、fuse-t-sshfs は
+# FUSE-T の tap にしか無く、brew は信頼していない tap の cask を読まない。
+# どちらも pkg なので途中で sudo のパスワードを聞かれる。
+#
+# FUSE-T には iconv モジュールが無いので -o modules=iconv は使えない。
+# マウント先のファイル名は NFC で、今の macOS はそのまま扱えるので要らない。
+brew install --cask fuse-t
+brew tap macos-fuse-t/homebrew-cask
+brew trust macos-fuse-t/cask
+brew install --cask macos-fuse-t/cask/fuse-t-sshfs
+
 # font-hack-nerd-font は homebrew/cask 本体に移行済み。かつて要った
 # homebrew/cask-fonts の tap は deprecated になり、叩くとエラーになるだけなの
 # で張らない。

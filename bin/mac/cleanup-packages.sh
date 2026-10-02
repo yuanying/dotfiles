@@ -55,6 +55,52 @@ if command -v brew > /dev/null && brew list --formula terminal-notifier > /dev/n
     fi
 fi
 
+# --- sshfs (2026-10 FUSE-T へ移行) ---
+# sshfs は setup-packages.sh が FUSE-T から入れる。それ以前に入れていた 2 つを
+# 消す。macFUSE 本体は FUSE-T とファイルがぶつからないので、ここでは消さない。
+#
+# brew uninstall は、消したものの依存に限らず、どこからも依存されなくなった
+# formula をすべて autoremove する。sshfs-mac を消したときに python@3.14 まで
+# 消えたことがあるので、autoremove を止めて呼ぶ。
+if command -v brew > /dev/null; then
+    # gromgit/fuse tap の formula。upstream で deprecated・disabled になった。
+    if brew list --formula sshfs-mac > /dev/null 2>&1; then
+        if HOMEBREW_NO_AUTOREMOVE=1 brew uninstall --formula sshfs-mac; then
+            note "brew uninstall した: sshfs-mac (formula)"
+        else
+            echo "sshfs-mac (formula) を消せなかった" >&2
+        fi
+    fi
+
+    # formula を消したあとは空になっているはず。まだ何か入っていれば brew が
+    # untap を拒否するので、そのときは残す。
+    if brew tap | grep -qx gromgit/fuse; then
+        if brew untap gromgit/fuse; then
+            note "brew untap した: gromgit/fuse"
+        else
+            echo "gromgit/fuse を untap できなかった (まだ formula が入っている?)" >&2
+        fi
+    fi
+
+    # macFUSE が配っている SSHFS の pkg を包んだ cask。pkg のレシートを見て
+    # /usr/local/bin/sshfs を消すが、そこは fuse-t-sshfs の置き場所でもある。
+    # FUSE-T を入れたあとに消すと FUSE-T の sshfs まで消えるので入れ直す。
+    if brew list --cask sshfs-mac > /dev/null 2>&1; then
+        if HOMEBREW_NO_AUTOREMOVE=1 brew uninstall --cask sshfs-mac; then
+            note "brew uninstall した: sshfs-mac (cask)"
+            if brew list --cask fuse-t-sshfs > /dev/null 2>&1; then
+                if brew reinstall --cask macos-fuse-t/cask/fuse-t-sshfs; then
+                    note "消えた sshfs を戻すため brew reinstall した: fuse-t-sshfs"
+                else
+                    echo "fuse-t-sshfs を入れ直せなかった。sshfs が無いかもしれない" >&2
+                fi
+            fi
+        else
+            echo "sshfs-mac (cask) を消せなかった" >&2
+        fi
+    fi
+fi
+
 if [[ ${changed} -eq 0 ]]; then
     echo "消すものは無かった"
 fi
