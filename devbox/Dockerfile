@@ -391,7 +391,7 @@ COPY --from=docker_builder /usr/local/bin/docker /usr/local/bin/
 # The Go one. Ubuntu's `yq` package is a different program with a different
 # expression language, so it is not a substitute.
 # renovate: datasource=github-releases depName=mikefarah/yq extractVersion=^v(?<version>.+)$
-ARG YQ_VERSION=4.53.6
+ARG YQ_VERSION=4.54.1
 RUN \
     sudo curl -fsSL -o /usr/local/bin/yq \
         https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 && \
