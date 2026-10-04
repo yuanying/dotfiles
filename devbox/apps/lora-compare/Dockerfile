@@ -2,7 +2,7 @@
 # outputs/compare/build.py. The image is only nginx; the pages are the
 # directory compose mounts from $HOME and sets as the working directory.
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
 
 USER root
 # bash for the entrypoint, as in the other apps.
