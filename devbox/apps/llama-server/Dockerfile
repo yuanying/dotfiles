@@ -5,7 +5,7 @@
 # The base the devbox itself is built on (ROCM_IMAGE in devbox/Makefile), so
 # the ROCm a llama.cpp built in the devbox links against is the one in here,
 # and the layers are the ones the host already has.
-FROM rocm/dev-ubuntu-24.04:10.0.0-full
+FROM rocm/dev-ubuntu-24.04:10.1.0-full
 
 # As in devbox/Dockerfile: the ROCm 10 image has no ld.so.conf entry for
 # /opt/rocm, and libamdhip64 does not load without one. ggml's CPU backend
