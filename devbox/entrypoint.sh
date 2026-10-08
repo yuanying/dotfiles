@@ -87,7 +87,12 @@ echo "Clone dotfiles and setup"
 git clone https://github.com/yuanying/dotfiles ~/dotfiles
 cd ~/dotfiles
 git checkout lua
-bash ~/dotfiles/bin/setup.sh
+# 端末から切り離して流す。docker run -t だとこのスクリプトには TTY があり、
+# setup.sh の中のツールが確認を求めてくると誰も答えないまま止まって、sshd まで
+# 辿り着かない (moshi-hook install が Codex の daemon_auto_start を聞いてきた)。
+# 制御端末も stdin も無ければ、対話はできないものとして先へ進むか失敗する。
+# 失敗は setup.sh がそれぞれ握りつぶすので、ここで止まることはない。
+setsid -w bash ~/dotfiles/bin/setup.sh < /dev/null
 
 echo "Setup herdr plugins"
 # The plugin trees are built into the image, but herdr registers plugins under

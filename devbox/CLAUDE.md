@@ -171,6 +171,10 @@ the proxy and the herdr plugins are — the image carries the binary, `$HOME` ca
   `~/.claude/settings.json`, next to the ones `herdr integration install` puts there. The Claude
   settings merge further down that script only overwrites keys the repository tracks, so neither
   installer's hooks are lost.
+  `entrypoint.sh` runs that script under `setsid -w ... < /dev/null`: `moshi-hook install` asks
+  questions when it has a terminal (whether to turn off Codex's `daemon_auto_start`), and under
+  `docker run -t` nobody answers, so the start never reached sshd. Answer such questions by hand
+  (`moshi-hook doctor --yes`, or `moshi-hook install` in a shell).
 
 Pairing is the one step nothing here automates: it needs a token from the app
 (Settings → Hooks) and is done once per box.
