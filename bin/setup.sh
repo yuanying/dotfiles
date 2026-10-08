@@ -60,16 +60,6 @@ else
     done
 fi
 
-# Moshi (端末アプリ) のエージェント連携。登録先は herdr と同じく各エージェント
-# の設定ファイル (~/.claude/settings.json など) で、両方のフックが並んで入る。
-# どのエージェントに入れるかは moshi-hook が自分で見て決めるので、こちらは
-# 対象を並べない。冪等なので毎回流してよい。
-# ペアリングしていないホストには何も入れないよう ~/.config/moshi の有無で
-# 判断する。ペアリング自体は手作業で 1 回だけ (devbox/entrypoint.sh に手順)。
-if command -v moshi-hook > /dev/null && [[ -d ~/.config/moshi ]]; then
-    moshi-hook install || echo "moshi-hook install に失敗した" >&2
-fi
-
 # Codex のカスタムテーマ。組み込みに無い Tokyo Night だけを張る。
 # ディレクトリごと張らず、/theme などで追加した手元のテーマは残す。
 mkdir -p ~/.codex/themes
@@ -92,6 +82,18 @@ else
         ${CODEX_SETTINGS} \
         ${ROOT}/../codex/config.toml \
         ${CODEX_HOST_SETTINGS}
+fi
+
+# Moshi (端末アプリ) のエージェント連携。登録先は herdr と同じく各エージェント
+# の設定ファイル (~/.claude/settings.json など) で、両方のフックが並んで入る。
+# どのエージェントに入れるかは moshi-hook が自分で見て決めるので、こちらは
+# 対象を並べない。冪等なので毎回流してよい。
+# ペアリングしていないホストには何も入れないよう ~/.config/moshi の有無で
+# 判断する。ペアリング自体は手作業で 1 回だけ (devbox/entrypoint.sh に手順)。
+# Codex の config.toml のマージより後に置く。daemon_auto_start を先に切って
+# おかないと、install が切るかどうかを対話で聞いてくる。
+if command -v moshi-hook > /dev/null && [[ -d ~/.config/moshi ]]; then
+    moshi-hook install || echo "moshi-hook install に失敗した" >&2
 fi
 
 # hunk の設定。config.toml は hunk 自身も表示設定 (レイアウトや行番号) を
