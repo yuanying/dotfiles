@@ -13,3 +13,10 @@ network_access = true
 [tui]
 # ホスト別設定が無いマシンのデフォルト。
 theme = "solarized-dark"
+
+[features]
+# Codex 0.157+ は全セッションを 1 つの共有バックグラウンドサーバーで動かし、
+# Moshi からはどのペインのセッションか見分けられなくなる (承認や返信が別の
+# ペインに飛ぶ)。moshi-hook install はこれを切るか対話で聞いてくるので、
+# ここで先に切っておく。bin/setup.sh はこのマージを moshi-hook より先に流す。
+daemon_auto_start = false
