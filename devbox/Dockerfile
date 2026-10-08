@@ -301,7 +301,7 @@ RUN \
 # コンパイルとパーサー生成を回すのがこの CLI で、無いと :TSInstall が動かない。
 # Mac 側は bin/mac/setup-packages.sh の brew install tree-sitter-cli が担当する。
 # renovate: datasource=github-releases depName=tree-sitter/tree-sitter extractVersion=^v(?<version>.+)$
-ARG TREE_SITTER_VERSION=0.27.0
+ARG TREE_SITTER_VERSION=0.27.1
 RUN \
     curl -fsSL https://github.com/tree-sitter/tree-sitter/releases/download/v${TREE_SITTER_VERSION}/tree-sitter-linux-x64.gz | \
         gunzip | sudo tee /usr/local/bin/tree-sitter > /dev/null && \
