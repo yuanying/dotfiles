@@ -285,7 +285,7 @@ ENV GHQ_ROOT="$HOME/src"
 
 # neovim
 # renovate: datasource=github-releases depName=neovim/neovim extractVersion=^v(?<version>.+)$
-ARG NEOVIM_VERSION=0.12.5
+ARG NEOVIM_VERSION=0.12.6
 RUN \
      curl -L https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz | sudo sudo tar zx --strip-components 1 -C /usr
 RUN \
