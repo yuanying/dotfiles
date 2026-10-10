@@ -1,5 +1,6 @@
 {
   "theme": "solarized",
+  "tuiMode": "regular",
   "packages": [
     "npm:pi-web-access@0.38.0",
     "npm:pi-verdict@0.15.0",
