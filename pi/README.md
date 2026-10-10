@@ -17,7 +17,11 @@
   競合する既定キーは、モデルの次 / 前を `Alt+n` / `Alt+p`、
   `/resume` のパス表示 / 名前付きフィルタを `Alt+p` / `Alt+n`、
   `/scoped-models` のプロバイダー一括切替を `Alt+p` に変更している。
+- 入力欄の履歴は `Ctrl+p` / `Ctrl+n` で前 / 次へ移動する。
 - `Ctrl+[` も選択画面のキャンセルと生成中の中断に使える (`Esc` はそのまま)。
+- `openai-codex` のモデル選択中は、フッターに Weekly 使用率とリセット日時を表示する。
+  ChatGPT の Codex usage API から 5 分ごとに取得する (OAuth ログインが必要)。
+  他のプロバイダーでは表示しない。取得できないときは `Weekly: unavailable` を表示する。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由でそのまま届く。
 - ユーザー指示は Claude Code と同じ `~/.claude/CLAUDE.md` を `~/.pi/agent/CLAUDE.md`
