@@ -85,6 +85,12 @@ services:
       - --min-p
       - "0"
       - --jinja
+      # The prompt cache copies a slot's KV out to host RAM, which on this
+      # unified-memory APU is the same pool the KV already lives in. With one
+      # conversation per slot it only adds copies, of several GiB each, until
+      # the host OOM killer takes the server down.
+      - --cache-ram
+      - "0"
       - --alias
       - qwen3.8-flash-next
       - --host
