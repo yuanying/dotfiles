@@ -26,5 +26,4 @@ Host github.com
   HostName ssh.github.com
   Port 443
   User git
-  IdentityFile ~/.ssh/github_rsa
   IdentitiesOnly yes
