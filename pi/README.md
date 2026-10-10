@@ -20,9 +20,14 @@
   `/scoped-models` のプロバイダー一括切替を `Alt+p` に変更している。
 - 入力欄の履歴は `Ctrl+p` / `Ctrl+n` で前 / 次へ移動する。
 - `Ctrl+[` も選択画面のキャンセルと生成中の中断に使える (`Esc` はそのまま)。
-- `openai-codex` のモデル選択中は、フッターに Weekly 使用率とリセット日時を表示する。
-  ChatGPT の Codex usage API から 5 分ごとに取得する (OAuth ログインが必要)。
-  他のプロバイダーでは表示しない。取得できないときは `Weekly: unavailable` を表示する。
+- 利用率表示は `@specode/pi-subscription-usage` を使う。フッターの `1w` が週間使用率。
+  `subscription-usage.json` の `displayMode: "used"` で消費した割合を表示する
+  (設定は他の JSON と同じ順でマージ)。`/usage` で詳細表示・再取得する。
+  `openai` の ChatGPT サブスクリプションでは、同じアカウント・ワークスペースで
+  `/login openai-codex` も一度行う。Codex 認証は Usage の取得だけに使い、
+  モデルは `openai` のままでよい。プラン全体とアプリ別の制限は別々に表示する。
+  非公開 API を使うため、提供元の変更で取得できなくなる可能性がある。
+  リセットクレジット消費は `/usage` の明示的な確認操作が必要。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由でそのまま届く。
 - ユーザー指示は pi 専用の `AGENTS.md` で管理する。`herdr-tasks` 使用時は、

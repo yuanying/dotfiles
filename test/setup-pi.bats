@@ -54,6 +54,7 @@ EOF
 }
 EOF
     echo '{ "provider": "searxng", "fetch": { "timeout": 30 } }' > "${FAKE}/pi/web-search.json"
+    echo '{ "displayMode": "used" }' > "${FAKE}/pi/subscription-usage.json"
     echo '{ "tui.editor.historyPrevious": "ctrl+p", "tui.editor.historyNext": "ctrl+n", "tui.select.up": ["up", "ctrl+p"], "tui.select.down": ["down", "ctrl+n"] }' > "${FAKE}/pi/keybindings.json"
     cp "${REPO}/pi/AGENTS.md" "${FAKE}/pi/AGENTS.md"
     SETUP="${FAKE}/bin/setup-pi.sh"
@@ -69,6 +70,14 @@ pi_calls() {
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
     jq -e '."tui.editor.historyPrevious" == "ctrl+p" and ."tui.editor.historyNext" == "ctrl+n" and ."tui.select.up" == ["up", "ctrl+p"] and ."tui.select.down" == ["down", "ctrl+n"] and ."app.editor.external" == "ctrl+g"' "${AGENT}/keybindings.json"
+}
+
+@test "subscription usage config is merged while preserving unrelated local settings" {
+    mkdir -p "${AGENT}"
+    echo '{ "displayMode": "remaining", "localSetting": true }' > "${AGENT}/subscription-usage.json"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    jq -e '.displayMode == "used" and .localSetting == true' "${AGENT}/subscription-usage.json"
 }
 
 # --- settings ---
