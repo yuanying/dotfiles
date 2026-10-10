@@ -70,13 +70,14 @@ setup() {
     printf '#!/bin/sh\necho testhost\n' > "${BATS_TEST_TMPDIR}/bin/hostname"
     chmod +x "${BATS_TEST_TMPDIR}/bin/"*
     export PATH="${BATS_TEST_TMPDIR}/bin:$PATH"
-    echo '{"allow":["old"],"deny":["local-deny"],"denyPaths":["~/private"],"audit":true}' > "$HOME/.pi/agent/config/pi-verdict.json"
+    echo '{"allow":["old"],"deny":["local-deny"],"denyPaths":["~/private"],"ignoreTools":["todo"],"audit":true}' > "$HOME/.pi/agent/config/pi-verdict.json"
     echo '{"classifierModel":"test/model","deny":["host-deny"]}' > "$FAKE/pi/config/pi-verdict.testhost.json"
     run bash "$FAKE/bin/setup-pi.sh"
     [ "$status" -eq 0 ]
     target="$HOME/.pi/agent/config/pi-verdict.json"
     [ ! -L "$target" ]
     jq -e '.audit and .builtinDenyFloor and .classifierModel == "test/model" and (.allow | index("old") | not) and (.deny | index("local-deny") != null) and (.deny | index("host-deny") != null) and (.denyPaths | index("~/private") != null) and (.denyPaths | index("~/.ssh/") != null)' "$target"
+    jq -e '.ignoreTools == ["todo", "web_enable"]' "$target"
     [ -x "$HOME/bin/herdr-task-worktree" ]
     run node "${REPO}/test/pi-herdr-rules.mjs" "$target"
     [ "$status" -eq 0 ]

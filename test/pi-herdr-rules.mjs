@@ -8,6 +8,29 @@ if (process.argv[2]) {
   const args = ' --repo /repo --path /task/worktrees/branch --branch feature --base abc123';
   assert.ok(allowed(helper + args));
   assert.ok(!policy.allow.some(rule => rule.includes('__HOME_REGEX__')));
+  const scripts = `${process.env.HOME}/src/github.com/yuanying/herdr-tasks/scripts`;
+  const prompt = `${scripts}/prompt-agent.sh work-task "worker として ADR を作成し、push・PR 作成してください。\n実装とマージはしないでください。"`;
+  assert.ok(allowed(prompt));
+  for (const dir of ['.agents/skills/herdr-tasks', '.claude/skills/herdr-tasks']) {
+    assert.ok(allowed(`${process.env.HOME}/${dir}/scripts/write-task-agents.sh /task`));
+  }
+  assert.ok(allowed(`${scripts}/install-skill.sh`));
+  for (const command of [
+    `${scripts}/../other.sh`,
+    `${scripts}/nested/other.sh`,
+    `${scripts}/other.py`,
+    `${scripts}/prompt-agent.sh work-task "$PROMPT"`,
+    `${scripts}/prompt-agent.sh work-task "$(other)"`,
+    `${scripts}/prompt-agent.sh work-task "\u0060other\u0060"`,
+    `${scripts}/prompt-agent.sh work-task "hello"; other`,
+    `${scripts}/prompt-agent.sh work-task "hello" && other`,
+    `${scripts}/prompt-agent.sh work-task "hello" | sh`,
+    `${scripts}/prompt-agent.sh work-task "hello" > /tmp/output`,
+    `${scripts}/prompt-agent.sh work-task "hello"\nother`,
+    `${scripts}/prompt-agent.sh work-task "unterminated`,
+    prompt.replace('herdr-tasks/scripts', 'other/scripts'),
+    prompt.replace('home.test+', 'homeXtest'),
+  ]) assert.ok(!allowed(command), command);
   const root = `${process.env.HOME}/.local/state/herdr-tasks`;
   const prefix = 'git -C /home/user/src/github.com/user/repo worktree remove ';
   const target = `${root}/test-agent-startup/worktrees/test-agent-startup`;

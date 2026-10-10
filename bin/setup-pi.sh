@@ -54,7 +54,8 @@ else
             ) | join("")) as $homeRegex |
             (.[0] * .[1] * .[2] + {
                 deny: ([.[].deny[]?] | unique),
-                denyPaths: ([.[].denyPaths[]?] | unique)
+                denyPaths: ([.[].denyPaths[]?] | unique),
+                ignoreTools: ([.[].ignoreTools[]?] | unique)
             }) | .allow |= map(split("__HOME_REGEX__") | join($homeRegex))
         ' "${target}" "${common}" "${host}" \
             > "${target}.tmp" && mv -f "${target}.tmp" "${target}"
