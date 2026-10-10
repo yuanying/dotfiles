@@ -355,6 +355,15 @@ RUN \
     sudo ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
     sudo ln -s ../lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack
 
+# pi coding agent
+# Installed on the system node so it is there before asdf is, like the herdr
+# plugins below. Its packages go under ~/.pi/agent, which bin/setup-pi.sh fills.
+# bin/mac/setup-packages.sh reads this ARG so a Mac runs the same pi.
+# --ignore-scripts is what pi's own docs give for an npm install.
+# renovate: datasource=npm depName=@earendil-works/pi-coding-agent
+ARG PI_VERSION=1.1.0
+RUN sudo /usr/local/bin/npm install -g --ignore-scripts @earendil-works/pi-coding-agent@${PI_VERSION}
+
 # herdr plugins
 # herdr registers plugins under ~/.config/herdr, which the host $HOME mount
 # hides, so entrypoint.sh links these trees in at runtime instead.

@@ -48,6 +48,9 @@ EOF
     # plugins when herdr is on PATH. Neither is under test here.
     printf '#!/bin/bash\nexit 1\n' > "${FAKE_BIN}/launchctl"
     printf '#!/bin/bash\nexit 0\n' > "${FAKE_BIN}/herdr"
+    # pi comes from npm, at the version devbox/Dockerfile pins. The fake npm
+    # logs into the brew log so ordering against brew install node can be seen.
+    printf '#!/bin/bash\necho "npm $*" >> "${BREW_LOG}"\n' > "${FAKE_BIN}/npm"
     chmod +x "${FAKE_BIN}"/*
 
     export HOME="${BATS_TEST_TMPDIR}/home"
@@ -167,4 +170,44 @@ lacks() { # <formulae|casks|taps> <name>
     [ "$status" -eq 0 ]
     no_calls 'uninstall|untap|reinstall'
     [[ "$output" == *"消すものは無かった"* ]]
+}
+
+# --- pi ---
+
+pi_version() {
+    sed -n 's/^ARG PI_VERSION=//p' "${REPO}/devbox/Dockerfile"
+}
+
+@test "setup installs pi from npm at the version devbox pins" {
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ -n "$(pi_version)" ]
+    calls "^npm install -g --ignore-scripts @earendil-works/pi-coding-agent@$(pi_version)\$"
+}
+
+@test "setup installs pi after node is there to run it" {
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    node=$(grep -nE ' install node$' "${BREW_LOG}" | cut -d: -f1)
+    pi=$(grep -nE '^npm install .*pi-coding-agent' "${BREW_LOG}" | cut -d: -f1)
+    [ -n "${node}" ]
+    [ -n "${pi}" ]
+    [ "${node}" -lt "${pi}" ]
+}
+
+@test "setup leaves pi alone when the pinned version is already installed" {
+    [ -n "$(pi_version)" ]
+    printf '#!/bin/bash\necho %s\n' "$(pi_version)" > "${FAKE_BIN}/pi"
+    chmod +x "${FAKE_BIN}/pi"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    no_calls 'pi-coding-agent'
+}
+
+@test "setup moves pi to the pinned version when another one is installed" {
+    printf '#!/bin/bash\necho 0.0.1\n' > "${FAKE_BIN}/pi"
+    chmod +x "${FAKE_BIN}/pi"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    calls "^npm install -g --ignore-scripts @earendil-works/pi-coding-agent@$(pi_version)\$"
 }

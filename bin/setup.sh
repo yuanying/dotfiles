@@ -50,11 +50,13 @@ fi
 # 冪等なので毎回流してよい。対象が全部入っているホストは無いので
 # (opencode が無ければ install は失敗する)、1 つずつ実行して警告だけ出す。
 # `herdr integration status` で現状を確認できる。
-# 対応エージェントは他にもあるが、常用する 3 つだけ入れる。
+# 対応エージェントは他にもあるが、常用するものだけ入れる。pi の分は
+# ~/.pi/agent/extensions/ にファイルを 1 つ置く (moshi-hook も同じ場所に置く)
+# ので、あのディレクトリは symlink にしない。
 if ! command -v herdr > /dev/null; then
     echo "herdr が無いので integration のセットアップをスキップした" >&2
 else
-    for target in claude codex opencode; do
+    for target in claude codex opencode pi; do
         herdr integration install ${target} || \
             echo "herdr integration install ${target} に失敗した (${target} が未インストール?)" >&2
     done
@@ -83,6 +85,9 @@ else
         ${ROOT}/../codex/config.toml \
         ${CODEX_HOST_SETTINGS}
 fi
+
+# pi coding agent の設定とパッケージ。中身は setup-pi.sh を参照。
+bash ${ROOT}/setup-pi.sh
 
 # Moshi (端末アプリ) のエージェント連携。登録先は herdr と同じく各エージェント
 # の設定ファイル (~/.claude/settings.json など) で、両方のフックが並んで入る。

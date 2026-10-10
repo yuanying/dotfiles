@@ -79,6 +79,18 @@ devbox_version() { # <ARG 名>
     printf '%s' "${version}"
 }
 
+# pi coding agent。devbox と同じ版を npm で入れる (上の brew の node か、
+# あれば asdf の node)。設定とパッケージは bin/setup-pi.sh が流す。
+# 入れ直しは数十秒かかるので、版が合っていれば飛ばす。
+if pi_version=$(devbox_version PI_VERSION); then
+    if [[ "$(pi --version 2> /dev/null)" == "${pi_version}" ]]; then
+        echo "pi は ${pi_version} 導入済み"
+    else
+        npm install -g --ignore-scripts @earendil-works/pi-coding-agent@${pi_version} || \
+            echo "pi のインストールに失敗した" >&2
+    fi
+fi
+
 if ! command -v herdr > /dev/null; then
     echo "herdr が無いのでプラグインのインストールをスキップした" >&2
 else
