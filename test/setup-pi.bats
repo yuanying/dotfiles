@@ -54,11 +54,20 @@ EOF
 }
 EOF
     echo '{ "provider": "searxng", "fetch": { "timeout": 30 } }' > "${FAKE}/pi/web-search.json"
+    echo '{ "tui.select.up": ["up", "ctrl+p"], "tui.select.down": ["down", "ctrl+n"] }' > "${FAKE}/pi/keybindings.json"
     SETUP="${FAKE}/bin/setup-pi.sh"
 }
 
 pi_calls() {
     cat "${PI_LOG}"
+}
+
+@test "keybindings are merged while preserving unrelated local bindings" {
+    mkdir -p "${AGENT}"
+    echo '{ "tui.select.up": "k", "app.editor.external": "ctrl+g" }' > "${AGENT}/keybindings.json"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    jq -e '."tui.select.up" == ["up", "ctrl+p"] and ."tui.select.down" == ["down", "ctrl+n"] and ."app.editor.external" == "ctrl+g"' "${AGENT}/keybindings.json"
 }
 
 # --- settings ---

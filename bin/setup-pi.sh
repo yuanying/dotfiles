@@ -30,6 +30,7 @@ if ! command -v jq > /dev/null; then
     echo "jq が無いので ${AGENT_DIR} の設定のマージをスキップした" >&2
 else
     merge_json settings
+    merge_json keybindings
     merge_json web-search
 fi
 
