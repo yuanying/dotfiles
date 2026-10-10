@@ -54,13 +54,16 @@ for kind in extensions themes prompts; do
     done
 done
 
-# ユーザー指示は Claude Code と同じものを使う。pi はエージェントディレクトリの
-# CLAUDE.md も読む。~/.claude/CLAUDE.md はホストごとのファイルで dotfiles の
-# 管理外なので、あるときだけ張る。pi 用に手で書いた指示があれば触らない。
-if [[ -f ${HOME}/.claude/CLAUDE.md ]] && \
-        [[ ! -e ${AGENT_DIR}/AGENTS.md ]] && \
-        { [[ -L ${AGENT_DIR}/CLAUDE.md ]] || [[ ! -e ${AGENT_DIR}/CLAUDE.md ]]; }; then
-    ln -sfn "${HOME}/.claude/CLAUDE.md" "${AGENT_DIR}/CLAUDE.md"
+# pi 専用のユーザー指示。手書きのファイルや他所へのリンクは上書きしない。
+# 以前の setup が張った Claude Code の指示へのリンクだけは片付ける。
+if [[ -L ${AGENT_DIR}/CLAUDE.md && $(readlink "${AGENT_DIR}/CLAUDE.md") == "${HOME}/.claude/CLAUDE.md" ]]; then
+    rm -f "${AGENT_DIR}/CLAUDE.md"
+fi
+if [[ ! -e ${AGENT_DIR}/AGENTS.md && ! -L ${AGENT_DIR}/AGENTS.md ]] || \
+        [[ -L ${AGENT_DIR}/AGENTS.md && $(readlink "${AGENT_DIR}/AGENTS.md") == "${PI_DIR}/AGENTS.md" ]]; then
+    ln -sfn "${PI_DIR}/AGENTS.md" "${AGENT_DIR}/AGENTS.md"
+else
+    echo "${AGENT_DIR}/AGENTS.md は既存のユーザー指示なのでリンクをスキップした" >&2
 fi
 
 # パッケージ (extension) を入れる。宣言はマージで settings.json に入っているが、

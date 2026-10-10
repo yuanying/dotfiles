@@ -12,6 +12,7 @@
 | 自作の extension | `extensions/` に単体の `.ts` か、`index.ts` を持つディレクトリ | 1 つずつ symlink |
 | テーマ | `themes/<名前>.json` (`name` はファイル名と同じ) | 1 つずつ symlink。どれを使うかは各ホストの `settings` の `theme` |
 | プロンプトテンプレート | `prompts/*.md` | 1 つずつ symlink |
+| ユーザー指示 | `AGENTS.md` | `~/.pi/agent/AGENTS.md` へ symlink (既存の手書きファイルや他所へのリンクは上書きしない) |
 
 - 選択リストは矢印キーに加えて `Ctrl+p` / `Ctrl+n` で上下移動する。
   競合する既定キーは、モデルの次 / 前を `Alt+n` / `Alt+p`、
@@ -29,8 +30,11 @@
   リセットクレジット消費は `/usage` の明示的な確認操作が必要。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由でそのまま届く。
-- ユーザー指示は Claude Code と同じ `~/.claude/CLAUDE.md` を `~/.pi/agent/CLAUDE.md`
-  として張る (pi 用の `AGENTS.md` / `CLAUDE.md` を手で置いたホストでは張らない)。
+- ユーザー指示は pi 専用の `AGENTS.md` で管理する。`herdr-tasks` 使用時は、
+  特に指示がなければ worker を `claude` で起動する。
+  以前の setup が張った `~/.claude/CLAUDE.md` へのリンクは削除するが、
+  手書きの `CLAUDE.md` や他所へのリンクは残す。
+  `PI_CODING_AGENT_DIR` があれば、そのディレクトリをリンク先に使う。
 - `extensions/` を丸ごと symlink にしないのは、`herdr integration install pi` と
   `moshi-hook install` が同じディレクトリに自分のファイルを置くため。
 - `auth.json` とセッションはホストごとのまま。ログインは各ホストで `/login` を 1 回。

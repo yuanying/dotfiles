@@ -56,6 +56,7 @@ EOF
     echo '{ "provider": "searxng", "fetch": { "timeout": 30 } }' > "${FAKE}/pi/web-search.json"
     echo '{ "displayMode": "used" }' > "${FAKE}/pi/subscription-usage.json"
     echo '{ "tui.editor.historyPrevious": "ctrl+p", "tui.editor.historyNext": "ctrl+n", "tui.select.up": ["up", "ctrl+p"], "tui.select.down": ["down", "ctrl+n"] }' > "${FAKE}/pi/keybindings.json"
+    cp "${REPO}/pi/AGENTS.md" "${FAKE}/pi/AGENTS.md"
     SETUP="${FAKE}/bin/setup-pi.sh"
 }
 
@@ -241,19 +242,43 @@ resources() {
 
 # --- user instructions ---
 
-@test "Claude Code's user instructions are what pi reads too" {
-    mkdir -p "${HOME}/.claude"
-    echo '常に日本語で会話する' > "${HOME}/.claude/CLAUDE.md"
+@test "pi user instructions are linked from the repository, idempotently" {
+    bash "${SETUP}"
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
-    [ -L "${AGENT}/CLAUDE.md" ]
-    [ "$(readlink "${AGENT}/CLAUDE.md")" = "${HOME}/.claude/CLAUDE.md" ]
+    [ "$(readlink "${AGENT}/AGENTS.md")" = "${FAKE}/pi/AGENTS.md" ]
+    [ ! -e "${AGENT}/CLAUDE.md" ] && [ ! -L "${AGENT}/CLAUDE.md" ]
 }
 
-@test "nothing is linked when there are no Claude Code instructions" {
+@test "user instructions respect PI_CODING_AGENT_DIR" {
+    export PI_CODING_AGENT_DIR="${BATS_TEST_TMPDIR}/agent"
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
-    [ ! -e "${AGENT}/CLAUDE.md" ] && [ ! -L "${AGENT}/CLAUDE.md" ]
+    [ "$(readlink "${PI_CODING_AGENT_DIR}/AGENTS.md")" = "${FAKE}/pi/AGENTS.md" ]
+    [ ! -L "${AGENT}/AGENTS.md" ]
+}
+
+@test "the old managed Claude link is removed even when broken" {
+    mkdir -p "${AGENT}"
+    ln -s "${HOME}/.claude/CLAUDE.md" "${AGENT}/CLAUDE.md"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ ! -L "${AGENT}/CLAUDE.md" ]
+    [ -L "${AGENT}/AGENTS.md" ]
+}
+
+@test "instruction links pointing elsewhere are preserved even when broken" {
+    mkdir -p "${AGENT}"
+    ln -s "${BATS_TEST_TMPDIR}/other-agents.md" "${AGENT}/AGENTS.md"
+    ln -s "${BATS_TEST_TMPDIR}/other-claude.md" "${AGENT}/CLAUDE.md"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${AGENT}/AGENTS.md")" = "${BATS_TEST_TMPDIR}/other-agents.md" ]
+    [ "$(readlink "${AGENT}/CLAUDE.md")" = "${BATS_TEST_TMPDIR}/other-claude.md" ]
+}
+
+@test "the repository instructions default herdr workers to claude" {
+    grep -q 'herdr-tasks.*特に指示がない場合.*worker.*claude' "${REPO}/pi/AGENTS.md"
 }
 
 @test "instructions written for pi itself are left alone" {
