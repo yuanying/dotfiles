@@ -54,7 +54,7 @@ EOF
 }
 EOF
     echo '{ "provider": "searxng", "fetch": { "timeout": 30 } }' > "${FAKE}/pi/web-search.json"
-    echo '{ "tui.select.up": ["up", "ctrl+p"], "tui.select.down": ["down", "ctrl+n"] }' > "${FAKE}/pi/keybindings.json"
+    echo '{ "tui.editor.historyPrevious": "ctrl+p", "tui.editor.historyNext": "ctrl+n", "tui.select.up": ["up", "ctrl+p"], "tui.select.down": ["down", "ctrl+n"] }' > "${FAKE}/pi/keybindings.json"
     SETUP="${FAKE}/bin/setup-pi.sh"
 }
 
@@ -67,7 +67,7 @@ pi_calls() {
     echo '{ "tui.select.up": "k", "app.editor.external": "ctrl+g" }' > "${AGENT}/keybindings.json"
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
-    jq -e '."tui.select.up" == ["up", "ctrl+p"] and ."tui.select.down" == ["down", "ctrl+n"] and ."app.editor.external" == "ctrl+g"' "${AGENT}/keybindings.json"
+    jq -e '."tui.editor.historyPrevious" == "ctrl+p" and ."tui.editor.historyNext" == "ctrl+n" and ."tui.select.up" == ["up", "ctrl+p"] and ."tui.select.down" == ["down", "ctrl+n"] and ."app.editor.external" == "ctrl+g"' "${AGENT}/keybindings.json"
 }
 
 # --- settings ---
