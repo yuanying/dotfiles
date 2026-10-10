@@ -1,0 +1,11 @@
+{
+  "tui.select.up": ["up", "ctrl+p"],
+  "tui.select.down": ["down", "ctrl+n"],
+  "tui.select.cancel": ["escape", "ctrl+c", "ctrl+["],
+  "app.interrupt": ["escape", "ctrl+["],
+  "app.model.cycleForward": "alt+n",
+  "app.model.cycleBackward": "alt+p",
+  "app.session.togglePath": "alt+p",
+  "app.session.toggleNamedFilter": "alt+n",
+  "app.models.toggleProvider": "alt+p"
+}
