@@ -26,6 +26,25 @@ and skips it silently when the host declares nothing, so it is not something
 the container depends on. See `proxy/README.md`, and `docs/adr/0004` to `0008`
 for why it is built the way it is.
 
+## SSH agent
+
+The container has no systemd, so nothing starts an ssh-agent for you.
+`zsh.d/12_ssh_agent.zsh` does: on Linux, a shell that cannot reach an agent
+uses the one at `~/.ssh/agent/agent.sock`, starting it if it is not running.
+Every shell shares that one agent, and it outlives the shell that started it.
+An agent that is already reachable — one forwarded from a Mac with `ssh -A` —
+is left in place.
+
+`sshconfig` sets `AddKeysToAgent yes` for `github.com` only, so the first
+`git fetch` puts the key GitHub accepted — one of the default `~/.ssh/id_*` —
+into the agent, and that is the only key a host you forward the agent to can
+use.
+
+- To use GitHub from a host you log in to, such as a Pod: `ssh -A <host>`.
+- If the key is not loaded yet: `ssh -T git@github.com`, which loads only that
+  key. `ssh-add` with no arguments works too, but loads every default key.
+- To see what the agent holds: `ssh-add -l`.
+
 ## License
 
 MIT — the rest of the dotfiles repository is Apache-2.0, so this directory
