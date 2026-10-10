@@ -152,6 +152,75 @@ EOF
     [ "$(jq -r .theme "${AGENT}/settings.json")" = "dark" ]
 }
 
+# --- resources written here ---
+#
+# Extensions, themes and prompt templates kept under pi/ are linked one entry at
+# a time. The directories themselves are not links: herdr and moshi-hook put
+# their own extensions next to ours, and /settings-made themes must not end up
+# in the repository.
+
+resources() {
+    mkdir -p "${FAKE}/pi/extensions/gate" "${FAKE}/pi/themes" "${FAKE}/pi/prompts"
+    echo 'export default () => {}' > "${FAKE}/pi/extensions/hello.ts"
+    echo 'export default () => {}' > "${FAKE}/pi/extensions/gate/index.ts"
+    echo '{ "name": "night" }' > "${FAKE}/pi/themes/night.json"
+    echo 'Review this' > "${FAKE}/pi/prompts/review.md"
+}
+
+@test "extensions are linked one by one, single files and directories alike" {
+    resources
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${AGENT}/extensions/hello.ts")" = "${FAKE}/pi/extensions/hello.ts" ]
+    [ "$(readlink "${AGENT}/extensions/gate")" = "${FAKE}/pi/extensions/gate" ]
+    [ ! -L "${AGENT}/extensions" ]
+}
+
+@test "themes and prompt templates are linked too" {
+    resources
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${AGENT}/themes/night.json")" = "${FAKE}/pi/themes/night.json" ]
+    [ "$(readlink "${AGENT}/prompts/review.md")" = "${FAKE}/pi/prompts/review.md" ]
+}
+
+@test "what other tools put in the extensions directory is left alone" {
+    resources
+    mkdir -p "${AGENT}/extensions"
+    echo 'herdr' > "${AGENT}/extensions/herdr-agent-state.ts"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ "$(cat "${AGENT}/extensions/herdr-agent-state.ts")" = "herdr" ]
+}
+
+@test "running again changes nothing" {
+    resources
+    bash "${SETUP}"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${AGENT}/extensions/gate")" = "${FAKE}/pi/extensions/gate" ]
+    [ ! -e "${FAKE}/pi/extensions/gate/gate" ]
+}
+
+@test "a link left behind by something removed from pi/ is cleaned up" {
+    resources
+    bash "${SETUP}"
+    rm "${FAKE}/pi/extensions/hello.ts" "${FAKE}/pi/themes/night.json"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ ! -L "${AGENT}/extensions/hello.ts" ]
+    [ ! -L "${AGENT}/themes/night.json" ]
+    [ -L "${AGENT}/extensions/gate" ]
+}
+
+@test "a broken link that points somewhere else is not ours to remove" {
+    mkdir -p "${AGENT}/extensions"
+    ln -s "${BATS_TEST_TMPDIR}/elsewhere.ts" "${AGENT}/extensions/elsewhere.ts"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ -L "${AGENT}/extensions/elsewhere.ts" ]
+}
+
 # --- user instructions ---
 
 @test "Claude Code's user instructions are what pi reads too" {
@@ -198,6 +267,39 @@ EOF
     while read -r source; do
         [[ ${source} =~ ^npm:@?[^@]+@[0-9][^@]*$ ]] || { echo "unpinned: ${source}"; return 1; }
     done <<< "$output"
+}
+
+@test "every host's theme is one the repository ships, under its own name" {
+    for f in "${REPO}"/pi/settings*.json; do
+        theme=$(jq -r '.theme // empty' "$f")
+        [ -n "${theme}" ] || continue
+        [ -f "${REPO}/pi/themes/${theme}.json" ] || { echo "$f: ${theme}"; return 1; }
+    done
+    for f in "${REPO}"/pi/themes/*.json; do
+        [ "$(jq -r .name "$f")" = "$(basename "$f" .json)" ] || { echo "$f"; return 1; }
+    done
+}
+
+@test "each host gets the palette its terminal and Claude Code use" {
+    [ "$(jq -r .theme "${REPO}/pi/settings.json")" = "solarized" ]
+    [ "$(jq -r .theme "${REPO}/pi/settings.anietta.json")" = "gruvbox" ]
+    [ "$(jq -r .theme "${REPO}/pi/settings.boucherie.json")" = "tokyonight" ]
+}
+
+@test "the themes are valid for the pi that is pinned" {
+    require node
+    rm "${FAKE_BIN}/pi"
+    command -v pi > /dev/null || skip "pi is not installed"
+    # pi is dist/bundle/cli.js inside its package.
+    local pi_root
+    pi_root=$(cd "$(dirname "$(readlink -f "$(command -v pi)")")/../.." && pwd)
+    run node --input-type=module -e '
+        const root = process.argv[1];
+        const { validateThemeJson } = await import(root + "/dist/modes/interactive/theme/theme-json.js");
+        const fs = await import("node:fs");
+        for (const f of process.argv.slice(2)) validateThemeJson(f, JSON.parse(fs.readFileSync(f, "utf8")));
+    ' "${pi_root}" "${REPO}"/pi/themes/*.json
+    [ "$status" -eq 0 ]
 }
 
 @test "web search goes to the fleet's SearXNG and nowhere else" {

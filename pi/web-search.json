@@ -1,0 +1,11 @@
+{
+  "provider": "searxng",
+  "searxngBaseUrl": "http://searxng.searxng.svc.fraction.cluster",
+  "ssrf": {
+    "allowRanges": ["10.254.0.0/24"]
+  },
+  "fetchRouting": {
+    "providers": ["http", "jina"],
+    "allowRemoteHostedProviders": true
+  }
+}

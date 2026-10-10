@@ -26,6 +26,15 @@
 - テストは `test/`。リポジトリ全体のテストは root で `bats -r .` を実行する
   (`test/` と `devbox/proxy/test/` の両方が走る)。
 
+## pi/
+
+pi coding agent の設定。`bin/setup-pi.sh` (`bin/setup.sh` から呼んでいる) が
+`~/.pi/agent` へマージ・symlink する。置き方は `pi/README.md`。
+
+- pi 本体の版の正は `devbox/Dockerfile` の `ARG PI_VERSION`。
+- パッケージは `pi/settings.json` の `packages` に版付きで書く
+  (`renovate.json` の regex マネージャが追う)。
+
 ## devbox/
 
 開発環境の Docker イメージ。旧 `yuanying/devbox` リポジトリを取り込んだもので、

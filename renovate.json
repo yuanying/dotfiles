@@ -36,6 +36,17 @@
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s+\\w+_IMAGE\\s*:?=\\s*[^\\s:]+:(?<currentValue>\\S+)"
       ],
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}docker{{/if}}"
+    },
+    {
+      "description": "Update the pinned `npm:<package>@<version>` pi packages in pi/settings.json",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "pi/settings.json"
+      ],
+      "matchStrings": [
+        "\"npm:(?<depName>@?[^@\"\\s]+)@(?<currentValue>[^\"\\s]+)\""
+      ],
+      "datasourceTemplate": "npm"
     }
   ],
   "packageRules": [
