@@ -1,0 +1,17 @@
+{
+  "allow": [
+    "^(?![\\s\\S]*[\\r\\n;$`\\\\|&<>()])(?![\\s\\S]*/\\.\\.(?:/|[ \\t]|$))git[ \\t]+-C[ \\t]+/[A-Za-z0-9_./:@%+=,-]+[ \\t]+worktree[ \\t]+remove[ \\t]+(['\"]?)__HOME_REGEX__/\\.local/state/herdr-tasks/[A-Za-z0-9_#-]+/worktrees/[A-Za-z0-9_-]+\\1[ \\t]*(?![\\s\\S])",
+    "^(?:herdr|/usr/local/bin/herdr)[ \\t]+tab[ \\t]+close[ \\t]+w[A-Za-z0-9]+:t[A-Za-z0-9]+[ \\t]*(?![\\s\\S])",
+    "^(?![\\s\\S]*[\\r\\n;$`\\\\|&<>()])(?:herdr|/usr/local/bin/herdr)[ \\t]+(?:workspace[ \\t]+(?:list|create|get|focus|rename|report-metadata)|tab[ \\t]+(?:list|create|get|focus|rename)|agent[ \\t]+(?:list|get|read|send-keys|prompt|rename|focus|wait|start|explain)|pane[ \\t]+(?:list|current|get|layout|process-info|neighbor|edges|focus|resize|zoom|read|rename|split|swap|move|send-keys|wait-output)|worktree[ \\t]+list)(?:[ \\t]+(?:[A-Za-z0-9_./:@%+=,#-]+|'[^'\\r\\n]*'|\"[^\"\\r\\n]*\"))*[ \\t]*(?![\\s\\S])",
+    "^(?![\\s\\S]*[\\r\\n;$`\\\\|&<>()])(?:herdr-task-worktree|~/bin/herdr-task-worktree|__HOME_REGEX__/bin/herdr-task-worktree)(?:[ \\t]+(?:[A-Za-z0-9_./:@%+=,#-]+|'[^'\\r\\n]*'|\"[^\"\\r\\n]*\"))+[ \\t]*(?![\\s\\S])"
+  ],
+  "denyPaths": [
+    "~/.ssh/",
+    "~/.profile",
+    "~/.gnupg",
+    "~/.mc",
+    "~/.zshrc",
+    "~/.bashrc"
+  ],
+  "builtinDenyFloor": true
+}
