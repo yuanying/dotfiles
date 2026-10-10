@@ -35,13 +35,19 @@ Every shell shares that one agent, and it outlives the shell that started it.
 An agent that is already reachable — one forwarded from a Mac with `ssh -A` —
 is left in place.
 
-`sshconfig` sets `AddKeysToAgent yes` for `github.com` only, so the first
-`git fetch` puts the key GitHub accepted — one of the default `~/.ssh/id_*` —
-into the agent, and that is the only key a host you forward the agent to can
-use.
+When it starts the agent, it also loads the GitHub key: the first of the
+default `~/.ssh/id_*` that exists, which is the one ssh tries first for
+`github.com`. So the key is there right after the container restarts. Only
+that key is loaded, and it is the only key a host you forward the agent to can
+use. A key with a passphrase is skipped rather than asked for. An agent that
+was already running, or a forwarded one, is not touched.
+
+`sshconfig` also sets `AddKeysToAgent yes` for `github.com` only, so if the
+key is missing, the first `git fetch` puts the key GitHub accepted into the
+agent.
 
 - To use GitHub from a host you log in to, such as a Pod: `ssh -A <host>`.
-- If the key is not loaded yet: `ssh -T git@github.com`, which loads only that
+- If the key is not loaded: `ssh -T git@github.com`, which loads only that
   key. `ssh-add` with no arguments works too, but loads every default key.
 - To see what the agent holds: `ssh-add -l`.
 
