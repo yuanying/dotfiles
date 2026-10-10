@@ -8,6 +8,7 @@
 | 設定 | `settings.json`、ホスト別は `settings.<hostname>.json` | 手元 < 共通 < ホスト別 の順に jq でマージ。pi が書き戻すので symlink にしない |
 | キーバインド | `keybindings.json`、ホスト別は `keybindings.<hostname>.json` | 設定と同じ順でマージ |
 | Web 検索 (pi-web-access) | `web-search.json`、ホスト別は `web-search.<hostname>.json` | 同上。pi-web-access も書き戻す |
+| auto mode の許可ポリシー (pi-verdict) | `config/pi-verdict.json`、ホスト別は `config/pi-verdict.<hostname>.json` | コピーしてマージ。`allow` は管理値で置換、`deny` / `denyPaths` は手元・共通・ホスト別の和集合 |
 | パッケージ (他人の extension) | `settings.json` の `packages` に `npm:<名前>@<版>` で書く | マージの後に `pi install` で入れる。版は Renovate が追う |
 | 自作の extension | `extensions/` に単体の `.ts` か、`index.ts` を持つディレクトリ | 1 つずつ symlink |
 | テーマ | `themes/<名前>.json` (`name` はファイル名と同じ) | 1 つずつ symlink。どれを使うかは各ホストの `settings` の `theme` |
@@ -42,6 +43,51 @@
 - `auth.json` とセッションはホストごとのまま。ログインは各ホストで `/login` を 1 回。
 - 本体の版は `devbox/Dockerfile` の `ARG PI_VERSION`。Mac では
   `bin/mac/setup-packages.sh` がそれを読んで同じ版を npm で入れる。
+
+## herdr と auto mode
+
+`pi-verdict` の `allow` で herdr の一覧・参照、workspace/tab の作成・移動、
+agent の起動・プロンプト送信などを分類器を通さず許可する。起動・送信は
+別 agent に作業を委譲する権限も含む。後片付け用の `herdr tab close <tab-id>` も、
+`w14:t2` のような明示的な tab ID を1つ指定した単独コマンドに限り許可する。
+これは指定した tab のセッションを終了する権限を含み、完了済みかどうかは
+ルールでは判定しない。workspace の close や許可対象外の削除、`pane run` / `send-text`、
+更新、直接の `herdr worktree create/remove` はこの許可に含めない。
+許可されない操作は通常の判定に戻るため、確認ではなく拒否される場合もある。
+
+ルールはコマンド全体に一致させる。複合コマンド、改行、リダイレクト、
+変数展開・コマンド置換・バックスラッシュを含むものは通常の判定に戻す。
+引数は値を展開して単独のコマンドで渡す。保護パスや組み込みの危険操作判定は
+許可ルールより優先し、auto mode 全体は無効にしない。
+
+worktree は次のラッパーを使う (`bin/setup-pi.sh` が `~/bin` にリンクする)。
+許可ルールの `__HOME_REGEX__` は setup 時に、その環境の `$HOME` を正規表現用に
+エスケープした値へ置換する。`~/bin/herdr-task-worktree` に加えて展開済みの
+絶対パスも許可するが、別ユーザーのホーム配下には許可を広げない。
+
+```bash
+~/bin/herdr-task-worktree --repo /absolute/repo \
+  --path /absolute/home/.local/state/herdr-tasks/task/worktrees/branch \
+  --branch feature-branch --base <base-sha>
+```
+
+後片付けの `git -C /absolute/repo worktree remove <path>` は、削除先が展開済みの
+`$HOME/.local/state/herdr-tasks/<task>/worktrees/<branch>` と一致する場合だけ許可する。
+`task` は英数字・`_`・`#`・`-`、`branch` は英数字・`_`・`-` の単一要素に限定し、
+削除先の引用符は使用できる。`--force`、追加引数、`..`、範囲外の削除は許可しない。
+未コミット変更の保護は Git の通常の判定に任せる。このルールは文字列の範囲を
+制限するもので、削除先の祖先 symlink の実体までは検証しない。
+
+作成先は `~/.local/state/herdr-tasks/<task>/worktrees/` の下に限定し、
+パストラバーサル・外へ向かう symlink・既存の作成先を拒否する。新規ブランチの
+作成だけを行い、tab 作成は別途 `herdr tab create` で行う。ラッパーやポリシーは
+OS サンドボックスではない。並行した symlink の差し替えなど、同じユーザーの
+悪意あるプロセスまで隔離するものではない。
+
+**許可設定の反映は pi を終了し、pi 外のシェルで `bin/setup-pi.sh` を実行してから
+再起動する。** pi-verdict は自身の設定変更を保護しているため、この操作を
+agent に実行させない。手元の `deny` / `denyPaths` や分類器の設定は残るが、
+`allow` は dotfiles の管理値に置き換わる。追加ルールは共通またはホスト別に書く。
 
 自作の extension を足したら、各ホストで `bin/setup-pi.sh` を流すか (devbox は
 起動時に流れる)、既に張ってあるものを直しただけなら pi で `/reload` する。

@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Create a new-branch worktree only under ~/.local/state/herdr-tasks."""
+import argparse
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo", required=True)
+    parser.add_argument("--path", required=True)
+    parser.add_argument("--branch", required=True)
+    parser.add_argument("--base", required=True)
+    args = parser.parse_args()
+
+    # Check both lexical and real paths: symlinked ancestors must not escape.
+    root = Path.home() / ".local/state/herdr-tasks"
+    target = Path(os.path.abspath(os.path.expanduser(args.path)))
+    try:
+        relative = target.relative_to(root)
+        if len(relative.parts) < 3 or relative.parts[1] != "worktrees":
+            raise ValueError("expected <task>/worktrees/<checkout>")
+        if root.resolve() != root or not target.resolve().is_relative_to(root):
+            raise ValueError("symlink escapes the task directory")
+        if target.exists() or target.is_symlink():
+            raise ValueError("destination already exists")
+        repo = Path(args.repo).expanduser().resolve(strict=True)
+        subprocess.run(["git", "check-ref-format", "--branch", args.branch],
+                       check=True, stdout=subprocess.DEVNULL)
+        if args.branch.startswith("-") or args.base.startswith("-"):
+            raise ValueError("branch and base must not be options")
+        base = subprocess.check_output(
+            ["git", "-C", str(repo), "rev-parse", "--verify", "--end-of-options",
+             args.base + "^{commit}"], text=True).strip()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        # No shell, arbitrary extra flags, force, removal or repository-trust bypass.
+        subprocess.run(["git", "-C", str(repo), "worktree", "add", "-b",
+                        args.branch, str(target), base], check=True)
+    except (ValueError, OSError, subprocess.CalledProcessError) as error:
+        print(f"herdr-task-worktree: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

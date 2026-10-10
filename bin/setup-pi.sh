@@ -33,6 +33,38 @@ else
     merge_json keybindings
     merge_json web-search
     merge_json subscription-usage
+
+    # Permission policy: run setup outside pi. pi-verdict protects its own config
+    # against agent writes. Never symlink it to an agent-editable checkout.
+    if [[ -f ${PI_DIR}/config/pi-verdict.json ]]; then
+        mkdir -p "${AGENT_DIR}/config"
+        target=${AGENT_DIR}/config/pi-verdict.json
+        common=${PI_DIR}/config/pi-verdict.json
+        host=${PI_DIR}/config/pi-verdict.${HOST}.json
+        [[ -f ${host} ]] || host=${common}
+        [[ -f ${target} ]] || echo '{}' > "${target}"
+        # Managed allow rules replace local ones; local deny/protected paths
+        # survive, and repository/host protections can only add to them.
+        # Expand only the explicit template token, escaping HOME as a regex
+        # literal so dots, brackets, etc. cannot broaden the allowed path.
+        jq -s --arg home "${HOME}" '
+            ($home | split("") | map(
+                . as $char | if (["\\", ".", "^", "$", "|", "?", "*", "+", "(", ")", "[", "]", "{", "}"] | index($char)) != null
+                then "\\" + $char else $char end
+            ) | join("")) as $homeRegex |
+            (.[0] * .[1] * .[2] + {
+                deny: ([.[].deny[]?] | unique),
+                denyPaths: ([.[].denyPaths[]?] | unique)
+            }) | .allow |= map(split("__HOME_REGEX__") | join($homeRegex))
+        ' "${target}" "${common}" "${host}" \
+            > "${target}.tmp" && mv -f "${target}.tmp" "${target}"
+    fi
+fi
+
+# Validates the worktree destination before invoking git; agents use ~/bin.
+if [[ -f ${ROOT}/bin/herdr-task-worktree ]]; then
+    mkdir -p "${HOME}/bin"
+    ln -sfn "${ROOT}/bin/herdr-task-worktree" "${HOME}/bin/herdr-task-worktree"
 fi
 
 # 自作の extension / テーマ / プロンプトテンプレート。ディレクトリごとではなく
