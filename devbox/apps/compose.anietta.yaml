@@ -57,15 +57,9 @@ services:
       - per_layer_token_embd\.weight=CPU
       - -lm
       - none
+      # The model's native length. Stretching it with YaRN to 393216 left the
+      # host too little RAM, and the OOM killer kept taking the server down.
       - -c
-      - "393216"
-      - --override-kv
-      - qwen4exp.context_length=int:393216
-      - --rope-scaling
-      - yarn
-      - --rope-scale
-      - "2"
-      - --yarn-orig-ctx
       - "262144"
       - -np
       - "2"
@@ -79,9 +73,9 @@ services:
       - -ctv
       - q8_0
       - -b
-      - "4096"
+      - "2048"
       - -ub
-      - "4096"
+      - "2048"
       - --min-p
       - "0"
       - --jinja
