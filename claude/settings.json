@@ -3,7 +3,7 @@
     "type": "command",
     "command": "~/.claude/statusline-command.sh"
   },
-  "tui": "fullscreen",
+  "tui": "default",
   "theme": "custom:solarized",
   "agentPushNotifEnabled": true,
   "permissions": {
