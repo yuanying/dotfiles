@@ -14,6 +14,8 @@
 | プロンプトテンプレート | `prompts/*.md` | 1 つずつ symlink |
 | ユーザー指示 | `AGENTS.md` | `~/.pi/agent/AGENTS.md` へ symlink (既存の手書きファイルや他所へのリンクは上書きしない) |
 
+- TUI は `regular` モードを使う。会話を端末のスクロールバックに残し、
+  herdr のコピーモードや `prefix+e` で読み返せるようにする。
 - 選択リストは矢印キーに加えて `Ctrl+p` / `Ctrl+n` で上下移動する。
   競合する既定キーは、モデルの次 / 前を `Alt+n` / `Alt+p`、
   `/resume` のパス表示 / 名前付きフィルタを `Alt+p` / `Alt+n`、
