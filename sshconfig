@@ -27,3 +27,7 @@ Host github.com
   Port 443
   User git
   IdentitiesOnly yes
+  # 使った鍵を agent に載せる。devbox から `ssh -A` で入った先でも GitHub に
+  # 入れるようにするため。全体ではなくここだけにして、転送先に渡る鍵を
+  # GitHub の鍵に絞る。
+  AddKeysToAgent yes
