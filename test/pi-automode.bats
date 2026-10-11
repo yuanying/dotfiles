@@ -41,7 +41,7 @@ setup() {
     [ "$status" -eq 0 ]
     cmp "$LEGACY" "${BATS_TEST_TMPDIR}/legacy.json"
     jq -e '.autoMode.deniedPaths | index("~/private") != null and index("~/private/*") != null and index("~/.local-secret") != null' "$TARGET"
-    jq -e '.permissions.allow == ["web_enable"] and (.autoMode | has("classifierModel") | not)' "$TARGET"
+    jq -e --slurpfile common "$FAKE/pi/config/pi-automode.json" '.permissions.allow == ["web_enable"] and .autoMode.classifierModel == $common[0].autoMode.classifierModel' "$TARGET"
     jq -e '.lastChangelogVersion == "local" and (.packages | any(startswith("npm:@czottmann/pi-automode@"))) and (.packages | any(startswith("npm:pi-verdict")) | not)' "$AGENT/settings.json"
 }
 
@@ -66,13 +66,13 @@ setup() {
     cmp "$AGENT/settings.json" "${BATS_TEST_TMPDIR}/before.json"
 }
 
-@test "local protections and classifier selection survive common and host merges" {
+@test "local protections survive while common and host choose the classifier" {
     mkdir -p "$(dirname "$TARGET")"
     echo '{"autoMode":{"classifierModel":"local/model","deniedPaths":["~/private/*"],"hard_deny":["local policy"],"soft_deny":["local soft policy"],"protectedPaths":["local-control"]},"permissions":{"deny":["bash(local*)"],"ask":["bash(review*)"],"allow":["old"]}}' > "$TARGET"
     echo '{"autoMode":{"classifierReasoningLevel":"low","deniedPaths":["~/host/*"],"hard_deny":["host policy"]},"permissions":{"deny":["bash(host*)"],"ask":["bash(host-review*)"]}}' > "$FAKE/pi/config/pi-automode.testhost.json"
     run bash "$FAKE/bin/setup-pi.sh"
     [ "$status" -eq 0 ]
-    jq -e '.autoMode.classifierModel == "local/model" and .autoMode.classifierReasoningLevel == "low" and (.autoMode.deniedPaths | index("~/private/*") != null and index("~/host/*") != null) and (.autoMode.hard_deny | index("local policy") != null and index("host policy") != null and index("$defaults") != null) and (.autoMode.soft_deny | index("local soft policy") != null) and (.autoMode.protectedPaths | index("local-control") != null)' "$TARGET"
+    jq -e --slurpfile common "$FAKE/pi/config/pi-automode.json" '.autoMode.classifierModel == $common[0].autoMode.classifierModel and .autoMode.classifierReasoningLevel == "low" and (.autoMode.deniedPaths | index("~/private/*") != null and index("~/host/*") != null) and (.autoMode.hard_deny | index("local policy") != null and index("host policy") != null and index("$defaults") != null) and (.autoMode.soft_deny | index("local soft policy") != null) and (.autoMode.protectedPaths | index("local-control") != null)' "$TARGET"
     jq -e '.permissions.deny == ["bash(host*)", "bash(local*)"] and .permissions.ask == ["bash(host-review*)", "bash(review*)"] and .permissions.allow == ["web_enable"]' "$TARGET"
     echo '{"autoMode":{"classifierModel":"host/model"}}' > "$FAKE/pi/config/pi-automode.testhost.json"
     run bash "$FAKE/bin/setup-pi.sh"

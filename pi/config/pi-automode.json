@@ -3,6 +3,7 @@
     "enabled": true,
     "classifyReadOnlyTools": false,
     "allowInsideWorkingDirectory": false,
+    "classifierModel": "openai-codex/gpt-6-luna",
     "soft_deny": ["$defaults"],
     "hard_deny": ["$defaults"],
     "protectedPaths": ["$defaults"],

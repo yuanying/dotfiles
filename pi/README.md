@@ -50,7 +50,9 @@
 `@czottmann/pi-automode` を使う。読み取りツールは原則モデル判定なし、書き込みと
 シェル操作は標準ポリシーによる判定に任せる。`allowInsideWorkingDirectory` は
 `false` のままにし、作業ディレクトリ内の編集も判定を省略しない。
-分類器のモデルは未指定ならセッションモデル。`/automode model` で選択できる。
+分類器のモデルは `classifierModel` で `openai-codex/gpt-6-luna` に固定する。
+各ホストで `/login openai-codex` が必要。`/automode model` で選び直した値は、
+次の setup でリポジトリの値に上書きされる。
 `/automode status`、`/automode config`、`/automode denials` で状態を確認する。
 
 `web_enable` だけを `permissions.allow` で自動許可する。設定済み Web ツールの
