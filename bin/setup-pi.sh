@@ -29,37 +29,57 @@ merge_json() { # <ファイル名 (拡張子なし)>
 if ! command -v jq > /dev/null; then
     echo "jq が無いので ${AGENT_DIR} の設定のマージをスキップした" >&2
 else
+    # Legacy regex denies have no equivalent in pi-automode's tool patterns.
+    # Stop before changing package declarations rather than silently drop them.
+    legacy=${AGENT_DIR}/config/pi-verdict.json
+    # pi-automode 1.17 reads this fixed HOME path, not PI_CODING_AGENT_DIR.
+    automode=${HOME}/.pi/agent/extensions/pi-automode/config.json
+    if [[ -f ${PI_DIR}/config/pi-automode.json && ! -f ${automode} && -f ${legacy} ]]; then
+        if ! jq -e '(.deny // []) | length == 0' "${legacy}" > /dev/null; then
+            echo "pi-verdict の deny を手動で移行して ${automode} を作成してから再実行してください" >&2
+            exit 1
+        fi
+    fi
+
+    # Safety configuration is copied, never linked to an agent-editable checkout.
+    # Run setup outside pi. Preserve local restrictions and classifier selection.
+    if [[ -f ${PI_DIR}/config/pi-automode.json ]]; then
+        mkdir -p "$(dirname "${automode}")"
+        target=${automode}
+        common=${PI_DIR}/config/pi-automode.json
+        host=${PI_DIR}/config/pi-automode.${HOST}.json
+        [[ -f ${host} ]] || host=${common}
+        [[ -f ${target} ]] || echo '{}' > "${target}"
+        # Read (but never change) the old policy to retain protected paths.
+        # A legacy protected path asked the user; the new glob blocks file tools.
+        local_legacy=${legacy}
+        [[ -f ${local_legacy} ]] || local_legacy=${target}
+        if ! jq -s '
+            . as $inputs |
+            ($inputs[0] * $inputs[1] * $inputs[2]) |
+            .autoMode.deniedPaths = (
+                ([$inputs[0:3][].autoMode.deniedPaths[]?] +
+                 [$inputs[3].denyPaths[]? | rtrimstr("/") | ., (. + "/*")]) | unique
+            ) |
+            .permissions.deny = ([$inputs[0:3][].permissions.deny[]?] | unique) |
+            .permissions.ask = ([$inputs[0:3][].permissions.ask[]?] | unique) |
+            reduce ["soft_deny", "hard_deny", "protectedPaths"][] as $key (.;
+                if any($inputs[0:3][]; (.autoMode // {}) | has($key)) then
+                    .autoMode[$key] = ([$inputs[0:3][].autoMode[$key][]?] | unique)
+                else . end
+            )
+        ' "${target}" "${common}" "${host}" "${local_legacy}" > "${target}.tmp"; then
+            rm -f "${target}.tmp"
+            echo "pi-automode 設定のマージに失敗したためパッケージの切り替えを中止した" >&2
+            exit 1
+        fi
+        mv -f "${target}.tmp" "${target}" || exit 1
+    fi
+
     merge_json settings
     merge_json keybindings
     merge_json web-search
     merge_json subscription-usage
-
-    # Permission policy: run setup outside pi. pi-verdict protects its own config
-    # against agent writes. Never symlink it to an agent-editable checkout.
-    if [[ -f ${PI_DIR}/config/pi-verdict.json ]]; then
-        mkdir -p "${AGENT_DIR}/config"
-        target=${AGENT_DIR}/config/pi-verdict.json
-        common=${PI_DIR}/config/pi-verdict.json
-        host=${PI_DIR}/config/pi-verdict.${HOST}.json
-        [[ -f ${host} ]] || host=${common}
-        [[ -f ${target} ]] || echo '{}' > "${target}"
-        # Managed allow rules replace local ones; local deny/protected paths
-        # survive, and repository/host protections can only add to them.
-        # Expand only the explicit template token, escaping HOME as a regex
-        # literal so dots, brackets, etc. cannot broaden the allowed path.
-        jq -s --arg home "${HOME}" '
-            ($home | split("") | map(
-                . as $char | if (["\\", ".", "^", "$", "|", "?", "*", "+", "(", ")", "[", "]", "{", "}"] | index($char)) != null
-                then "\\" + $char else $char end
-            ) | join("")) as $homeRegex |
-            (.[0] * .[1] * .[2] + {
-                deny: ([.[].deny[]?] | unique),
-                denyPaths: ([.[].denyPaths[]?] | unique),
-                ignoreTools: ([.[].ignoreTools[]?] | unique)
-            }) | .allow |= map(split("__HOME_REGEX__") | join($homeRegex))
-        ' "${target}" "${common}" "${host}" \
-            > "${target}.tmp" && mv -f "${target}.tmp" "${target}"
-    fi
 fi
 
 # Validates the worktree destination before invoking git; agents use ~/bin.
