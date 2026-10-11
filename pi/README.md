@@ -9,7 +9,7 @@
 | キーバインド | `keybindings.json`、ホスト別は `keybindings.<hostname>.json` | 設定と同じ順でマージ |
 | Web 検索 (pi-web-access) | `web-search.json`、ホスト別は `web-search.<hostname>.json` | 同上。pi-web-access も書き戻す |
 | auto mode (pi-automode) | `config/pi-automode.json`、ホスト別は `config/pi-automode.<hostname>.json` | `~/.pi/agent/extensions/pi-automode/config.json` へコピーしてマージ。詳細は下記 |
-| パッケージ (他人の extension) | `settings.json` の `packages` に `npm:<名前>@<版>` で書く | マージの後に `pi install` で入れる。版は Renovate が追う |
+| パッケージ (他人の extension) | `settings.json` の `packages` に `npm:<名前>@<版>` で書く | マージの後に `pi install` で入れる。版は Renovate が追う。詳細は下記 |
 | 自作の extension | `extensions/` に単体の `.ts` か、`index.ts` を持つディレクトリ | 1 つずつ symlink |
 | テーマ | `themes/<名前>.json` (`name` はファイル名と同じ) | 1 つずつ symlink。どれを使うかは各ホストの `settings` の `theme` |
 | プロンプトテンプレート | `prompts/*.md` | 1 つずつ symlink |
@@ -39,6 +39,11 @@
   手書きの `CLAUDE.md` や他所へのリンクは残す。
 - `PI_CODING_AGENT_DIR` があれば設定・リンク先を変更する。ただし pi-automode は
   現在この変数を参照しないため、その設定だけは固定の `~/.pi/agent` 配下へ置く。
+- マージは配列を丸ごと置き換えるので、手元で `pi install` しただけのパッケージ宣言は
+  次の setup で消える。ホスト固有のパッケージは `settings.<hostname>.json` の
+  `packages` に共通の分も含めて全部書く (Renovate はこちらの版も追う)。
+  setup が `pi install` するのは共通の `settings.json` の分だけなので、
+  ホスト固有のものは初回だけ手で `pi install` する。
 - `extensions/` を丸ごと symlink にしないのは、`herdr integration install pi` と
   `moshi-hook install` が同じディレクトリに自分のファイルを置くため。
 - `auth.json` とセッションはホストごとのまま。ログインは各ホストで `/login` を 1 回。
