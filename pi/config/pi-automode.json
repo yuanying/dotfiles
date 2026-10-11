@@ -1,0 +1,19 @@
+{
+  "autoMode": {
+    "enabled": true,
+    "classifyReadOnlyTools": false,
+    "allowInsideWorkingDirectory": false,
+    "soft_deny": ["$defaults"],
+    "hard_deny": ["$defaults"],
+    "protectedPaths": ["$defaults"],
+    "deniedPaths": [
+      "~/.ssh", "~/.ssh/*",
+      "~/.gnupg", "~/.gnupg/*",
+      "~/.mc", "~/.mc/*",
+      "~/.profile", "~/.zshrc", "~/.bashrc"
+    ]
+  },
+  "permissions": {
+    "allow": ["web_enable"]
+  }
+}

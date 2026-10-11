@@ -381,6 +381,6 @@ resources() {
         console.log(found.sort().join("\n"));
     ' "${REPO}"
     [ "$status" -eq 0 ]
-    expected=$(jq -r '.packages[] | if type == "string" then . else .source end | sub("^npm:"; "")' "${REPO}/pi/settings.json" | sort)
+    expected=$(jq -r '.packages[] | if type == "string" then . else .source end | sub("^npm:"; "")' "${REPO}/pi/settings.json" | LC_ALL=C sort)
     [ "$output" = "$expected" ]
 }
