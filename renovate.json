@@ -38,10 +38,11 @@
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}docker{{/if}}"
     },
     {
-      "description": "Update the pinned `npm:<package>@<version>` pi packages in pi/settings.json",
+      "description": "Update the pinned `npm:<package>@<version>` pi packages in pi/settings.json and the host-specific pi/settings.<hostname>.json",
       "customType": "regex",
       "managerFilePatterns": [
-        "pi/settings.json"
+        "pi/settings.json",
+        "pi/settings.*.json"
       ],
       "matchStrings": [
         "\"npm:(?<depName>@?[^@\"\\s]+)@(?<currentValue>[^\"\\s]+)\""
