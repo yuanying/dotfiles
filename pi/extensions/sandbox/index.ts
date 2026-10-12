@@ -20,12 +20,14 @@ import {
 import { spawnInBwrap } from "./linux.ts";
 import { cleanupAfterMacosCommand, resetMacos, wrapForMacos } from "./macos.ts";
 import {
+	addAllowWrite,
 	buildPolicy,
 	changedPaths,
 	checkExcluded,
 	checkWrite,
 	coversHome,
 	type GitLayout,
+	grantTarget,
 	type MergedSettings,
 	mergeSettings,
 	type Policy,
@@ -38,6 +40,13 @@ const MESSAGE_TYPE = "sandbox";
 // background-bash.ts との受け渡し。リクエストの形は SpawnRequest。
 export const SPAWN_CHANNEL = "sandbox:spawn";
 export const UNCONFINED_JOBS_CHANNEL = "background-bash:unconfined-jobs";
+
+// 許可を問うダイアログ。答えが無ければこの時間で中止にする (許可はしない)。
+const PROMPT_TIMEOUT_MS = 10 * 60 * 1000;
+const CHOICE_ABORT = "中止 (書き込まない)";
+const CHOICE_SESSION = "このセッションだけ許可";
+const CHOICE_PROJECT = "このプロジェクトで許可 (.pi/sandbox.json に書く)";
+const CHOICE_GLOBAL = "すべてのプロジェクトで許可 (~/.pi/agent/extensions/sandbox.json に書く)";
 
 const DENIAL_NOTE =
 	"サンドボックスによる拒否なので、別の書き方や別の場所で回避しようとせず、何が拒否されたかをユーザーに伝えること。";
@@ -139,6 +148,9 @@ function looksDenied(output: string): boolean {
 export default function sandbox(pi: ExtensionAPI): void {
 	let state: State | undefined;
 	let ui: ExtensionContext["ui"] | undefined;
+	// 「このセッションだけ許可」した場所。メモリにだけ持ち、/sandbox off/on では残し、
+	// セッションの終了で消える。モデルからは触れない。
+	let sessionGrants: string[] = [];
 
 	pi.registerFlag("sandbox", { description: "サンドボックスを有効にして起動する", type: "boolean", default: false });
 	pi.registerFlag("no-sandbox", { description: "設定に関わらずサンドボックスを無効にして起動する", type: "boolean", default: false });
@@ -148,7 +160,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 			cwd: current.cwd,
 			home,
 			temp: ["/tmp", tmpdir()],
-			settings: current.settings,
+			settings: { ...current.settings, allowWrite: [...current.settings.allowWrite, ...sessionGrants] },
 			settingsFiles: current.settingsFiles,
 			git: current.git,
 		});
@@ -242,8 +254,46 @@ export default function sandbox(pi: ExtensionAPI): void {
 		const target = (event.input as { path?: unknown }).path;
 		if (typeof target !== "string") return { block: true, reason: "[sandbox] 書き込み先が読めない" };
 		const decision = checkWrite(policyFor(current), target, ctx.cwd, home);
-		if (!decision.allowed) return { block: true, reason: `[sandbox] ${decision.reason}。${DENIAL_NOTE}` };
+		if (decision.allowed) return;
+		if (decision.kind === "outside" && ctx.hasUI && (await askToAllow(ctx, decision.path))) {
+			const retry = state ? checkWrite(policyFor(state), target, ctx.cwd, home) : undefined;
+			if (!retry || retry.allowed) return;
+			return { block: true, reason: `[sandbox] ${retry.reason}。${DENIAL_NOTE}` };
+		}
+		return { block: true, reason: `[sandbox] ${decision.reason}。${DENIAL_NOTE}` };
 	});
+
+	/**
+	 * 許可した場所の外への書き込みを、ユーザーに許すか問う。許したら設定に足して
+	 * 読み直し、true を返す。禁止パス (denyWrite) への書き込みは問わずに拒む。
+	 */
+	async function askToAllow(ctx: ExtensionContext, path: string): Promise<boolean> {
+		const grant = grantTarget(path, home);
+		const choices = [CHOICE_ABORT, CHOICE_SESSION];
+		if (projectTrusted(ctx)) choices.push(CHOICE_PROJECT);
+		choices.push(CHOICE_GLOBAL);
+		const title = [
+			`サンドボックス: ${path} への書き込みは許可した場所の外にある。`,
+			`許可すると ${grant} ${grant === path ? "" : "以下"}に書き込めるようになる (bash からも)。`,
+		].join("\n");
+		const choice = await ctx.ui.select(title, choices, { timeout: PROMPT_TIMEOUT_MS });
+		if (choice === undefined || choice === CHOICE_ABORT) return false;
+		try {
+			if (choice === CHOICE_SESSION) {
+				if (!sessionGrants.includes(grant)) sessionGrants.push(grant);
+			} else {
+				addAllowWrite(choice === CHOICE_PROJECT ? projectSettingsPath(ctx.cwd) : globalSettingsPath(), grant);
+				const loaded = loadSettings(ctx);
+				if (!loaded.state) throw new Error(loaded.error ?? "設定を読み直せない");
+				if (state) state = loaded.state;
+			}
+		} catch (error) {
+			ctx.ui.notify(`許可を保存できない: ${error instanceof Error ? error.message : error}`, "error");
+			return false;
+		}
+		ctx.ui.notify(`${grant} への書き込みを許可した (${choice})`, "info");
+		return true;
+	}
 
 	pi.events.on(SPAWN_CHANNEL, (data) => {
 		const request = data as SpawnRequest;
@@ -347,6 +397,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 
 	pi.on("session_shutdown", async () => {
 		state = undefined;
+		sessionGrants = [];
 		ui = undefined;
 		if (process.platform === "darwin") await resetMacos().catch(() => {});
 	});

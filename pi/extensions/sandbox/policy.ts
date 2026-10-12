@@ -3,7 +3,18 @@
 // write / edit の書き込み先の判定、除外コマンドの判定を持つ。
 // 決定の経緯は docs/adr/0013。
 
-import { accessSync, constants, existsSync, lstatSync, readFileSync, realpathSync, statSync } from "node:fs";
+import {
+	accessSync,
+	constants,
+	existsSync,
+	lstatSync,
+	mkdirSync,
+	readFileSync,
+	realpathSync,
+	renameSync,
+	statSync,
+	writeFileSync,
+} from "node:fs";
 import { delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
 
 export type SandboxSettings = {
@@ -151,7 +162,7 @@ export type PolicyInput = {
 };
 
 export type Policy = {
-	/** 書き込みを許すパス (実体)。存在するものだけ */
+	/** 書き込みを許すパス (実体)。まだ無いものも含む (bwrap には存在するものだけ渡す) */
 	writable: string[];
 	/** 書き込みを禁じるパス (実体)。存在しないものも含む (後から作られたら警告する) */
 	denyWrite: string[];
@@ -169,7 +180,7 @@ export function buildPolicy(input: PolicyInput): Policy {
 	const { cwd, home, settings } = input;
 	const expand = (path: string) => realpathForWrite(expandPath(path, cwd, home));
 	const roots = unique([cwd, ...input.temp, ...settings.allowWrite].map(expand));
-	const writable = roots.filter((path) => existsSync(path));
+	const writable = [...roots];
 	// 保護する名前は、起動ディレクトリと設定で足した書き込み先の直下に置く。
 	// 一時ディレクトリはどこからも読まれないので外す。
 	const configured = unique([cwd, ...settings.allowWrite].map(expand));
@@ -197,17 +208,41 @@ export function buildPolicy(input: PolicyInput): Policy {
 	};
 }
 
-export type WriteDecision = { allowed: true; path: string } | { allowed: false; path: string; reason: string };
+/** 書き込めない理由。denied は禁止パス (確認せずに拒む)、outside は許可した場所の外 (許可を問える)。 */
+export type WriteDecision =
+	| { allowed: true; path: string }
+	| { allowed: false; path: string; kind: "denied" | "outside"; reason: string };
 
 /** write / edit の書き込み先を判定する。 */
 export function checkWrite(policy: Policy, target: string, cwd: string, home: string): WriteDecision {
 	const path = realpathForWrite(expandPath(target, cwd, home));
 	const denied = policy.denyWrite.find((dir) => isAtOrUnder(path, dir));
-	if (denied) return { allowed: false, path, reason: `${denied} はサンドボックスで書き込みを禁じている` };
+	if (denied) return { allowed: false, path, kind: "denied", reason: `${denied} はサンドボックスで書き込みを禁じている` };
 	if (!policy.writable.some((dir) => isAtOrUnder(path, dir))) {
-		return { allowed: false, path, reason: `${path} はサンドボックスで書き込みを許した場所の外にある` };
+		return { allowed: false, path, kind: "outside", reason: `${path} はサンドボックスで書き込みを許した場所の外にある` };
 	}
 	return { allowed: true, path };
+}
+
+/**
+ * 許可を問われたときに書き込みを許す範囲。書き込み先の親ディレクトリにする。
+ * 親が $HOME かその上なら、ホーム全体を開けないようにそのパスだけにする。
+ */
+export function grantTarget(path: string, home: string): string {
+	const parent = dirname(path);
+	return isAtOrUnder(home, parent) ? path : parent;
+}
+
+/** 設定ファイルの allowWrite に足す。他のキーはそのまま残す。 */
+export function addAllowWrite(file: string, path: string): void {
+	const current = readSettingsFile(file) ?? {};
+	const allowWrite = current.allowWrite ?? [];
+	if (allowWrite.includes(path)) return;
+	const updated = { ...current, allowWrite: [...allowWrite, path] };
+	mkdirSync(dirname(file), { recursive: true });
+	const temp = `${file}.tmp-${process.pid}`;
+	writeFileSync(temp, `${JSON.stringify(updated, null, 2)}\n`);
+	renameSync(temp, file);
 }
 
 /**

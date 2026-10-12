@@ -2,6 +2,7 @@
 // network.allowedDomains を渡さないので、プロキシは立たずネットワークは素通し。
 // devbox のテストでは通らない経路 (docs/adr/0013)。
 
+import { existsSync } from "node:fs";
 import type { Policy } from "./policy.ts";
 
 type Manager = {
@@ -17,7 +18,7 @@ let manager: Manager | undefined;
 function runtimeConfig(policy: Policy): unknown {
 	return {
 		network: { deniedDomains: [], allowAllUnixSockets: policy.allowAllUnixSockets },
-		filesystem: { denyRead: policy.denyRead, allowWrite: policy.writable, denyWrite: policy.denyWrite },
+		filesystem: { denyRead: policy.denyRead, allowWrite: policy.writable.filter((path) => existsSync(path)), denyWrite: policy.denyWrite },
 	};
 }
 

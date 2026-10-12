@@ -180,3 +180,35 @@ loses the wait.
   devbox's tests. The extension's `package.json` pulls it in, so
   `bin/setup-pi.sh` runs `npm ci` in the extension's directory and Renovate
   tracks the version.
+
+## Revision (2026-10-12): ask before refusing a write outside the allowlist
+
+The sandbox is now on by default and pi-automode off, so a write the allowlist
+does not cover (a herdr-tasks note under `~/.local/state`, a file in a sibling
+checkout) stops the task until the user edits a settings file outside the
+sandbox. pi-sandbox and @sysid/pi-sandbox-extended answer this with a prompt;
+this extension now does the same for `write` and `edit`.
+
+- **A write outside the allowlist asks** "abort", "allow for this session",
+  "allow for this project" or "allow for all projects". No answer in ten
+  minutes is "abort". Without a UI (`-p`, RPC without a client) nothing is
+  asked and the write is refused as before.
+- **What is granted is the target's parent directory**, or the target alone
+  when the parent is `$HOME` or above, so that one answer cannot open the whole
+  home directory. The grant applies to `bash` too from the next command.
+- **Session grants live in the extension's memory** and end with the session.
+  Project grants go to `.pi/sandbox.json` (offered only for a trusted
+  project, since an untrusted one's file is not read), global grants to
+  `~/.pi/agent/extensions/sandbox.json`. The extension writes them from the pi
+  process; the agent still cannot, both files being in `denyWrite`.
+- **Denied paths are never asked about.** `.git/hooks`, `.pi` and the rest stay
+  refused outright: allowing them is what the sandbox exists to prevent.
+- **`bash` is not asked about.** Its writes are refused by the kernel, and the
+  extension learns only that something failed, not which path.
+- **setup unites list settings** with what is already in the global file
+  instead of replacing them, so grants survive the next setup. An entry removed
+  from `pi/config/sandbox.json` is therefore not removed from a host that has
+  it; it is removed there by hand.
+- **A writable root need not exist.** Granted paths and configured ones are
+  checked for `write`/`edit` whether or not they exist yet; bubblewrap still
+  binds only those that do.
