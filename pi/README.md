@@ -9,8 +9,9 @@
 | キーバインド | `keybindings.json`、ホスト別は `keybindings.<hostname>.json` | 設定と同じ順でマージ |
 | Web 検索 (pi-web-access) | `web-search.json`、ホスト別は `web-search.<hostname>.json` | 同上。pi-web-access も書き戻す |
 | auto mode (pi-automode) | `config/pi-automode.json`、ホスト別は `config/pi-automode.<hostname>.json` | `~/.pi/agent/extensions/pi-automode/config.json` へコピーしてマージ。詳細は下記 |
+| サンドボックス | `config/sandbox.json`、ホスト別は `config/sandbox.<hostname>.json` | `~/.pi/agent/extensions/sandbox.json` へコピーしてマージ。詳細は下記 |
 | パッケージ (他人の extension) | `settings.json` の `packages` に `npm:<名前>@<版>` で書く | マージの後に `pi install` で入れる。版は Renovate が追う。詳細は下記 |
-| 自作の extension | `extensions/` に単体の `.ts` か、`index.ts` を持つディレクトリ | 1 つずつ symlink |
+| 自作の extension | `extensions/` に単体の `.ts` か、`index.ts` を持つディレクトリ | 1 つずつ symlink。`package-lock.json` を持つものには `npm ci` |
 | テーマ | `themes/<名前>.json` (`name` はファイル名と同じ) | 1 つずつ symlink。どれを使うかは各ホストの `settings` の `theme` |
 | プロンプトテンプレート | `prompts/*.md` | 1 つずつ symlink |
 | ユーザー指示 | `AGENTS.md` | `~/.pi/agent/AGENTS.md` へ symlink (既存の手書きファイルや他所へのリンクは上書きしない) |
@@ -43,6 +44,22 @@
   `herdr agent wait` を置いて worker の完了を待つのに使う。全文のログは
   `$TMPDIR/pi-background-bash-*/` に残る。ジョブはセッションの終了や `/reload` で
   止まり、結果は届かない。`bg_run` の呼び出しも pi-automode の判定を通る。
+- 自作の `extensions/sandbox/` は、必要なときだけ有効にするサンドボックス。有効な間は
+  `bash` と `bg_run` のコマンドを OS のサンドボックス (Linux は bubblewrap、Mac は
+  sandbox-runtime) で包み、`write` / `edit` の書き込み先を検査する。書き込めるのは
+  起動ディレクトリ、`/tmp`、`$TMPDIR` と設定の `allowWrite` だけで、その中でも
+  `.git/hooks`、`.git/config`、`.pi`、`.claude`、`.envrc` などは書けない。Unix ソケットは
+  塞ぐ (herdr や docker に頼んで外で実行させるのを防ぐため)。ネットワークは制限しない。
+  - 切り替えは `/sandbox on` / `/sandbox off`、状態は `/sandbox`。設定の `enabled` で起動時から
+    有効にでき、`--sandbox` / `--no-sandbox` でその起動だけ上書きする。モデルからは切り替えられない。
+  - 設定はグローバル (`config/sandbox.json` から配る) とプロジェクトの `.pi/sandbox.json`。
+    プロジェクトの設定は `/trust` したプロジェクトでだけ読む。リスト (`allowWrite`、
+    `denyWrite`、`denyRead`、`excludedCommands`) は両方を合わせ、真偽値 (`enabled`、
+    `allowAllUnixSockets`) はプロジェクトが勝つ。
+  - herdr は `excludedCommands` で使える。単独のコマンドとして呼んだときだけ (パイプや
+    `&&`、`$` を含まないとき) サンドボックスの外で実行する。ソケットを全部開けるなら
+    `allowAllUnixSockets: true`。
+  - 設計の経緯と限界は `docs/adr/0013`。テストは `test/pi-sandbox.bats`。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由で届く。
 - pi 専用の `AGENTS.md` でユーザー指示を管理する。`herdr-tasks` 使用時は、

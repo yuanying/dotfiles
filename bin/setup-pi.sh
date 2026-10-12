@@ -79,6 +79,19 @@ else
         mv -f "${target}.tmp" "${target}" || exit 1
     fi
 
+    # The sandbox's settings are safety configuration too: copied, not linked,
+    # so that a sandboxed agent editing the checkout cannot widen them.
+    if [[ -f ${PI_DIR}/config/sandbox.json ]]; then
+        mkdir -p "${AGENT_DIR}/extensions"
+        target=${AGENT_DIR}/extensions/sandbox.json
+        common=${PI_DIR}/config/sandbox.json
+        host=${PI_DIR}/config/sandbox.${HOST}.json
+        [[ -f ${host} ]] || host=${common}
+        [[ -f ${target} ]] || echo '{}' > "${target}"
+        jq -s '.[0] * .[1] * .[2]' "${target}" "${common}" "${host}" \
+            > "${target}.tmp" && mv -f "${target}.tmp" "${target}"
+    fi
+
     merge_json settings
     merge_json keybindings
     merge_json web-search
@@ -109,6 +122,21 @@ for kind in extensions themes prompts; do
         ln -sfn "${entry}" "${AGENT_DIR}/${kind}/$(basename "${entry}")"
     done
 done
+
+# 依存パッケージを持つ自作の extension (package-lock.json があるもの) に入れる。
+# pi はローカルの extension の依存を入れない。lock が入れたものより新しいときだけ
+# 入れ直す。
+if ! command -v npm > /dev/null; then
+    echo "npm が無いので extension の依存のインストールをスキップした" >&2
+else
+    for lock in "${PI_DIR}"/extensions/*/package-lock.json; do
+        [[ -f ${lock} ]] || continue
+        dir=$(dirname "${lock}")
+        [[ ${dir}/node_modules/.package-lock.json -nt ${lock} ]] && continue
+        (cd "${dir}" && npm ci --omit=dev --ignore-scripts --no-audit --no-fund > /dev/null) ||
+            echo "${dir} の npm ci に失敗した" >&2
+    done
+fi
 
 # pi 専用のユーザー指示。手書きのファイルや他所へのリンクは上書きしない。
 # 以前の setup が張った Claude Code の指示へのリンクだけは片付ける。
