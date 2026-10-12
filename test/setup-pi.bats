@@ -80,6 +80,57 @@ pi_calls() {
     jq -e '.displayMode == "used" and .localSetting == true' "${AGENT}/subscription-usage.json"
 }
 
+@test "sandbox settings are copied next to the extensions, not linked, over local keys" {
+    mkdir -p "${FAKE}/pi/config" "${AGENT}/extensions"
+    echo '{ "allowWrite": ["~/.npm"], "excludedCommands": ["herdr"] }' > "${FAKE}/pi/config/sandbox.json"
+    echo '{ "allowWrite": ["~/mine"], "enabled": true }' > "${AGENT}/extensions/sandbox.json"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ ! -L "${AGENT}/extensions/sandbox.json" ]
+    jq -e '.allowWrite == ["~/.npm"] and .excludedCommands == ["herdr"] and .enabled == true' \
+        "${AGENT}/extensions/sandbox.json"
+}
+
+@test "the sandbox settings in the repository are well-formed" {
+    jq -e '(.allowWrite | type) == "array" and (.excludedCommands | index("herdr")) != null and .enabled == false' \
+        "${REPO}/pi/config/sandbox.json"
+}
+
+# Extensions with dependencies of their own get them through npm ci, since pi
+# does not install a local extension's dependencies. A fake npm logs the calls.
+fake_npm() {
+    cat > "${FAKE_BIN}/npm" <<'EOF'
+#!/bin/bash
+echo "npm $* in ${PWD}" >> "${PI_LOG}"
+mkdir -p node_modules && touch node_modules/.package-lock.json
+EOF
+    chmod +x "${FAKE_BIN}/npm"
+    mkdir -p "${FAKE}/pi/extensions/deps" "${FAKE}/pi/extensions/plain"
+    echo 'export default () => {}' > "${FAKE}/pi/extensions/deps/index.ts"
+    echo '{}' > "${FAKE}/pi/extensions/deps/package-lock.json"
+    echo 'export default () => {}' > "${FAKE}/pi/extensions/plain/index.ts"
+}
+
+@test "an extension with a lock file gets its dependencies, once" {
+    fake_npm
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    grep -qx "npm ci --omit=dev --ignore-scripts --no-audit --no-fund in ${FAKE}/pi/extensions/deps" "${PI_LOG}"
+    ! grep -q "extensions/plain" "${PI_LOG}"
+    : > "${PI_LOG}"
+    run bash "${SETUP}"
+    ! grep -q "^npm " "${PI_LOG}"
+}
+
+@test "a newer lock file installs the dependencies again" {
+    fake_npm
+    run bash "${SETUP}"
+    : > "${PI_LOG}"
+    touch -d '+1 minute' "${FAKE}/pi/extensions/deps/package-lock.json"
+    run bash "${SETUP}"
+    grep -q "^npm ci" "${PI_LOG}"
+}
+
 # --- settings ---
 
 @test "the agent directory and its settings are created when absent" {
