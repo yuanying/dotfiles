@@ -13,6 +13,8 @@ network_access = true
 [tui]
 # ホスト別設定が無いマシンのデフォルト。
 theme = "solarized-dark"
+# 会話を端末のスクロールバックに残し、herdr/tmux のコピーモードで読めるようにする。
+alternate_screen = "never"
 
 [features]
 # Codex 0.157+ は全セッションを 1 つの共有バックグラウンドサーバーで動かし、
