@@ -1,0 +1,14 @@
+{
+	"name": "pi-extension-sandbox",
+	"private": true,
+	"type": "module",
+	"description": "pi の書き込みを起動ディレクトリと設定した場所に閉じ込めるサンドボックス (docs/adr/0013)",
+	"pi": {
+		"extensions": [
+			"./index.ts"
+		]
+	},
+	"dependencies": {
+		"@anthropic-ai/sandbox-runtime": "0.0.79"
+	}
+}

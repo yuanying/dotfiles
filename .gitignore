@@ -2,3 +2,6 @@
 # `go build` in proxy/proxyd/ leaves the binary next to the sources. The one
 # that runs is compiled into ~/.config/devbox-proxy/bin by bin/devbox-proxy.
 devbox/proxy/proxyd/proxyd
+
+# The sandbox extension's dependencies, installed by bin/setup-pi.sh with npm ci.
+pi/extensions/sandbox/node_modules/

@@ -1,0 +1,24 @@
+{
+  "enabled": false,
+  "allowWrite": [
+    "~/.cache/go-build",
+    "~/.cache/golangci-lint",
+    "~/pkg/mod",
+    "~/go/pkg/mod",
+    "~/.npm",
+    "~/.cache/node-gyp",
+    "~/.cache/pip",
+    "~/.cache/uv",
+    "~/.cargo/registry",
+    "~/.cargo/git",
+    "~/Library/Caches/go-build",
+    "~/Library/Caches/pip",
+    "~/Library/Caches/uv"
+  ],
+  "excludedCommands": [
+    "herdr",
+    "~/bin/herdr-task-worktree",
+    "~/.agents/skills/herdr-tasks/scripts/prompt-agent.sh",
+    "~/.agents/skills/herdr-tasks/scripts/write-task-agents.sh"
+  ]
+}
