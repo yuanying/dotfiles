@@ -20,6 +20,40 @@
     ]
   },
   "permissions": {
-    "allow": ["web_enable"]
+    "allow": [
+      "web_enable",
+      "write(~/.local/state/herdr-tasks/*)",
+      "edit(~/.local/state/herdr-tasks/*)",
+      "bash(herdr workspace *)",
+      "bash(herdr tab *)",
+      "bash(herdr agent *)",
+      "bash(herdr worktree *)",
+      "bash(herdr notification *)",
+      "bash(herdr pane list*)",
+      "bash(herdr pane current*)",
+      "bash(herdr pane get*)",
+      "bash(herdr pane layout*)",
+      "bash(herdr pane process-info*)",
+      "bash(herdr pane neighbor*)",
+      "bash(herdr pane edges*)",
+      "bash(herdr pane focus*)",
+      "bash(herdr pane resize*)",
+      "bash(herdr pane zoom*)",
+      "bash(herdr pane read*)",
+      "bash(herdr pane rename*)",
+      "bash(herdr pane split*)",
+      "bash(herdr pane swap*)",
+      "bash(herdr pane move*)",
+      "bash(herdr pane close*)",
+      "bash(herdr pane wait-output*)",
+      "bash(~/bin/herdr-task-worktree *)",
+      "bash(__HOME__/bin/herdr-task-worktree *)",
+      "bash(__HOME__/.agents/skills/herdr-tasks/scripts/prompt-agent.sh *)",
+      "bash(__HOME__/.agents/skills/herdr-tasks/scripts/write-task-agents.sh *)",
+      "bash(__HOME__/.claude/skills/herdr-tasks/scripts/prompt-agent.sh *)",
+      "bash(__HOME__/.claude/skills/herdr-tasks/scripts/write-task-agents.sh *)",
+      "bash(__HOME__/src/github.com/yuanying/herdr-tasks/scripts/prompt-agent.sh *)",
+      "bash(__HOME__/src/github.com/yuanying/herdr-tasks/scripts/write-task-agents.sh *)"
+    ]
   }
 }

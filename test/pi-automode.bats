@@ -24,7 +24,7 @@ setup() {
     run bash "$FAKE/bin/setup-pi.sh"
     [ "$status" -eq 0 ]
     [ ! -L "$TARGET" ]
-    jq -e '.autoMode.enabled and (.autoMode.classifyReadOnlyTools | not) and (.autoMode.allowInsideWorkingDirectory | not) and .permissions.allow == ["web_enable"] and .autoMode.hard_deny == ["$defaults"] and .autoMode.soft_deny == ["$defaults"]' "$TARGET"
+    jq -e --arg home "$HOME" '.autoMode.enabled and (.autoMode.classifyReadOnlyTools | not) and (.autoMode.allowInsideWorkingDirectory | not) and .permissions.allow[0] == "web_enable" and (.permissions.allow | index("bash(" + $home + "/bin/herdr-task-worktree *)") != null and all(contains("__HOME__") | not)) and .autoMode.hard_deny == ["$defaults"] and .autoMode.soft_deny == ["$defaults"]' "$TARGET"
     jq -e '.autoMode.deniedPaths | index("~/.ssh") != null and index("~/.ssh/*") != null' "$TARGET"
     jq -e '.autoMode.allow[0] == "$defaults" and (.autoMode.allow[1:] | any(test("tracked by git")))' "$TARGET"
     [ -x "$HOME/bin/herdr-task-worktree" ]
@@ -42,7 +42,7 @@ setup() {
     [ "$status" -eq 0 ]
     cmp "$LEGACY" "${BATS_TEST_TMPDIR}/legacy.json"
     jq -e '.autoMode.deniedPaths | index("~/private") != null and index("~/private/*") != null and index("~/.local-secret") != null' "$TARGET"
-    jq -e --slurpfile common "$FAKE/pi/config/pi-automode.json" '.permissions.allow == ["web_enable"] and .autoMode.classifierModel == $common[0].autoMode.classifierModel' "$TARGET"
+    jq -e --arg home "$HOME" --slurpfile common "$FAKE/pi/config/pi-automode.json" '.permissions.allow == ($common[0].permissions.allow | map(split("__HOME__") | join($home))) and .autoMode.classifierModel == $common[0].autoMode.classifierModel' "$TARGET"
     jq -e '.lastChangelogVersion == "local" and (.packages | any(startswith("npm:@czottmann/pi-automode@"))) and (.packages | any(startswith("npm:pi-verdict")) | not)' "$AGENT/settings.json"
 }
 
@@ -74,7 +74,8 @@ setup() {
     run bash "$FAKE/bin/setup-pi.sh"
     [ "$status" -eq 0 ]
     jq -e --slurpfile common "$FAKE/pi/config/pi-automode.json" '.autoMode.classifierModel == $common[0].autoMode.classifierModel and .autoMode.classifierReasoningLevel == "low" and (.autoMode.deniedPaths | index("~/private/*") != null and index("~/host/*") != null) and (.autoMode.hard_deny | index("local policy") != null and index("host policy") != null and index("$defaults") != null) and (.autoMode.soft_deny | index("local soft policy") != null) and (.autoMode.protectedPaths | index("local-control") != null)' "$TARGET"
-    jq -e '.permissions.deny == ["bash(host*)", "bash(local*)"] and .permissions.ask == ["bash(host-review*)", "bash(review*)"] and .permissions.allow == ["web_enable"]' "$TARGET"
+    jq -e '.permissions.deny == ["bash(host*)", "bash(local*)"] and .permissions.ask == ["bash(host-review*)", "bash(review*)"]' "$TARGET"
+    jq -e --arg home "$HOME" --slurpfile common "$FAKE/pi/config/pi-automode.json" '.permissions.allow == ($common[0].permissions.allow | map(split("__HOME__") | join($home)))' "$TARGET"
     jq -e --slurpfile common "$FAKE/pi/config/pi-automode.json" '.autoMode.allow == $common[0].autoMode.allow' "$TARGET"
     echo '{"autoMode":{"classifierModel":"host/model"}}' > "$FAKE/pi/config/pi-automode.testhost.json"
     run bash "$FAKE/bin/setup-pi.sh"
