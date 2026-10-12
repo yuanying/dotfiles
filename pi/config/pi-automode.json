@@ -1,6 +1,6 @@
 {
   "autoMode": {
-    "enabled": true,
+    "enabled": false,
     "classifyReadOnlyTools": false,
     "allowInsideWorkingDirectory": false,
     "classifierModel": "openai-codex/gpt-6-luna",

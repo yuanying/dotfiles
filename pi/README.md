@@ -44,14 +44,15 @@
   `herdr agent wait` を置いて worker の完了を待つのに使う。全文のログは
   `$TMPDIR/pi-background-bash-*/` に残る。ジョブはセッションの終了や `/reload` で
   止まり、結果は届かない。`bg_run` の呼び出しも pi-automode の判定を通る。
-- 自作の `extensions/sandbox/` は、必要なときだけ有効にするサンドボックス。有効な間は
+- 自作の `extensions/sandbox/` はサンドボックス。共通の設定で既定で有効にしている。有効な間は
   `bash` と `bg_run` のコマンドを OS のサンドボックス (Linux は bubblewrap、Mac は
   sandbox-runtime) で包み、`write` / `edit` の書き込み先を検査する。書き込めるのは
   起動ディレクトリ、`/tmp`、`$TMPDIR` と設定の `allowWrite` だけで、その中でも
   `.git/hooks`、`.git/config`、`.pi`、`.claude`、`.envrc` などは書けない。Unix ソケットは
   塞ぐ (herdr や docker に頼んで外で実行させるのを防ぐため)。ネットワークは制限しない。
-  - 切り替えは `/sandbox on` / `/sandbox off`、状態は `/sandbox`。設定の `enabled` で起動時から
-    有効にでき、`--sandbox` / `--no-sandbox` でその起動だけ上書きする。モデルからは切り替えられない。
+  - 切り替えは `/sandbox on` / `/sandbox off`、状態は `/sandbox`。起動時の状態は設定の `enabled`
+    で決まり、`--sandbox` / `--no-sandbox` でその起動だけ上書きする。モデルからは切り替えられない。
+    1 コマンドだけ外で実行するなら、入力欄で `!` を付けて打つ (ユーザーの `!` は包まない)。
   - 設定はグローバル (`config/sandbox.json` から配る) とプロジェクトの `.pi/sandbox.json`。
     プロジェクトの設定は `/trust` したプロジェクトでだけ読む。リスト (`allowWrite`、
     `denyWrite`、`denyRead`、`excludedCommands`) は両方を合わせ、真偽値 (`enabled`、
@@ -81,7 +82,8 @@
 
 ## auto mode
 
-`@czottmann/pi-automode` を使う。読み取りツールは原則モデル判定なし、書き込みと
+`@czottmann/pi-automode` を使う。既定では無効 (`autoMode.enabled: false`) で、書き込みの
+封じ込めはサンドボックスに任せる。使うときは `/automode on` で有効にする (そのセッションだけ)。読み取りツールは原則モデル判定なし、書き込みと
 シェル操作は標準ポリシーによる判定に任せる。`allowInsideWorkingDirectory` は
 `false` のままにし、作業ディレクトリ内の編集も判定を省略しない。
 分類器のモデルは `classifierModel` で `openai-codex/gpt-6-luna` に固定する。
@@ -150,7 +152,7 @@ setup はパッケージ宣言を pi-automode に切り替えてインストー�
 旧 `allow` / `ignoreTools` / 分類器・監査設定は自動移行しない。
 `config/pi-verdict.json` と `test/pi-herdr-rules.mjs` は旧形式の参照用で、setup は使わない。
 
-再起動して `/automode status` で pi-automode が有効なことを確認する。
+再起動して `/automode status` で pi-automode が読み込まれていることを確認する。
 
 ## herdr worktree
 

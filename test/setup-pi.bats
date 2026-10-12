@@ -92,7 +92,7 @@ pi_calls() {
 }
 
 @test "the sandbox settings in the repository are well-formed" {
-    jq -e '(.allowWrite | type) == "array" and (.excludedCommands | index("herdr")) != null and .enabled == false' \
+    jq -e '(.allowWrite | type) == "array" and (.excludedCommands | index("herdr")) != null and .enabled == true' \
         "${REPO}/pi/config/sandbox.json"
 }
 
