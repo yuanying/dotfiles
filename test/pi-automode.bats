@@ -24,7 +24,7 @@ setup() {
     run bash "$FAKE/bin/setup-pi.sh"
     [ "$status" -eq 0 ]
     [ ! -L "$TARGET" ]
-    jq -e --arg home "$HOME" '.autoMode.enabled and (.autoMode.classifyReadOnlyTools | not) and (.autoMode.allowInsideWorkingDirectory | not) and .permissions.allow[0] == "web_enable" and (.permissions.allow | index("bash(" + $home + "/bin/herdr-task-worktree *)") != null and all(contains("__HOME__") | not)) and .autoMode.hard_deny == ["$defaults"] and .autoMode.soft_deny == ["$defaults"]' "$TARGET"
+    jq -e --arg home "$HOME" '(.autoMode.enabled | not) and (.autoMode.classifyReadOnlyTools | not) and (.autoMode.allowInsideWorkingDirectory | not) and .permissions.allow[0] == "web_enable" and (.permissions.allow | index("bash(" + $home + "/bin/herdr-task-worktree *)") != null and all(contains("__HOME__") | not)) and .autoMode.hard_deny == ["$defaults"] and .autoMode.soft_deny == ["$defaults"]' "$TARGET"
     jq -e '.autoMode.deniedPaths | index("~/.ssh") != null and index("~/.ssh/*") != null' "$TARGET"
     jq -e '.autoMode.allow[0] == "$defaults" and (.autoMode.allow[1:] | any(test("tracked by git")))' "$TARGET"
     [ -x "$HOME/bin/herdr-task-worktree" ]
