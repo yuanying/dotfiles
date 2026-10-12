@@ -81,6 +81,8 @@ else
 
     # The sandbox's settings are safety configuration too: copied, not linked,
     # so that a sandboxed agent editing the checkout cannot widen them.
+    # Lists are united rather than replaced: the sandbox's permission prompt
+    # adds paths to the local allowWrite, and setup must not drop them.
     if [[ -f ${PI_DIR}/config/sandbox.json ]]; then
         mkdir -p "${AGENT_DIR}/extensions"
         target=${AGENT_DIR}/extensions/sandbox.json
@@ -88,7 +90,12 @@ else
         host=${PI_DIR}/config/sandbox.${HOST}.json
         [[ -f ${host} ]] || host=${common}
         [[ -f ${target} ]] || echo '{}' > "${target}"
-        jq -s '.[0] * .[1] * .[2]' "${target}" "${common}" "${host}" \
+        jq -s '
+            . as $inputs | (.[0] * .[1] * .[2]) |
+            reduce ["allowWrite", "denyWrite", "denyRead", "excludedCommands"][] as $key (.;
+                if any($inputs[]; has($key)) then .[$key] = ([$inputs[][$key][]?] | unique) else . end
+            )
+        ' "${target}" "${common}" "${host}" \
             > "${target}.tmp" && mv -f "${target}.tmp" "${target}"
     fi
 

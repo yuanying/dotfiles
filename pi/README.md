@@ -57,6 +57,13 @@
     プロジェクトの設定は `/trust` したプロジェクトでだけ読む。リスト (`allowWrite`、
     `denyWrite`、`denyRead`、`excludedCommands`) は両方を合わせ、真偽値 (`enabled`、
     `allowAllUnixSockets`) はプロジェクトが勝つ。
+  - `write` / `edit` が許可した場所の外に書こうとすると、「中止」「このセッションだけ許可」
+    「このプロジェクトで許可」「すべてのプロジェクトで許可」を問う。10 分答えなければ中止。
+    許すのは書き込み先の親ディレクトリ (親が `$HOME` かその上ならそのパスだけ) で、以後は bash からも
+    書ける。プロジェクトは `.pi/sandbox.json`、すべては `~/.pi/agent/extensions/sandbox.json` の
+    `allowWrite` に足す (プロジェクトの選択肢は trust 済みのときだけ出る)。禁止パスへの書き込み、
+    bash の書き込み、UI の無い実行 (`-p` など) は問わずに拒む。setup はリストを手元と合わせるので、
+    ここで足したものは消えない (リポジトリから消した項目も手元には残る)。
   - herdr は `excludedCommands` で使える。単独のコマンドとして呼んだときだけ (パイプや
     `&&`、`$` を含まないとき) サンドボックスの外で実行する。ソケットを全部開けるなら
     `allowAllUnixSockets: true`。

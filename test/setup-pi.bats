@@ -80,14 +80,14 @@ pi_calls() {
     jq -e '.displayMode == "used" and .localSetting == true' "${AGENT}/subscription-usage.json"
 }
 
-@test "sandbox settings are copied next to the extensions, not linked, over local keys" {
+@test "sandbox settings are copied next to the extensions, not linked, keeping local entries" {
     mkdir -p "${FAKE}/pi/config" "${AGENT}/extensions"
     echo '{ "allowWrite": ["~/.npm"], "excludedCommands": ["herdr"] }' > "${FAKE}/pi/config/sandbox.json"
-    echo '{ "allowWrite": ["~/mine"], "enabled": true }' > "${AGENT}/extensions/sandbox.json"
+    echo '{ "allowWrite": ["~/mine", "~/.npm"], "enabled": true }' > "${AGENT}/extensions/sandbox.json"
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
     [ ! -L "${AGENT}/extensions/sandbox.json" ]
-    jq -e '.allowWrite == ["~/.npm"] and .excludedCommands == ["herdr"] and .enabled == true' \
+    jq -e '.allowWrite == ["~/.npm", "~/mine"] and .excludedCommands == ["herdr"] and .enabled == true and (has("denyRead") | not)' \
         "${AGENT}/extensions/sandbox.json"
 }
 

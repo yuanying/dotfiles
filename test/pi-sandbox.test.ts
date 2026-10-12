@@ -8,11 +8,13 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { bwrapArgs, unixSocketFilter } from "../pi/extensions/sandbox/bwrap.ts";
 import {
+	addAllowWrite,
 	buildPolicy,
 	changedPaths,
 	checkExcluded,
 	checkWrite,
 	coversHome,
+	grantTarget,
 	mergeSettings,
 	type Policy,
 	readSettingsFile,
@@ -73,13 +75,12 @@ test("write: the launch directory, /tmp and configured paths are writable", () =
 	mkdirSync(cwd);
 	const policy = policyIn(cwd, home, { allowWrite: ["~/cache"] });
 	assert.equal(checkWrite(policy, "src/new.ts", cwd, home).allowed, true);
-	mkdirSync(join(home, "tmp"));
-	assert.equal(checkWrite(policy, "~/tmp/x", cwd, home).allowed, false, "the policy was built before ~/tmp existed");
-	assert.equal(checkWrite(policyIn(cwd, home), "~/tmp/x", cwd, home).allowed, true);
+	assert.equal(checkWrite(policy, "~/tmp/x", cwd, home).allowed, true, "a writable root need not exist yet");
 	assert.equal(checkWrite(policy, "~/cache/x", cwd, home).allowed, true);
 	assert.equal(checkWrite(policy, "~/other", cwd, home).allowed, false);
 	assert.equal(checkWrite(policy, "../other", cwd, home).allowed, false);
 	assert.equal(checkWrite(policy, `${cwd}2/x`, cwd, home).allowed, false);
+	assert.equal((checkWrite(policy, "~/other", cwd, home) as { kind: string }).kind, "outside");
 });
 
 test("write: protected names and the settings files are denied", () => {
@@ -91,6 +92,7 @@ test("write: protected names and the settings files are denied", () => {
 		assert.equal(checkWrite(policy, target, cwd, home).allowed, false, target);
 	}
 	assert.equal(checkWrite(policy, ".git/HEAD", cwd, home).allowed, true);
+	assert.equal((checkWrite(policy, ".pi/x", cwd, home) as { kind: string }).kind, "denied");
 	assert.equal(checkWrite(policy, "~/global.json", cwd, home).allowed, false);
 });
 
@@ -237,11 +239,13 @@ test("bwrap: binds go from shallow to deep, denies over the writable ones", () =
 		excludedCommands: [],
 		allowAllUnixSockets: false,
 	};
+	policy.writable.push(join(dir, "not-yet"));
 	const args = bwrapArgs(policy, join(dir, "a"), 3);
 	const text = args.join(" ");
 	assert.ok(text.indexOf(`--bind ${dir}/a ${dir}/a`) < text.indexOf(`--ro-bind ${dir}/a/.git/hooks`));
 	assert.ok(!text.includes("/dev/shm"), "/dev comes from --dev");
 	assert.ok(!text.includes(".pi"), "a path that does not exist cannot be bound");
+	assert.ok(!text.includes("not-yet"), "nor a writable root that does not exist yet");
 	assert.deepEqual(args.slice(-5), ["--seccomp", "3", "--chdir", `${dir}/a`, "--"]);
 	assert.ok(!bwrapArgs(policy, join(dir, "a"), undefined).includes("--seccomp"));
 });
@@ -254,4 +258,24 @@ test("seccomp: one filter per architecture, eight bytes per instruction", () => 
 		assert.equal(filter.readUInt32LE(filter.length - 4), 0x7fff0000);
 	}
 	assert.throws(() => unixSocketFilter("ia32"));
+});
+
+test("grants: the parent directory, but never $HOME or above", () => {
+	assert.equal(grantTarget("/home/u/.local/state/notes/a.md", "/home/u"), "/home/u/.local/state/notes");
+	assert.equal(grantTarget("/home/u/a.md", "/home/u"), "/home/u/a.md");
+	assert.equal(grantTarget("/etc/a.conf", "/home/u"), "/etc");
+	assert.equal(grantTarget("/a.conf", "/home/u"), "/a.conf");
+});
+
+test("grants: allowWrite is extended and the other keys are kept", () => {
+	const dir = scratch();
+	const file = join(dir, "nested", "sandbox.json");
+	addAllowWrite(file, "/srv/a");
+	assert.deepEqual(readSettingsFile(file), { allowWrite: ["/srv/a"] });
+	writeFileSync(file, JSON.stringify({ enabled: true, allowWrite: ["/srv/a"], excludedCommands: ["herdr"] }));
+	addAllowWrite(file, "/srv/b");
+	addAllowWrite(file, "/srv/b");
+	assert.deepEqual(readSettingsFile(file), { enabled: true, allowWrite: ["/srv/a", "/srv/b"], excludedCommands: ["herdr"] });
+	writeFileSync(file, "{");
+	assert.throws(() => addAllowWrite(file, "/srv/c"));
 });

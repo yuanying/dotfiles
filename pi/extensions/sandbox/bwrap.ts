@@ -82,6 +82,8 @@ export function bwrapArgs(policy: Policy, cwd: string, seccompFd: number | undef
 	for (const path of byDepth(policy.writable)) {
 		// /dev と /proc は別に用意したものを使う。
 		if (path === "/dev" || path.startsWith("/dev/") || path === "/proc" || path.startsWith("/proc/")) continue;
+		// まだ無いパスはバインドできない。write ツールで作られた後の起動から入る。
+		if (!existsSync(path)) continue;
 		args.push("--bind", path, path);
 	}
 	// 書き込みを許した場所の中にある禁止パスを、読み取り専用で上から被せる。
