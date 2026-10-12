@@ -31,6 +31,13 @@
   モデルは `openai` のままでよい。プラン全体とアプリ別の制限は別々に表示する。
   非公開 API のため提供元の変更で取得できなくなる可能性がある。
   リセットクレジット消費は `/usage` の明示的な確認操作が必要。
+- pi 本体にはコマンドをバックグラウンドで走らせる機能が無いので、自作の
+  `extensions/background-bash.ts` が `bg_run` / `bg_list` / `bg_kill` ツールを足す。
+  `bg_run` はすぐに戻り、コマンドが終了すると exit code と出力の末尾を会話へ
+  差し込んでターンを始める (処理中なら今の処理の後)。`herdr-tasks` の coordinator が
+  `herdr agent wait` を置いて worker の完了を待つのに使う。全文のログは
+  `$TMPDIR/pi-background-bash-*/` に残る。ジョブはセッションの終了や `/reload` で
+  止まり、結果は届かない。`bg_run` の呼び出しも pi-automode の判定を通る。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由で届く。
 - pi 専用の `AGENTS.md` でユーザー指示を管理する。`herdr-tasks` 使用時は、
