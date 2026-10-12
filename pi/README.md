@@ -67,13 +67,41 @@
 次の setup でリポジトリの値に上書きされる。
 `/automode status`、`/automode config`、`/automode denials` で状態を確認する。
 
-`web_enable` だけを `permissions.allow` で自動許可する。設定済み Web ツールの
-有効化だけを対象とし、検索・取得は通常の判定に残す。herdr の起動・委譲・削除や
-worktree ラッパーには広いシェル許可を設定しない。旧正規表現と同等の制約を
-ツールパターンで表現できないため、これらも分類器に任せる。引数は展開済みの値を
-単独コマンドで渡し、拒否された操作を別表記や複合コマンドで回避しない。
+`permissions.allow` で分類器を通さずに許可するのは次のもの。
 
-ポリシーのマージ順は手元 < 共通 < ホスト別。`permissions.allow` は管理値で置換する。
+- `web_enable`。設定済み Web ツールの有効化だけで、検索・取得は通常の判定に残す。
+- herdr-tasks のタスクディレクトリ (`~/.local/state/herdr-tasks/`) 配下への
+  `write` / `edit`。coordinator が `TASK.md` / `STATE.md` / `PROGRESS.md` / `notes/` を
+  書くたびに止まらないようにする。パターンの `*` は `/` をまたぐので、
+  配下の `worktrees/` (worker のリポジトリ) も含む。protected paths
+  (`.git` や `.pi` など) への書き込みは、この許可があっても分類器に回る。
+- herdr の操作。`workspace` / `tab` / `agent` / `worktree` / `notification` は
+  close を含めてすべて、`pane` は参照・レイアウト操作・`close`・`wait-output`。
+  `agent start` / `prompt` は別 agent へ作業を委譲する権限も含む。
+  `pane run` / `send-text` / `send-keys` / `input` は別の pane のシェルに任意の
+  コマンドを打ち込めるので、herdr 自体の管理 (`server` / `update` / `config` など) と
+  一緒に分類器に残す。
+- worktree ラッパー `~/bin/herdr-task-worktree` と、herdr-tasks スキルの
+  `scripts/prompt-agent.sh` / `scripts/write-task-agents.sh`。
+
+Bash のパターンは文字どおりに照合され (`~` も `$HOME` も展開されない)、ホームは
+ホストごとに違う。そのためスクリプトの絶対パスは `__HOME__` で書き、setup がコピーする
+ときに置き換える。変数展開・コマンド置換・リダイレクトを含むものや、許可していない
+コマンドを `;` や `|` でつないだものは、パターンに合っても分類器に回る。
+引数は展開済みの値を単独コマンドで渡し、拒否された操作を別表記や複合コマンドで
+回避しない。
+
+分類器の `autoMode.allow` には、組み込み (`$defaults`) に加えて
+「git 管理下の既存ファイルの編集・上書きは、都度の許可なしに許す」例外を置く。
+組み込みの既定では、既存ファイルの変更にタスク・リポジトリ・パス・操作を
+名指しした許可を求めるので、実装のたびに止まる。git が復元できる範囲だけを
+緩め、削除、未追跡・無視対象のファイル、protected paths は対象にしない。
+分類器はツールの結果を見ないため追跡の有無を確かめられず、パスから推し量る。
+自然言語のルールなので、効くかどうかも分類器の判断次第である。
+auto mode の設定そのものの編集は組み込みの hard_deny に当たるため、この例外が
+あってもブロックされる。
+
+ポリシーのマージ順は手元 < 共通 < ホスト別。`permissions.allow` と `autoMode.allow` は管理値で置換する。
 `permissions.deny` / `permissions.ask` / `autoMode.deniedPaths` と、
 `soft_deny` / `hard_deny` / `protectedPaths` は和集合にして手元の制限も残す。
 組み込みの禁止・保護ルールは `$defaults` を保持する。分類器のモデルやログ設定は、

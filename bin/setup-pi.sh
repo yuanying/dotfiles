@@ -54,9 +54,12 @@ else
         # A legacy protected path asked the user; the new glob blocks file tools.
         local_legacy=${legacy}
         [[ -f ${local_legacy} ]] || local_legacy=${target}
-        if ! jq -s '
+        # Bash allow patterns are matched literally (no ~ or $HOME expansion),
+        # so absolute script paths are written as __HOME__ and filled in here.
+        if ! jq -s --arg home "${HOME}" '
             . as $inputs |
             ($inputs[0] * $inputs[1] * $inputs[2]) |
+            .permissions.allow |= (if . then map(split("__HOME__") | join($home)) else . end) |
             .autoMode.deniedPaths = (
                 ([$inputs[0:3][].autoMode.deniedPaths[]?] +
                  [$inputs[3].denyPaths[]? | rtrimstr("/") | ., (. + "/*")]) | unique
