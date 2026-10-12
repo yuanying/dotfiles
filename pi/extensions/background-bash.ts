@@ -5,6 +5,10 @@
 //
 // ジョブは pi のプロセスに属する。セッションの終了や /reload では殺し、
 // 結果も届けない (届け先のセッションがもう無いため)。
+//
+// サンドボックス (extensions/sandbox) が有効なら、起動はそちらに任せる。
+// 共有のイベントバスへ SANDBOX_SPAWN を投げ、result が埋まればそれを使う。
+// 埋まらなければサンドボックスは無効なので、ここで素のまま起動する。
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { createWriteStream, mkdtempSync, type WriteStream } from "node:fs";
@@ -15,6 +19,8 @@ import { formatSize, getShellConfig, truncateTail } from "@earendil-works/pi-cod
 import { Type } from "typebox";
 
 const MESSAGE_TYPE = "background-bash";
+const SANDBOX_SPAWN = "sandbox:spawn";
+const UNCONFINED_JOBS = "background-bash:unconfined-jobs";
 const STATUS_KEY = "background-bash";
 // 結果に載せる出力の末尾。全文はログファイルに残す。
 const TAIL_LINES = 100;
@@ -32,6 +38,13 @@ type Job = {
 	logPath: string;
 	output: string;
 	killed: boolean;
+	sandboxed: boolean;
+};
+
+type SandboxSpawnRequest = {
+	command: string;
+	cwd: string;
+	result?: Promise<{ child: ChildProcess; sandboxed: boolean; finish: (output: string) => string[] }>;
 };
 
 export function formatDuration(ms: number): string {
@@ -88,8 +101,13 @@ export default function backgroundBash(pi: ExtensionAPI): void {
 		ui?.setStatus(STATUS_KEY, jobs.size > 0 ? `bg ${jobs.size}` : undefined);
 	}
 
-	function finish(job: Job, code: number | null, signal: NodeJS.Signals | null): void {
+	function finish(job: Job, code: number | null, signal: NodeJS.Signals | null, notes: string[] = []): void {
 		if (!jobs.delete(job.id)) return;
+		if (notes.length > 0) {
+			const text = `\n${notes.join("\n")}\n`;
+			job.log.write(text);
+			job.output += text;
+		}
 		job.log.end();
 		updateStatus();
 		// bg_kill で止めたものは、止めた本人が知っているので呼び戻さない。
@@ -107,11 +125,7 @@ export default function backgroundBash(pi: ExtensionAPI): void {
 		);
 	}
 
-	function start(command: string, cwd: string): Job {
-		logDir ??= mkdtempSync(join(tmpdir(), "pi-background-bash-"));
-		const id = `bg${nextId++}`;
-		const logPath = join(logDir, `${id}.log`);
-		const log = createWriteStream(logPath);
+	function spawnPlain(command: string, cwd: string): ChildProcess {
 		const shell = getShellConfig();
 		const stdin = shell.commandTransport === "stdin";
 		const child = spawn(shell.shell, stdin ? shell.args : [...shell.args, command], {
@@ -120,7 +134,31 @@ export default function backgroundBash(pi: ExtensionAPI): void {
 			stdio: [stdin ? "pipe" : "ignore", "pipe", "pipe"],
 		});
 		if (stdin) child.stdin?.end(command);
-		const job: Job = { id, command, cwd, startedAt: Date.now(), child, log, logPath, output: "", killed: false };
+		return child;
+	}
+
+	async function start(command: string, cwd: string): Promise<Job> {
+		const request: SandboxSpawnRequest = { command, cwd };
+		pi.events.emit(SANDBOX_SPAWN, request);
+		// サンドボックスが起動に失敗したら、素で起動せずにエラーにする。
+		const launched = request.result ? await request.result : undefined;
+		const child = launched?.child ?? spawnPlain(command, cwd);
+		logDir ??= mkdtempSync(join(tmpdir(), "pi-background-bash-"));
+		const id = `bg${nextId++}`;
+		const logPath = join(logDir, `${id}.log`);
+		const log = createWriteStream(logPath);
+		const job: Job = {
+			id,
+			command,
+			cwd,
+			startedAt: Date.now(),
+			child,
+			log,
+			logPath,
+			output: "",
+			killed: false,
+			sandboxed: launched?.sandboxed ?? false,
+		};
 		const capture = (chunk: Buffer) => {
 			log.write(chunk);
 			job.output += chunk.toString("utf-8");
@@ -132,11 +170,17 @@ export default function backgroundBash(pi: ExtensionAPI): void {
 			capture(Buffer.from(`\n[background-bash] ${error.message}\n`));
 			finish(job, null, null);
 		});
-		child.on("close", (code, signal) => finish(job, code, signal));
+		child.on("close", (code, signal) => finish(job, code, signal, launched?.finish(job.output) ?? []));
 		jobs.set(id, job);
 		updateStatus();
 		return job;
 	}
+
+	// サンドボックスを有効にしたとき、外で動き続けるジョブを知らせるために答える。
+	pi.events.on(UNCONFINED_JOBS, (data) => {
+		const request = data as { jobs: string[] };
+		for (const job of jobs.values()) if (!job.sandboxed) request.jobs.push(`${job.id} (${job.command})`);
+	});
 
 	pi.on("session_start", async (_event, ctx) => {
 		alive = true;
@@ -167,12 +211,12 @@ export default function backgroundBash(pi: ExtensionAPI): void {
 			cwd: Type.Optional(Type.String({ description: "作業ディレクトリ (既定: セッションの cwd)" })),
 		}),
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const job = start(params.command, params.cwd ?? ctx.cwd);
+			const job = await start(params.command, params.cwd ?? ctx.cwd);
 			return {
 				content: [
 					{
 						type: "text",
-						text: `${job.id} をバックグラウンドで起動した (pid ${job.child.pid ?? "?"})。終了すると結果が届く。log: ${job.logPath}`,
+						text: `${job.id} を${job.sandboxed ? "サンドボックスの中で" : ""}バックグラウンドで起動した (pid ${job.child.pid ?? "?"})。終了すると結果が届く。log: ${job.logPath}`,
 					},
 				],
 				details: { id: job.id, command: job.command, cwd: job.cwd, logPath: job.logPath },
