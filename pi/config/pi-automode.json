@@ -5,6 +5,10 @@
     "allowInsideWorkingDirectory": false,
     "classifierModel": "openai-codex/gpt-6-luna",
     "classifierReasoningLevel": "low",
+    "allow": [
+      "$defaults",
+      "Editing or overwriting pre-existing files tracked by git inside the trusted repository or one of its worktrees is allowed without further user authorization, because git can restore them. This does not cover deleting files, untracked or git-ignored files, or protected paths."
+    ],
     "soft_deny": ["$defaults"],
     "hard_deny": ["$defaults"],
     "protectedPaths": ["$defaults"],
