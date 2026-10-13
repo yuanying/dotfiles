@@ -244,3 +244,26 @@ Consequences:
   repository's `.git` is writable to it already.
 - Other excluded commands receive the variable too and are free to ignore it.
   herdr itself does not need it: it runs commands in panes by design.
+
+## Revision (2026-10-13): let Go programs verify TLS on macOS
+
+`gh` fails inside the macOS sandbox with `x509: OSStatus -26276`. Go programs
+on macOS verify certificates through the Security framework, which asks
+`com.apple.trustd.agent`; sandbox-runtime denies that mach service by default.
+`gcloud`, `kubectl` and `terraform` fail the same way.
+
+- **The macOS sandbox sets `enableWeakerNetworkIsolation`**, which allows the
+  lookup of `com.apple.trustd.agent` and nothing else.
+- **It is always on, not a setting.** sandbox-runtime warns that it opens an
+  exfiltration path: trustd runs outside the sandbox and fetches OCSP, CRL and
+  intermediate certificates itself, so a crafted certificate can make it
+  contact any host. While the network is unrestricted that path adds nothing.
+
+Consequences:
+
+- **Restricting the network with an allowlist must revisit this.** Go programs
+  need trustd with or without a proxy, so turning it off breaks `gh` again,
+  and leaving it on lets trustd reach hosts the allowlist does not name. The
+  choices then are to run such commands outside the sandbox
+  (`excludedCommands`) and turn it off, to accept the path and keep it on, or
+  to make it a setting chosen per host or project.
