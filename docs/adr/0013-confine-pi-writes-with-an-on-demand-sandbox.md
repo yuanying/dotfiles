@@ -212,3 +212,35 @@ this extension now does the same for `write` and `edit`.
 - **A writable root need not exist.** Granted paths and configured ones are
   checked for `write`/`edit` whether or not they exist yet; bubblewrap still
   binds only those that do.
+
+## Revision (2026-10-13): excluded helpers refuse repositories the sandbox can write
+
+A herdr-tasks coordinator runs in its task directory, so `git fetch` in the
+repository it works from fails inside the sandbox: that repository's `.git` is
+not writable. `~/bin/herdr-task-worktree` gained a `fetch` subcommand, run
+outside the sandbox like `create` and `remove`.
+
+Writing it exposed a hole in all three. An excluded helper runs git outside the
+sandbox on a repository named by the agent (`--repo`) or found through a file
+the agent can write (a worktree's `.git`). A repository created, or a `.git`
+file rewritten, inside a writable path could carry `core.sshCommand`,
+`core.hooksPath` or hooks, and git would run them unconfined. The rule that an
+excluded executable must not be writable did not cover what it is pointed at.
+
+- **The extension passes the writable paths to excluded commands** in
+  `PI_SANDBOX_WRITABLE` (a JSON array). Only simple commands are excluded, so
+  the agent cannot set the variable itself.
+- **`herdr-task-worktree` reads a repository's git directory and common
+  directory from disk**, without running git, and refuses the repository when
+  either lies under a writable path or contains one. Outside the sandbox the
+  variable is absent and nothing is checked.
+- **`fetch` takes nothing but `--repo`** and runs `git fetch --prune origin`.
+
+Consequences:
+
+- A repository under the launch directory, `/tmp` or a granted path cannot be
+  used with the helper while the sandbox is on; it says to turn the sandbox off.
+- A worker in a worktree still fetches with plain `git fetch`: its main
+  repository's `.git` is writable to it already.
+- Other excluded commands receive the variable too and are free to ignore it.
+  herdr itself does not need it: it runs commands in panes by design.
