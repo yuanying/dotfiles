@@ -110,6 +110,9 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
 RUN mkdir /run/sshd
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 RUN sed 's/#Port 22/Port 3222/' -i /etc/ssh/sshd_config
+# Host keys come from the host, per container (entrypoint.sh). The ones the
+# package made here would be shared by every container and pushed with the image.
+RUN rm -f /etc/ssh/ssh_host_*
 
 # Create a user
 ENV USER=yuanying

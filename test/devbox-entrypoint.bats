@@ -7,7 +7,8 @@
 # a token the entrypoint sets on every start.
 #
 # The script is sourced: it defines its steps as functions and runs them only
-# when executed. curl and sudo are stand-ins that record their arguments.
+# when executed. curl and sudo are stand-ins that record their arguments;
+# with SUDO_STUB_EXEC set, sudo also runs what it was given, as this user.
 
 bats_require_minimum_version 1.5.0
 
@@ -38,6 +39,7 @@ EOF
     cat > "${STUB_DIR}/bin/sudo" <<'EOF'
 #!/bin/bash
 printf '%s\n' "$*" >> "${STUB_DIR}/sudo.calls"
+[[ -n ${SUDO_STUB_EXEC:-} ]] && exec "$@"
 exit "${SUDO_STUB_STATUS:-0}"
 EOF
     chmod +x "${STUB_DIR}/bin/curl" "${STUB_DIR}/bin/sudo"
@@ -119,4 +121,54 @@ EOF
     [ "${guard}" -lt "${token}" ]
     [ "${token}" -lt "${keys}" ]
     [ "${keys}" -lt "${sshd}" ]
+}
+
+@test "a container with no host keys yet gets one of each type" {
+    require ssh-keygen
+    local dir="${BATS_TEST_TMPDIR}/host-keys" type
+    SUDO_STUB_EXEC=1 run install_host_keys "${dir}"
+    [ "${status}" -eq 0 ]
+    for type in ed25519 ecdsa rsa; do
+        ssh-keygen -l -f "${dir}/ssh_host_${type}_key" > /dev/null
+    done
+    [ "$(stat -c %a "${dir}")" = 700 ]
+}
+
+@test "host keys that are there are kept" {
+    require ssh-keygen
+    local dir="${BATS_TEST_TMPDIR}/host-keys" before
+    SUDO_STUB_EXEC=1 install_host_keys "${dir}"
+    before=$(cat "${dir}"/ssh_host_*_key)
+    SUDO_STUB_EXEC=1 run install_host_keys "${dir}"
+    [ "${status}" -eq 0 ]
+    [ "$(cat "${dir}"/ssh_host_*_key)" = "${before}" ]
+}
+
+@test "only the missing host key is made, even with its .pub left behind" {
+    require ssh-keygen
+    local dir="${BATS_TEST_TMPDIR}/host-keys" ed25519
+    SUDO_STUB_EXEC=1 install_host_keys "${dir}"
+    ed25519=$(cat "${dir}/ssh_host_ed25519_key")
+    rm "${dir}/ssh_host_rsa_key"
+    SUDO_STUB_EXEC=1 run install_host_keys "${dir}"
+    [ "${status}" -eq 0 ]
+    ssh-keygen -l -f "${dir}/ssh_host_rsa_key" > /dev/null
+    [ "$(cat "${dir}/ssh_host_ed25519_key")" = "${ed25519}" ]
+}
+
+@test "a host key that cannot be made is a warning, not the end of the start" {
+    SUDO_STUB_STATUS=1 run install_host_keys "${BATS_TEST_TMPDIR}/host-keys"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *host-keys* ]]
+}
+
+@test "the host keys are made before sshd, which is given every one of them" {
+    local script="${REPO}/devbox/entrypoint.sh" guard hostkeys sshd
+    guard=$(grep -n '^\[\[ \${BASH_SOURCE\[0\]} == "\$0" \]\] || return 0$' "${script}" | cut -d: -f1)
+    hostkeys=$(grep -n '^install_host_keys$' "${script}" | cut -d: -f1)
+    sshd=$(grep -n 'sshd -D' "${script}" | cut -d: -f1)
+    [ -n "${guard}" ] && [ -n "${hostkeys}" ] && [ -n "${sshd}" ]
+    [ "${guard}" -lt "${hostkeys}" ]
+    [ "${hostkeys}" -lt "${sshd}" ]
+    grep -q 'sshd -D .*"\${HOST_KEY_OPTIONS\[@\]}"' "${script}"
 }
