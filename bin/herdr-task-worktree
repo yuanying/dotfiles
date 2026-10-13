@@ -1,47 +1,113 @@
 #!/usr/bin/env python3
-"""Create a new-branch worktree only under ~/.local/state/herdr-tasks."""
+"""Create or remove worktrees only under ~/.local/state/herdr-tasks.
+
+  herdr-task-worktree --repo <repo> --path <task>/worktrees/<checkout> --branch <branch> --base <commit>
+  herdr-task-worktree remove --path <task>/worktrees/<checkout> [--delete-branch]
+
+The pi sandbox runs this outside itself (excludedCommands), so every path is
+checked here before git is called.
+"""
 import argparse
 import os
 from pathlib import Path
 import subprocess
 import sys
 
+ROOT = Path.home() / ".local/state/herdr-tasks"
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+
+def task_path(path):
+    """Resolve a <task>/worktrees/<checkout> path, refusing anything else."""
+    # Check both lexical and real paths: symlinked ancestors must not escape.
+    target = Path(os.path.abspath(os.path.expanduser(path)))
+    relative = target.relative_to(ROOT)
+    if len(relative.parts) < 3 or relative.parts[1] != "worktrees":
+        raise ValueError("expected <task>/worktrees/<checkout>")
+    if ROOT.resolve() != ROOT or not target.resolve().is_relative_to(ROOT):
+        raise ValueError("symlink escapes the task directory")
+    return target
+
+
+def git(*args, cwd):
+    return subprocess.check_output(["git", "-C", str(cwd), *args], text=True).strip()
+
+
+def create(argv):
+    parser = argparse.ArgumentParser(description="Create a new-branch worktree.")
     parser.add_argument("--repo", required=True)
     parser.add_argument("--path", required=True)
     parser.add_argument("--branch", required=True)
     parser.add_argument("--base", required=True)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
-    # Check both lexical and real paths: symlinked ancestors must not escape.
-    root = Path.home() / ".local/state/herdr-tasks"
-    target = Path(os.path.abspath(os.path.expanduser(args.path)))
+    target = task_path(args.path)
+    if target.exists() or target.is_symlink():
+        raise ValueError("destination already exists")
+    repo = Path(args.repo).expanduser().resolve(strict=True)
+    subprocess.run(["git", "check-ref-format", "--branch", args.branch],
+                   check=True, stdout=subprocess.DEVNULL)
+    if args.branch.startswith("-") or args.base.startswith("-"):
+        raise ValueError("branch and base must not be options")
+    base = git("rev-parse", "--verify", "--end-of-options", args.base + "^{commit}", cwd=repo)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    # No shell, arbitrary extra flags, force, removal or repository-trust bypass.
+    subprocess.run(["git", "-C", str(repo), "worktree", "add", "-b",
+                    args.branch, str(target), base], check=True)
+    return 0
+
+
+def remove(argv):
+    parser = argparse.ArgumentParser(prog="herdr-task-worktree remove",
+                                     description="Remove a clean worktree.")
+    parser.add_argument("--path", required=True)
+    parser.add_argument("--delete-branch", action="store_true",
+                        help="also delete its branch, only if it is merged")
+    args = parser.parse_args(argv)
+
+    target = task_path(args.path)
+    if target.is_symlink() or not target.is_dir():
+        raise ValueError("not a directory")
+    # The checkout itself must be a linked worktree: its .git is a file, it is
+    # the top of its tree, and git lists it. The repository is taken from
+    # git, never from the caller.
+    if not (target / ".git").is_file():
+        raise ValueError("not a linked worktree")
+    if Path(git("rev-parse", "--show-toplevel", cwd=target)) != target.resolve():
+        raise ValueError("not the top of a worktree")
+    listed = [line[len("worktree "):] for line in
+              git("worktree", "list", "--porcelain", cwd=target).splitlines()
+              if line.startswith("worktree ")]
+    main = Path(listed[0])
+    if target.resolve() == main or str(target.resolve()) not in listed[1:]:
+        raise ValueError("not a linked worktree of its repository")
+    branch = subprocess.run(["git", "-C", str(target), "symbolic-ref", "--quiet",
+                             "--short", "HEAD"], text=True, capture_output=True).stdout.strip()
+
+    # Without --force git refuses a worktree with changes or untracked files.
+    subprocess.run(["git", "-C", str(main), "worktree", "remove", str(target)], check=True)
     try:
-        relative = target.relative_to(root)
-        if len(relative.parts) < 3 or relative.parts[1] != "worktrees":
-            raise ValueError("expected <task>/worktrees/<checkout>")
-        if root.resolve() != root or not target.resolve().is_relative_to(root):
-            raise ValueError("symlink escapes the task directory")
-        if target.exists() or target.is_symlink():
-            raise ValueError("destination already exists")
-        repo = Path(args.repo).expanduser().resolve(strict=True)
-        subprocess.run(["git", "check-ref-format", "--branch", args.branch],
-                       check=True, stdout=subprocess.DEVNULL)
-        if args.branch.startswith("-") or args.base.startswith("-"):
-            raise ValueError("branch and base must not be options")
-        base = subprocess.check_output(
-            ["git", "-C", str(repo), "rev-parse", "--verify", "--end-of-options",
-             args.base + "^{commit}"], text=True).strip()
-        target.parent.mkdir(parents=True, exist_ok=True)
-        # No shell, arbitrary extra flags, force, removal or repository-trust bypass.
-        subprocess.run(["git", "-C", str(repo), "worktree", "add", "-b",
-                        args.branch, str(target), base], check=True)
+        target.parent.rmdir()
+    except OSError:
+        pass
+
+    if args.delete_branch and branch:
+        # -d, not -D: an unmerged branch is kept.
+        result = subprocess.run(["git", "-C", str(main), "branch", "-d", "--", branch],
+                                text=True, capture_output=True)
+        if result.returncode != 0:
+            print(f"herdr-task-worktree: kept branch {branch}: {result.stderr.strip()}",
+                  file=sys.stderr)
+    return 0
+
+
+def main():
+    try:
+        if sys.argv[1:2] == ["remove"]:
+            return remove(sys.argv[2:])
+        return create(sys.argv[1:])
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         print(f"herdr-task-worktree: {error}", file=sys.stderr)
         return 1
-    return 0
 
 
 if __name__ == "__main__":
