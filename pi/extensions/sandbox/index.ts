@@ -39,6 +39,8 @@ const STATUS_KEY = "sandbox";
 const MESSAGE_TYPE = "sandbox";
 // background-bash.ts との受け渡し。リクエストの形は SpawnRequest。
 export const SPAWN_CHANNEL = "sandbox:spawn";
+// 除外コマンドに渡す、サンドボックスから書ける場所 (JSON の配列)。
+export const WRITABLE_ENV = "PI_SANDBOX_WRITABLE";
 export const UNCONFINED_JOBS_CHANNEL = "background-bash:unconfined-jobs";
 
 // 許可を問うダイアログ。答えが無ければこの時間で中止にする (許可はしない)。
@@ -172,7 +174,11 @@ export default function sandbox(pi: ExtensionAPI): void {
 		const path = env?.PATH ?? process.env.PATH ?? "";
 		const exclusion = checkExcluded(policy, command, cwd, home, path);
 		if (exclusion.excluded) {
-			return { child: spawnLocal(exclusion.command, cwd, env), sandboxed: false, finish: () => [] };
+			// 外で動くコマンドに、サンドボックスから書ける場所を教える。herdr-task-worktree は
+			// これを見て、サンドボックスの中で仕込めるリポジトリには git を実行しない。
+			// 単純なコマンドしか除外しないので、モデルがこの変数を書き換えることはできない。
+			const outsideEnv = { ...(env ?? process.env), [WRITABLE_ENV]: JSON.stringify(policy.writable) };
+			return { child: spawnLocal(exclusion.command, cwd, outsideEnv), sandboxed: false, finish: () => [] };
 		}
 		const notes = exclusion.note ? [`[sandbox] ${exclusion.note}`] : [];
 		const before = snapshot(policy.denyWrite);

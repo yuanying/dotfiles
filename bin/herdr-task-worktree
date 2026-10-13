@@ -3,11 +3,15 @@
 
   herdr-task-worktree --repo <repo> --path <task>/worktrees/<checkout> --branch <branch> --base <commit>
   herdr-task-worktree remove --path <task>/worktrees/<checkout> [--delete-branch]
+  herdr-task-worktree fetch --repo <repo>
 
 The pi sandbox runs this outside itself (excludedCommands), so every path is
-checked here before git is called.
+checked here before git is called. The sandbox also passes the paths it lets
+the agent write in PI_SANDBOX_WRITABLE; a repository whose git directory lies
+there could carry hooks or config planted from inside, so git is not run on it.
 """
 import argparse
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -28,6 +32,42 @@ def task_path(path):
     return target
 
 
+def git_dirs(top):
+    """The git directory and common directory of a checkout, read from disk.
+
+    git itself is not asked: it would already read the repository's config.
+    """
+    dotgit = top / ".git"
+    if dotgit.is_dir():
+        git_dir = dotgit
+    elif dotgit.is_file():
+        content = dotgit.read_text().strip()
+        if not content.startswith("gitdir: "):
+            raise ValueError(f"{dotgit} does not point to a git directory")
+        git_dir = top / content[len("gitdir: "):]
+    elif (top / "HEAD").is_file() and (top / "objects").is_dir():
+        git_dir = top
+    else:
+        raise ValueError(f"{top} is not a git repository")
+    git_dir = git_dir.resolve(strict=True)
+    commondir = git_dir / "commondir"
+    common = (git_dir / commondir.read_text().strip()).resolve(strict=True) if commondir.is_file() else git_dir
+    return git_dir, common
+
+
+def require_outside_sandbox(top):
+    """Refuse a repository the sandboxed agent could have written git files in."""
+    writable = os.environ.get("PI_SANDBOX_WRITABLE")
+    if writable is None:
+        return
+    roots = [Path(path).resolve() for path in json.loads(writable)]
+    for directory in git_dirs(top):
+        for root in roots:
+            if directory.is_relative_to(root) or root.is_relative_to(directory):
+                raise ValueError(f"{directory} is writable from the pi sandbox; "
+                                 "run this with the sandbox off (/sandbox off)")
+
+
 def git(*args, cwd):
     return subprocess.check_output(["git", "-C", str(cwd), *args], text=True).strip()
 
@@ -44,6 +84,7 @@ def create(argv):
     if target.exists() or target.is_symlink():
         raise ValueError("destination already exists")
     repo = Path(args.repo).expanduser().resolve(strict=True)
+    require_outside_sandbox(repo)
     subprocess.run(["git", "check-ref-format", "--branch", args.branch],
                    check=True, stdout=subprocess.DEVNULL)
     if args.branch.startswith("-") or args.base.startswith("-"):
@@ -72,6 +113,7 @@ def remove(argv):
     # git, never from the caller.
     if not (target / ".git").is_file():
         raise ValueError("not a linked worktree")
+    require_outside_sandbox(target)
     if Path(git("rev-parse", "--show-toplevel", cwd=target)) != target.resolve():
         raise ValueError("not the top of a worktree")
     listed = [line[len("worktree "):] for line in
@@ -100,10 +142,25 @@ def remove(argv):
     return 0
 
 
+def fetch(argv):
+    parser = argparse.ArgumentParser(prog="herdr-task-worktree fetch",
+                                     description="Fetch origin into a repository.")
+    parser.add_argument("--repo", required=True)
+    args = parser.parse_args(argv)
+
+    repo = Path(args.repo).expanduser().resolve(strict=True)
+    require_outside_sandbox(repo)
+    # origin only, no refspecs or flags from the caller.
+    subprocess.run(["git", "-C", str(repo), "fetch", "--prune", "origin"], check=True)
+    return 0
+
+
 def main():
     try:
         if sys.argv[1:2] == ["remove"]:
             return remove(sys.argv[2:])
+        if sys.argv[1:2] == ["fetch"]:
+            return fetch(sys.argv[2:])
         return create(sys.argv[1:])
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         print(f"herdr-task-worktree: {error}", file=sys.stderr)

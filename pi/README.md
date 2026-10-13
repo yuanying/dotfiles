@@ -186,8 +186,18 @@ worktree は `bin/setup-pi.sh` が `~/bin` にリンクするラッパーを使�
 `--delete-branch` は `git branch -d` なので、未マージのブランチは残してそう告げる
 (GitHub で squash マージしたものも未マージ扱いになる)。
 
-どちらもサンドボックスの `excludedCommands` に入っているので、単独のコマンドとして
-呼ぶと外で実行される。ただし実体はこのチェックアウトにあるので、dotfiles で起動した pi
+```bash
+~/bin/herdr-task-worktree fetch --repo /absolute/repo
+```
+
+coordinator はタスクディレクトリで動くので、サンドボックスの中からは元リポジトリの
+`.git` に書けず `git fetch` が失敗する。`fetch` は `git -C <repo> fetch --prune origin`
+だけを、他の引数を受け付けずに実行する。
+
+どれもサンドボックスの `excludedCommands` に入っているので、単独のコマンドとして
+呼ぶと外で実行される。外で git を動かすので、サンドボックスから書ける場所
+(拡張が `PI_SANDBOX_WRITABLE` で渡す) にあるリポジトリには、git を呼ぶ前に
+拒否する。そこにある hooks や設定は、サンドボックスの中から仕込めるため。ただし実体はこのチェックアウトにあるので、dotfiles で起動した pi
 からは外に出せない (書き換えられるファイルを外で実行しないため)。
 
 自作の extension を足したら各ホストで `bin/setup-pi.sh` を流す (devbox は起動時)。
