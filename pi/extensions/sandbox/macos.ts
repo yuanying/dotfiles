@@ -19,6 +19,10 @@ function runtimeConfig(policy: Policy): unknown {
 	return {
 		network: { deniedDomains: [], allowAllUnixSockets: policy.allowAllUnixSockets },
 		filesystem: { denyRead: policy.denyRead, allowWrite: policy.writable.filter((path) => existsSync(path)), denyWrite: policy.denyWrite },
+		// Go 製のコマンド (gh など) は TLS 証明書の検証を trustd に頼る。守るのはプロキシを
+		// 通らない trustd 経由の持ち出しだが、ネットワークが素通しのうちは塁いでも意味が無い。
+		// ネットワークを許可リストで制限するときに決め直す (docs/adr/0013)。
+		enableWeakerNetworkIsolation: true,
 	};
 }
 

@@ -50,6 +50,7 @@
   起動ディレクトリ、`/tmp`、`$TMPDIR` と設定の `allowWrite` だけで、その中でも
   `.git/hooks`、`.git/config`、`.pi`、`.claude`、`.envrc` などは書けない。Unix ソケットは
   塞ぐ (herdr や docker に頼んで外で実行させるのを防ぐため)。ネットワークは制限しない。
+  Mac では gh など Go 製のコマンドが TLS を検証できるよう、trustd への接続も許している。
   - 切り替えは `/sandbox on` / `/sandbox off`、状態は `/sandbox`。起動時の状態は設定の `enabled`
     で決まり、`--sandbox` / `--no-sandbox` でその起動だけ上書きする。モデルからは切り替えられない。
     1 コマンドだけ外で実行するなら、入力欄で `!` を付けて打つ (ユーザーの `!` は包まない)。
