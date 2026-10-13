@@ -1,0 +1,7 @@
+# aemilia 固有の Ghostty 設定
+# ~/Library/Application Support/com.mitchellh.ghostty/config.host
+# (bin/setup.sh から symlink、ghostty/config が config-file で読む)
+
+# herdr は terminal テーマでこの配色をそのまま使う。Claude Code / Codex / pi
+# のカスタムテーマ (labfox / lab-fox) もこのパレットから作っている。
+theme = Lab Fox
