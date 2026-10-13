@@ -175,5 +175,20 @@ worktree は `bin/setup-pi.sh` が `~/bin` にリンクするラッパーを使�
 パストラバーサル・外へ向かう symlink・既存の作成先を拒否する。新規ブランチの
 作成だけを行い、tab は別途 `herdr tab create` で作る。OS サンドボックスではない。
 
+```bash
+~/bin/herdr-task-worktree remove \
+  --path /absolute/home/.local/state/herdr-tasks/task/worktrees/branch [--delete-branch]
+```
+
+消すときも同じ範囲に限る。そのパスが worktree の先頭で、git が linked worktree と
+して挙げるものだけを `git worktree remove` (`--force` なし) で消す。未コミットの変更や
+未追跡のファイルがあれば git が拒む。元リポジトリは引数ではなく git から得る。
+`--delete-branch` は `git branch -d` なので、未マージのブランチは残してそう告げる
+(GitHub で squash マージしたものも未マージ扱いになる)。
+
+どちらもサンドボックスの `excludedCommands` に入っているので、単独のコマンドとして
+呼ぶと外で実行される。ただし実体はこのチェックアウトにあるので、dotfiles で起動した pi
+からは外に出せない (書き換えられるファイルを外で実行しないため)。
+
 自作の extension を足したら各ホストで `bin/setup-pi.sh` を流す (devbox は起動時)。
 既に張ってあるものの変更だけなら pi で `/reload` する。
