@@ -91,9 +91,11 @@ description = "navigator: list agents"
 new_cwd = "follow"
 
 [theme]
-# Ghostty のテーマ (Lab Fox、ghostty/config.aemilia) の ANSI パレットを
-# そのまま使う。色を変えるときは Ghostty 側を変える。
-name = "terminal"
+# Lab Fox (Ghostty の組み込みテーマ) の配色。herdr に Lab Fox は無いので、
+# 下の [theme.custom] で全部の色を上書きする。name は上書きが漏れたときの
+# 受け皿 (今後 herdr に色の項目が増えたときなど)。
+# Claude Code / Codex / pi / nvim のテーマ (labfox / lab-fox) と同じパレット。
+name = "catppuccin"
 
 # ホスト端末の light/dark には追従せず、上の name で固定する。
 auto_switch = false
@@ -102,10 +104,30 @@ auto_switch = false
 # tmux の `set -g status-style bg=default` 相当。
 # パネル背景を塗らず、ターミナル側の背景 (透過含む) をそのまま見せる。
 panel_bg = "reset"
+sidebar_bg = "reset"
+
+# Lab Fox には青と水色が無いので、blue には紫、teal にはミントを当てる。
+accent = "#fc6d26"         # オレンジ
+active_row_bg = "#3a3a3a"
+selection_bg = "#535353"
+surface0 = "#3a3a3a"
+surface1 = "#535353"
+surface_dim = "#2e2e2e"
+overlay0 = "#7f7f7f"
+overlay1 = "#b2b2b2"
+text = "#ffffff"
+subtext0 = "#b2b2b2"
+mauve = "#9e7cf0"
+green = "#3eb383"
+yellow = "#fca121"
+red = "#ec5941"
+blue = "#7d53e7"
+teal = "#53eaa8"
+peach = "#fc6d26"
 
 [ui]
-# 他ホストの accent (zenburn の colour109) は入れない。terminal テーマの
-# アクセント (ANSI の blue) を使い、Ghostty の配色に従わせる。
+# 他ホストの accent (zenburn の colour109) は入れない。アクセントは上の
+# [theme.custom] で Lab Fox のオレンジにしている。
 
 # タブ作成時に名前を聞かない。名前なしタブのラベルは表示位置の連番に
 # なるだけで cwd もターミナルタイトルも参照されないため、実際の命名は

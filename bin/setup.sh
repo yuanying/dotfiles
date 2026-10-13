@@ -126,15 +126,6 @@ if [[ "$(uname)" == "Darwin" ]]; then
     GHOSTTY_DIR="${HOME}/Library/Application Support/com.mitchellh.ghostty"
     mkdir -p "${GHOSTTY_DIR}"
     ln -sfn ${ROOT}/../ghostty/config "${GHOSTTY_DIR}/config"
-
-    # ホスト別の設定。ghostty/config が config-file = ?config.host で
-    # 読む。該当ファイルが無いホストでは張らず、以前張ったリンクも外す。
-    GHOSTTY_HOST_CONFIG=${ROOT}/../ghostty/config.$(hostname -s)
-    if [[ -f ${GHOSTTY_HOST_CONFIG} ]]; then
-        ln -sfn ${GHOSTTY_HOST_CONFIG} "${GHOSTTY_DIR}/config.host"
-    elif [[ -L "${GHOSTTY_DIR}/config.host" ]]; then
-        rm -f "${GHOSTTY_DIR}/config.host"
-    fi
 fi
 
 # Claude Code のカスタムテーマ。どのホストでも両方選べるように全部張る。
