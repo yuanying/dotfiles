@@ -32,6 +32,7 @@ exec docker run \
     --mount type=bind,source=/home/yuanying,target=/home/yuanying,bind-propagation=slave \
     --network "name=v6net,driver-opt=com.docker.network.endpoint.sysctls=net.ipv6.conf.IFNAME.disable_ipv6=0" \
     -e "DEVBOX_IP6_TOKEN=${IP6_TOKEN}" \
+    -v /var/lib/devbox/ssh/devbox:/etc/ssh/host-keys \
     -w /home/yuanying \
     --add-host braque:192.168.1.131 \
     --add-host chirico:192.168.1.83 \

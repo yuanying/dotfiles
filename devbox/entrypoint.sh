@@ -45,6 +45,40 @@ install_authorized_keys() {
     return 0
 }
 
+# sshd's host keys live on the host, one directory per container
+# (/var/lib/devbox/ssh/<container name>), which the start scripts mount here.
+# A container recreated from a new image answers with the same keys, and two
+# containers on one host do not share them. The image ships none: the keys
+# openssh-server made while the image was built were the same in every
+# container and went to the registry with it.
+#
+# A key that is missing is made on the first start; one that is there is left
+# alone, so keys copied in from elsewhere are kept. The directory is root's:
+# only sshd reads it. Without the mount the keys are made all the same and go
+# with the container. A key that cannot be made is a warning: sshd starts with
+# whichever keys it can load.
+HOST_KEY_DIR=/etc/ssh/host-keys
+HOST_KEY_TYPES=(ed25519 ecdsa rsa)
+
+install_host_keys() {
+    local dir=${1:-${HOST_KEY_DIR}} type key
+    if ! sudo mkdir -p "${dir}" || ! sudo chmod 700 "${dir}"; then
+        echo "could not prepare ${dir} for the host keys" >&2
+        return 0
+    fi
+    for type in "${HOST_KEY_TYPES[@]}"; do
+        key=${dir}/ssh_host_${type}_key
+        sudo test -s "${key}" && continue
+        echo "Making host key ${key}"
+        # A .pub left without its key would make ssh-keygen ask to overwrite.
+        sudo rm -f "${key}" "${key}.pub"
+        if ! sudo ssh-keygen -q -t "${type}" -N '' -C '' -f "${key}" < /dev/null; then
+            echo "could not make host key ${key}" >&2
+        fi
+    done
+    return 0
+}
+
 [[ ${BASH_SOURCE[0]} == "$0" ]] || return 0
 
 set -x
@@ -53,6 +87,7 @@ set_ip6_token
 
 echo "Setup ssh"
 install_authorized_keys
+install_host_keys
 
 echo "Setup env"
 mkdir -p ~/.zsh
@@ -202,5 +237,11 @@ if [[ -f ${host_zshrc} ]]; then
     ")
 fi
 
+# HostKey は SetEnv と違い、-o を重ねた分だけ足される。
+HOST_KEY_OPTIONS=()
+for type in "${HOST_KEY_TYPES[@]}"; do
+    HOST_KEY_OPTIONS+=(-o "HostKey=${HOST_KEY_DIR}/ssh_host_${type}_key")
+done
+
 # SetEnv は -o を複数回渡しても最初の 1 つしか効かないので、まとめて渡す。
-sudo /usr/sbin/sshd -D -o "SetEnv ${SESSION_ENV[*]}"
+sudo /usr/sbin/sshd -D -o "SetEnv ${SESSION_ENV[*]}" "${HOST_KEY_OPTIONS[@]}"

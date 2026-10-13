@@ -17,6 +17,7 @@ exec docker run \
     -v /usr/share/ca-certificates:/usr/share/ca-certificates \
     -v /etc/ssl/certs:/etc/ssl/certs \
     --mount type=bind,source=/home/yuanying,target=/home/yuanying,bind-propagation=slave \
+    -v /var/lib/devbox/ssh/devbox:/etc/ssh/host-keys \
     -w /home/yuanying \
     -p 8080:8080 \
     -p 9090:9090 \

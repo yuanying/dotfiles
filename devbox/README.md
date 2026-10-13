@@ -26,6 +26,27 @@ and skips it silently when the host declares nothing, so it is not something
 the container depends on. See `proxy/README.md`, and `docs/adr/0004` to `0008`
 for why it is built the way it is.
 
+## SSH host keys
+
+The image carries no host keys. Each container keeps its own on the host, in
+`/var/lib/devbox/ssh/<container name>` — `devbox` for the start scripts,
+`<hostname>-<segment>` for `scripts/run-workspace.sh` — mounted at
+`/etc/ssh/host-keys`. `entrypoint.sh` makes whichever key is missing on the
+first start and reuses it from then on, so a container recreated from a new
+image keeps its keys, and no two containers share them. The directory is
+root's and lies outside `$HOME`, so the copies of `~/.ssh` that
+`run-workspace.sh` makes never carry it.
+
+To keep the keys a container already has, and with them every client's
+`known_hosts`, copy them out before switching to an image without them:
+
+```
+$ sudo mkdir -p -m 700 /var/lib/devbox/ssh/devbox
+$ docker exec devbox sudo sh -c 'cd /etc/ssh && tar -c ssh_host_*' | sudo tar -C /var/lib/devbox/ssh/devbox -x
+```
+
+To give a container new keys, remove its directory and recreate it.
+
 ## SSH agent
 
 The container has no systemd, so nothing starts an ssh-agent for you.

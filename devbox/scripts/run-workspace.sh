@@ -79,6 +79,7 @@ exec docker run \
     -v /usr/share/ca-certificates:/usr/share/ca-certificates \
     -v /etc/ssl/certs:/etc/ssl/certs \
     --mount type=bind,source=${WORKSPACE_DIR},target=/home/yuanying,bind-propagation=slave \
+    -v /var/lib/devbox/ssh/${WORKSPACE_NAME}:/etc/ssh/host-keys \
     -w /home/yuanying \
     --add-host braque:192.168.1.131 \
     --add-host chirico:192.168.1.83 \

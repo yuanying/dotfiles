@@ -289,6 +289,11 @@ The second command should report nineteen dependencies across `devbox/Dockerfile
   and secrets belong in `~/.zsh_private` instead; and a value containing whitespace is skipped,
   since `SetEnv` cannot represent it. `-o SetEnv` also honours only its first occurrence, which
   is why every variable goes into a single `-o`.
+- sshd's host keys are not in the image (the `Dockerfile` deletes the ones `openssh-server`
+  makes). Every script that starts a container mounts `/var/lib/devbox/ssh/<container name>` at
+  `/etc/ssh/host-keys`, and `entrypoint.sh` makes the missing keys there and hands each to sshd
+  with its own `-o HostKey=` (unlike `SetEnv`, repeated `HostKey` options add up). A new start
+  script needs that mount, under a name no other container on the host uses.
 - On first start, `entrypoint.sh` fetches SSH keys from GitHub, installs zsh plugins, and clones
   the dotfiles into `~/dotfiles`. That is this same repository, cloned from GitHub rather than
   copied out of the build context on purpose: the container's `$HOME` is the host's, so the working
