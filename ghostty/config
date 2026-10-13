@@ -17,9 +17,3 @@ keybind = global:ctrl+tab=toggle_visibility
 
 font-family = Hack Nerd Font Mono
 font-thicken = true
-
-# ホスト別の設定 (ghostty/config.<hostname>)。bin/setup.sh がこのファイルの隣へ
-# config.host として張る。相対パスは symlink の先ではなくこのファイルを読んだ
-# 場所から解決される。読み込みはこのファイルを読み終えた後なので、同じキーは
-# ホスト別の値が勝つ。? を付けているので、無いホストではエラーにならない。
-config-file = ?config.host

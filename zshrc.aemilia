@@ -7,7 +7,7 @@
 # 後方互換のため ~/.zshrc.local も引き続き読まれる。読み込み順はこちらが
 # 後なので、同じ変数を両方で設定した場合はこのファイルが勝つ。
 
-# Ghostty が Lab Fox なので、nvim の配色も揃える (nvim/colors/labfox.lua)。
+# herdr が Lab Fox なので、nvim の配色も揃える (nvim/colors/labfox.lua)。
 export NVIM_COLORSCHEME=labfox
 
 # airline の base16 テーマは色を固定せず、今の colorscheme のハイライトから
@@ -16,7 +16,7 @@ export AIRLINE_THEME=base16
 
 # Claude Code の statusline はカスタムテーマの対象外で、スクリプトが自前で
 # 色を出す。claude/statusline-command.sh がこの値でパレットを選ぶ。
-# Ghostty (Lab Fox) と Claude Code のテーマ (custom:labfox) に揃える。
+# herdr (Lab Fox) と Claude Code のテーマ (custom:labfox) に揃える。
 export CLAUDE_STATUSLINE_THEME=labfox
 
 # vim: set ft=zsh :

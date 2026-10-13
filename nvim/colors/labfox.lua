@@ -1,4 +1,4 @@
--- Lab Fox (Ghostty の組み込みテーマ) の配色。aemilia で Ghostty / herdr /
+-- Lab Fox (Ghostty の組み込みテーマ) の配色。aemilia で herdr /
 -- Claude Code / Codex / pi と揃えるために使う。
 --
 -- Lab Fox の nvim 版は無いので、パレットを mini.base16 に渡して作る。
