@@ -14,6 +14,12 @@ case "${CLAUDE_STATUSLINE_THEME:-solarized}" in
     C_HIGH='255;117;127'  # #ff757f red
     C_DIM='59;66;97'      # #3b4261
     ;;
+  labfox)
+    C_LOW='62;179;131'    # #3eb383 green
+    C_MID='252;161;33'    # #fca121 amber
+    C_HIGH='236;89;65'    # #ec5941 red
+    C_DIM='83;83;83'      # #535353
+    ;;
   gruvbox)
     C_LOW='142;192;124'   # #8ec07c aqua
     C_MID='250;189;47'    # #fabd2f yellow

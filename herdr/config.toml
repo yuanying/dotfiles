@@ -6,8 +6,8 @@
 # config.<hostname>.toml が無いホストだけがこのファイルを使う。
 #
 # テーマなどホスト固有にしたい項目が出たら config.<hostname>.toml を
-# 増やす。既存のホスト固有ファイルは herdr/config.anietta.toml と
-# herdr/config.boucherie.toml。
+# 増やす。既存のホスト固有ファイルは herdr/config.aemilia.toml と
+# herdr/config.anietta.toml と herdr/config.boucherie.toml。
 #
 # 既定値は `herdr --default-config` で確認できる。
 # ここには tmux.conf から引き継いだ設定と、明示的に変えたい項目だけを書く。
