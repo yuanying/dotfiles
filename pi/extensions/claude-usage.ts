@@ -1,6 +1,8 @@
 // claude-bridge (pi-claude-agent-sdk) と anthropic で Claude サブスクリプションの
 // 5 時間・週間の利用率をフッターに出す。@specode/pi-subscription-usage が
-// Anthropic に対応していないための補完で、表示の書式と displayMode は揃える。
+// Anthropic に対応していないための補完で、displayMode はそちらに揃える。
+// 利用率は Claude Code の statusline (claude/statusline-command.sh) と同じく
+// 色付きのバーで出す。
 //
 // 取得先は Claude Code の /usage と同じ非公開エンドポイント。認証は claude-bridge と
 // 同じく pi の anthropic 認証 (/login anthropic) だけを使い、~/.claude は読まない。
@@ -33,6 +35,8 @@ type UsageResponse = {
 
 type DisplayMode = "used" | "remaining";
 
+type Painter = (color: "success" | "warning" | "error", text: string) => string;
+
 export function formatCountdown(ms: number): string | undefined {
 	if (!Number.isFinite(ms) || ms <= 0) return undefined;
 	const minutes = Math.floor(ms / 60_000);
@@ -54,10 +58,39 @@ export function formatWindow(label: string, window: Window, mode: DisplayMode, n
 	return countdown ? `${label} ${percent}% ↻${countdown}` : `${label} ${percent}%`;
 }
 
-export function formatStatus(usage: UsageResponse, mode: DisplayMode, now: number): string | undefined {
+export function progressBar(percent: number): string {
+	const filled = Math.min(10, Math.max(0, Math.floor(percent / 10)));
+	return "▰".repeat(filled) + "▱".repeat(10 - filled);
+}
+
+// "5h ▰▰▱▱▱▱▱▱▱▱ 23% ↻2h10m" の形。色は表示モードに関係なく消費した割合で
+// statusline と同じ閾値 (50% / 80%) で決める。
+export function formatGauge(
+	label: string,
+	window: Window,
+	mode: DisplayMode,
+	now: number,
+	paint: Painter,
+): string | undefined {
+	if (typeof window?.utilization !== "number") return undefined;
+	const used = Math.min(100, Math.max(0, window.utilization));
+	const percent = Math.round(mode === "used" ? used : 100 - used);
+	const color = used < 50 ? "success" : used < 80 ? "warning" : "error";
+	const resetsAt = window.resets_at ? Date.parse(window.resets_at) : NaN;
+	const countdown = formatCountdown(resetsAt - now);
+	const gauge = paint(color, `${progressBar(percent)} ${percent}%`);
+	return countdown ? `${label} ${gauge} ↻${countdown}` : `${label} ${gauge}`;
+}
+
+export function formatStatus(
+	usage: UsageResponse,
+	mode: DisplayMode,
+	now: number,
+	paint: Painter = (_color, text) => text,
+): string | undefined {
 	const parts = [
-		formatWindow("5h", usage.five_hour, mode, now),
-		formatWindow("1w", usage.seven_day, mode, now),
+		formatGauge("5h", usage.five_hour, mode, now, paint),
+		formatGauge("1w", usage.seven_day, mode, now, paint),
 	].filter((part): part is string => part !== undefined);
 	return parts.length > 0 ? parts.join(" · ") : undefined;
 }
@@ -127,6 +160,12 @@ export default function claudeUsage(pi: ExtensionAPI): void {
 
 	const active = (ctx: ExtensionContext) => PROVIDERS.has(ctx.model?.provider ?? "");
 
+	function showUsage(ctx: ExtensionContext, usage: UsageResponse | undefined): void {
+		const theme = ctx.ui.theme;
+		const paint: Painter = (color, text) => theme.fg(color, text);
+		ctx.ui.setStatus(STATUS_KEY, usage && formatStatus(usage, displayMode, Date.now(), paint));
+	}
+
 	function stop(ctx: ExtensionContext): void {
 		if (timer) clearTimeout(timer);
 		timer = undefined;
@@ -159,7 +198,7 @@ export default function claudeUsage(pi: ExtensionAPI): void {
 		timer = setTimeout(() => void refresh(ctx, true), REFRESH_MS);
 		try {
 			const usage = !force && last && Date.now() - last.at < REFRESH_MS ? last.usage : await query(ctx);
-			if (active(ctx)) ctx.ui.setStatus(STATUS_KEY, usage && formatStatus(usage, displayMode, Date.now()));
+			if (active(ctx)) showUsage(ctx, usage);
 		} catch (error) {
 			if ((error as Error)?.name === "AbortError") return;
 			if (active(ctx)) ctx.ui.setStatus(STATUS_KEY, "claude usage error");
@@ -183,7 +222,7 @@ export default function claudeUsage(pi: ExtensionAPI): void {
 					ctx.ui.notify("anthropic の OAuth 認証がない (/login anthropic)", "warning");
 					return;
 				}
-				if (active(ctx)) ctx.ui.setStatus(STATUS_KEY, formatStatus(usage, displayMode, Date.now()));
+				if (active(ctx)) showUsage(ctx, usage);
 				ctx.ui.notify(formatDetails(usage, displayMode, Date.now()), "info");
 			} catch (error) {
 				ctx.ui.notify(`Claude usage の取得に失敗した: ${(error as Error)?.message ?? error}`, "error");
