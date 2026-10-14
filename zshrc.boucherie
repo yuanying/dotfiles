@@ -7,15 +7,7 @@
 # 後方互換のため ~/.zshrc.local も引き続き読まれる。読み込み順はこちらが
 # 後なので、同じ変数を両方で設定した場合はこのファイルが勝つ。
 
-# herdr が tokyo-night なので、nvim の配色も揃える。
-export NVIM_COLORSCHEME=tokyonight
-
-# airline に tokyonight 専用のテーマは無いため、寒色系で近いものを使う。
-export AIRLINE_THEME=base16_tomorrow_night
-
-# Claude Code の statusline はカスタムテーマの対象外で、スクリプトが自前で
-# 色を出す。claude/statusline-command.sh がこの値でパレットを選ぶ。
-export CLAUDE_STATUSLINE_THEME=tokyonight
+# テーマ選択は themes/host.zsh にまとめる。
 
 # sdctl (sd-generate スキル) の既定の接続先は localhost:7860 だが、sd-webui は
 # devbox の外のコンテナで動いている。devbox も参加している v6net 上の
