@@ -33,7 +33,8 @@
   非公開 API のため提供元の変更で取得できなくなる可能性がある。
   リセットクレジット消費は `/usage` の明示的な確認操作が必要。
 - `claude-bridge` / `anthropic` の利用率は上のパッケージが対応していないので、
-  自作の `extensions/claude-usage.ts` がフッターに `5h` / `1w` を同じ書式で出す。
+  自作の `extensions/claude-usage.ts` がフッターに `5h` / `1w` を出す。
+  Claude Code の statusline と同じく、消費率で色を変えたバーで表示する。
   `displayMode` も `subscription-usage.json` に揃える。認証は `/login anthropic`
   だけを使い、Claude Code の `/usage` と同じ非公開 API を読む。
   `/claude-usage` で再取得し、Opus / Sonnet の週間枠も表示する。
