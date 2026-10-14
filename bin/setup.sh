@@ -139,7 +139,7 @@ for theme in ${ROOT}/../claude/themes/*.json; do
 done
 
 # statusline はテーマトークンの対象外なので、スクリプトが自前で色を出す。
-# パレットは $CLAUDE_STATUSLINE_THEME で切り替える (zshrc.<hostname> で設定)。
+# パレットは $CLAUDE_STATUSLINE_THEME で切り替える (themes/host.zsh で設定)。
 # settings.json がこのパスを直接指しているため、名前は変えない。
 ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 

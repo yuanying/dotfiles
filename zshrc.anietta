@@ -7,15 +7,6 @@
 # 後方互換のため ~/.zshrc.local も引き続き読まれる。読み込み順はこちらが
 # 後なので、同じ変数を両方で設定した場合はこのファイルが勝つ。
 
-# herdr が gruvbox なので、nvim の配色も揃える。
-export NVIM_COLORSCHEME=gruvbox
-
-# vim-airline-themes に "gruvbox" という名前のテーマは無く、
-# gruvbox 系は base16 版のみ用意されている。
-export AIRLINE_THEME=base16_gruvbox_dark_medium
-
-# Claude Code の statusline はカスタムテーマの対象外で、スクリプトが自前で
-# 色を出す。claude/statusline-command.sh がこの値でパレットを選ぶ。
-export CLAUDE_STATUSLINE_THEME=gruvbox
+# テーマ選択は themes/host.zsh にまとめる。
 
 # vim: set ft=zsh :

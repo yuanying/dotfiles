@@ -35,6 +35,9 @@ fi
 # brew info zsh-completions
 fpath=(${HOME}/.zsh/zsh-completions ${HOME}/.zfunc $fpath)
 
+# Spaceship の読み込み前にホストのテーマを決める。
+source "${${(%):-%x}:A:h}/themes/host.zsh"
+
 # Load all of zsh config files
 for config_file ($ZSH/*.zsh) source $config_file
 
@@ -55,6 +58,9 @@ fi
 if [[ -f ~/.zshrc.${HOST%%.*} ]]; then
     source ~/.zshrc.${HOST%%.*}
 fi
+
+# .zshrc.local よりホストのテーマを優先する (従来のホスト別設定と同じ順序)。
+source "${${(%):-%x}:A:h}/themes/host.zsh"
 
 ## テーマのフォールバック
 # .zshrc.<hostname> が無い (または設定していない) マシンのデフォルトは

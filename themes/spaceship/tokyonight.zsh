@@ -1,0 +1,7 @@
+_spaceship_accent='#c099ff'
+_spaceship_secondary='#82aaff'
+_spaceship_info='#86e1fc'
+_spaceship_muted='#828bb8'
+_spaceship_success='#c3e88d'
+_spaceship_warning='#ffc777'
+_spaceship_error='#ff757f'
