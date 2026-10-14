@@ -9,6 +9,7 @@
 // サンドボックス (extensions/sandbox) が有効なら、起動はそちらに任せる。
 // 共有のイベントバスへ SANDBOX_SPAWN を投げ、result が埋まればそれを使う。
 // 埋まらなければサンドボックスは無効なので、ここで素のまま起動する。
+// outsideSandbox を付けると、サンドボックスがユーザーに問い、許されたときだけ外で起動する。
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { createWriteStream, mkdtempSync, type WriteStream } from "node:fs";
@@ -44,6 +45,8 @@ type Job = {
 type SandboxSpawnRequest = {
 	command: string;
 	cwd: string;
+	ctx: ExtensionContext;
+	outsideSandbox?: { reason?: string };
 	result?: Promise<{ child: ChildProcess; sandboxed: boolean; finish: (output: string) => string[] }>;
 };
 
@@ -137,8 +140,13 @@ export default function backgroundBash(pi: ExtensionAPI): void {
 		return child;
 	}
 
-	async function start(command: string, cwd: string): Promise<Job> {
-		const request: SandboxSpawnRequest = { command, cwd };
+	async function start(
+		command: string,
+		cwd: string,
+		ctx: ExtensionContext,
+		outsideSandbox: SandboxSpawnRequest["outsideSandbox"],
+	): Promise<Job> {
+		const request: SandboxSpawnRequest = { command, cwd, ctx, outsideSandbox };
 		pi.events.emit(SANDBOX_SPAWN, request);
 		// サンドボックスが起動に失敗したら、素で起動せずにエラーにする。
 		const launched = request.result ? await request.result : undefined;
@@ -205,13 +213,20 @@ export default function backgroundBash(pi: ExtensionAPI): void {
 			"シェルコマンドをバックグラウンドで起動し、すぐに戻る。コマンドが終了すると、exit code と出力の末尾が" +
 			"メッセージとして会話に届き、ターンが始まる。完了を待つためにポーリングや sleep をしないこと。" +
 			"長く待つだけのコマンド (例: `herdr agent wait <name> --until done --until blocked`) に使う。" +
-			"対話的な入力を求めるコマンドには使えない (stdin は閉じている)。",
+			"対話的な入力を求めるコマンドには使えない (stdin は閉じている)。" +
+			"サンドボックスが有効な間、外で実行する必要があるなら outsideSandbox: true と reason を付けて頼める。" +
+			"外で実行するかは、起動する前にユーザーが決める。",
 		parameters: Type.Object({
 			command: Type.String({ description: "実行するシェルコマンド" }),
 			cwd: Type.Optional(Type.String({ description: "作業ディレクトリ (既定: セッションの cwd)" })),
+			outsideSandbox: Type.Optional(
+				Type.Boolean({ description: "サンドボックスの外で実行するよう頼む。起動前にユーザーに問い、許されたときだけ外で起動する" }),
+			),
+			reason: Type.Optional(Type.String({ description: "outsideSandbox のとき、外で実行する必要がある理由 (ユーザーに見せる)" })),
 		}),
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const job = await start(params.command, params.cwd ?? ctx.cwd);
+			const outside = params.outsideSandbox ? { reason: params.reason } : undefined;
+			const job = await start(params.command, params.cwd ?? ctx.cwd, ctx, outside);
 			return {
 				content: [
 					{

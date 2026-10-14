@@ -8,6 +8,7 @@ import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { homedir, constants as osConstants, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
 import {
 	type BashOperations,
 	createBashToolDefinition,
@@ -49,14 +50,28 @@ const CHOICE_ABORT = "中止 (書き込まない)";
 const CHOICE_SESSION = "このセッションだけ許可";
 const CHOICE_PROJECT = "このプロジェクトで許可 (.pi/sandbox.json に書く)";
 const CHOICE_GLOBAL = "すべてのプロジェクトで許可 (~/.pi/agent/extensions/sandbox.json に書く)";
+const CHOICE_DECLINE = "許可しない";
+const CHOICE_RUN_OUTSIDE = "今回だけサンドボックスの外で実行";
 
 const DENIAL_NOTE =
 	"サンドボックスによる拒否なので、別の書き方や別の場所で回避しようとせず、何が拒否されたかをユーザーに伝えること。";
+const OUTSIDE_NOTE =
+	"拒否されると分かっているコマンドや、拒否されたコマンドを外で実行する必要があるなら、bash / bg_run に outsideSandbox: true と reason を付けて頼める。外で実行するかは、実行前にユーザーが決める。";
+// bash の拒否と、サンドボックスの状態を伝えるときに添える。
+const COMMAND_DENIAL_NOTE =
+	"サンドボックスによる拒否なので、別の書き方や別の場所で回避しようとしないこと。" +
+	"外で実行する必要があるなら、bash / bg_run に outsideSandbox: true と reason を付けて頼み直せる (実行前にユーザーが決める)。" +
+	"そうでなければ、何が拒否されたかをユーザーに伝えること。";
 
-/** bg_run がコマンドを起動するときに投げる。サンドボックスが有効なら result を埋める。 */
+/**
+ * bg_run がコマンドを起動するときに投げる。サンドボックスが有効なら result を埋める。
+ * outsideSandbox なら、ユーザーに問うて許されたときだけ外で起動する (許されなければ reject)。
+ */
 export type SpawnRequest = {
 	command: string;
 	cwd: string;
+	ctx: ExtensionContext;
+	outsideSandbox?: { reason?: string };
 	result?: Promise<Launched>;
 };
 
@@ -168,6 +183,27 @@ export default function sandbox(pi: ExtensionAPI): void {
 		});
 	}
 
+	/** 禁止パスが作られた / 置き換えられたら、出力に足す警告を返す。 */
+	function denyWriteWatcher(policy: Policy): () => string[] {
+		const before = snapshot(policy.denyWrite);
+		return () => {
+			const changed = changedPaths(before, snapshot(policy.denyWrite));
+			if (changed.length === 0) return [];
+			const message = `[sandbox] 警告: 書き込みを禁じたパスが作られた / 置き換えられた: ${changed.join(", ")}。サンドボックスの外で読まれる前に中身を確認すること。`;
+			ui?.notify(message, "warning");
+			return [message];
+		};
+	}
+
+	/**
+	 * ユーザーが許したコマンドを、サンドボックスの外で起動する。制限は何もかけないが、
+	 * 禁止パスが作られた / 置き換えられたことは中で起動したときと同じく知らせる。
+	 */
+	function launchOutside(current: State, command: string, cwd: string, env: NodeJS.ProcessEnv | undefined): Launched {
+		const watch = denyWriteWatcher(policyFor(current));
+		return { child: spawnLocal(command, cwd, env), sandboxed: false, finish: () => watch() };
+	}
+
 	/** コマンドを起動する。サンドボックスの外へ出す (除外) か中で起動するかを決める。 */
 	async function launch(current: State, command: string, cwd: string, env: NodeJS.ProcessEnv | undefined): Promise<Launched> {
 		const policy = policyFor(current);
@@ -181,7 +217,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 			return { child: spawnLocal(exclusion.command, cwd, outsideEnv), sandboxed: false, finish: () => [] };
 		}
 		const notes = exclusion.note ? [`[sandbox] ${exclusion.note}`] : [];
-		const before = snapshot(policy.denyWrite);
+		const watch = denyWriteWatcher(policy);
 		let child: ChildProcess;
 		if (process.platform === "darwin") {
 			child = spawnLocal(await wrapForMacos(policy, command), cwd, env);
@@ -193,27 +229,46 @@ export default function sandbox(pi: ExtensionAPI): void {
 			if (process.platform === "darwin") cleanupAfterMacosCommand();
 			if (looksDenied(output)) {
 				notes.push(
-					`[sandbox] サンドボックスが有効。書き込めるのは /sandbox で示す場所だけで、Unix ソケット (herdr、docker など) は塞いでいる。${DENIAL_NOTE}`,
+					`[sandbox] サンドボックスが有効。書き込めるのは /sandbox で示す場所だけで、Unix ソケット (herdr、docker など) は塞いでいる。${COMMAND_DENIAL_NOTE}`,
 				);
 			}
-			const changed = changedPaths(before, snapshot(policy.denyWrite));
-			if (changed.length > 0) {
-				const message = `[sandbox] 警告: 書き込みを禁じたパスが作られた / 置き換えられた: ${changed.join(", ")}。サンドボックスの外で読まれる前に中身を確認すること。`;
-				notes.push(message);
-				ui?.notify(message, "warning");
-			}
+			notes.push(...watch());
 			return notes;
 		};
 		return { child, sandboxed: true, finish };
 	}
 
+	/**
+	 * コマンドをサンドボックスの外で実行してよいか、実行する前にユーザーに問う。
+	 * 許されなければ、モデルに返す理由を付けて例外にする。
+	 */
+	async function confirmOutside(ctx: ExtensionContext, command: string, cwd: string, reason: string | undefined): Promise<void> {
+		if (!ctx.hasUI) throw new Error("[sandbox] UI が無いので、サンドボックスの外での実行をユーザーに問えない。外では実行しなかった。");
+		const title = [
+			"サンドボックス: このコマンドをサンドボックスの外で実行するよう頼まれた。外では書き込みの制限が何もかからない。",
+			`理由: ${reason?.trim() || "(書かれていない)"}`,
+			`cwd: ${cwd}`,
+			"command:",
+			command,
+		].join("\n");
+		const choice = await ctx.ui.select(title, [CHOICE_DECLINE, CHOICE_RUN_OUTSIDE], { timeout: PROMPT_TIMEOUT_MS });
+		if (choice !== CHOICE_RUN_OUTSIDE) {
+			throw new Error(
+				"[sandbox] ユーザーがサンドボックスの外での実行を許可しなかった。コマンドは実行していない。別の書き方や別の場所で回避しようとせず、ユーザーに判断を仰ぐこと。",
+			);
+		}
+	}
+
 	const localOps = createLocalBashOperations();
-	const operations: BashOperations = {
+	/** bash の実行部分。outside なら (ユーザーが許した) コマンドをサンドボックスの外で起動する。 */
+	const operationsFor = (outside: boolean): BashOperations => ({
 		async exec(command, cwd, options) {
 			const current = state;
 			if (!current) return localOps.exec(command, cwd, options);
 			if (options.signal?.aborted) throw new Error("aborted");
-			const { child, finish } = await launch(current, command, cwd, options.env);
+			const { child, finish } = outside
+				? launchOutside(current, command, cwd, options.env)
+				: await launch(current, command, cwd, options.env);
 			let output = "";
 			const onData = (chunk: Buffer) => {
 				output = (output + chunk.toString("utf-8")).slice(-16 * 1024);
@@ -248,11 +303,29 @@ export default function sandbox(pi: ExtensionAPI): void {
 				options.signal?.removeEventListener("abort", onAbort);
 			}
 		},
-	};
+	});
 
-	// 組み込みの bash を、実行部分だけ差し替えたもので置き換える。
-	const bash = createBashToolDefinition(process.cwd(), { operations });
-	pi.registerTool({ ...bash, label: "bash" });
+	// 組み込みの bash を、実行部分だけ差し替え、外で実行するための引数を足したもので置き換える。
+	const bash = createBashToolDefinition(process.cwd(), { operations: operationsFor(false) });
+	const bashOutside = createBashToolDefinition(process.cwd(), { operations: operationsFor(true) });
+	pi.registerTool({
+		...bash,
+		label: "bash",
+		description: `${bash.description} サンドボックスが有効な間、${OUTSIDE_NOTE}`,
+		parameters: Type.Object({
+			...bash.parameters.properties,
+			outsideSandbox: Type.Optional(
+				Type.Boolean({ description: "サンドボックスの外で実行するよう頼む。実行前にユーザーに問い、許されたときだけ外で実行する" }),
+			),
+			reason: Type.Optional(Type.String({ description: "outsideSandbox のとき、外で実行する必要がある理由 (ユーザーに見せる)" })),
+		}),
+		async execute(toolCallId, params, signal, onUpdate, ctx) {
+			const { outsideSandbox, reason, ...input } = params;
+			if (!outsideSandbox || !state) return bash.execute(toolCallId, input, signal, onUpdate, ctx);
+			await confirmOutside(ctx, input.command, ctx.cwd, reason);
+			return bashOutside.execute(toolCallId, input, signal, onUpdate, ctx);
+		},
+	});
 
 	pi.on("tool_call", async (event, ctx) => {
 		const current = state;
@@ -306,7 +379,12 @@ export default function sandbox(pi: ExtensionAPI): void {
 		const current = state;
 		if (!current) return;
 		// 例外も result の reject として届ける。握りつぶされると bg_run が素で起動してしまう。
-		request.result = launch(current, request.command, request.cwd, undefined);
+		const outside = request.outsideSandbox;
+		request.result = outside
+			? confirmOutside(request.ctx, request.command, request.cwd, outside.reason).then(() =>
+					launchOutside(current, request.command, request.cwd, undefined),
+				)
+			: launch(current, request.command, request.cwd, undefined);
 	});
 
 	function loadSettings(ctx: ExtensionContext): { state?: State; messages: string[]; error?: string } {
@@ -342,6 +420,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 			`サンドボックスの外で実行するコマンド (単独のコマンドとして呼んだときだけ): ${policy.excludedCommands.join(", ") || "なし"}`,
 			`Unix ソケット: ${policy.allowAllUnixSockets ? "許可" : "塞いでいる (herdr、docker などは使えない)"}`,
 			"ネットワーク: 制限しない",
+			`サンドボックスの外での実行: ${OUTSIDE_NOTE}`,
 		];
 	}
 
@@ -397,7 +476,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 			if (loaded.error) ctx.ui.notify(loaded.error, "error");
 		}
 		if (wanted && enable(ctx)) {
-			tellModel(["サンドボックスが有効になっている。", ...describe(state as State), DENIAL_NOTE].join("\n"));
+			tellModel(["サンドボックスが有効になっている。", ...describe(state as State), COMMAND_DENIAL_NOTE].join("\n"));
 		}
 	});
 
@@ -418,7 +497,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 				if (!enable(ctx)) return;
 				const lines = describe(state as State);
 				ctx.ui.notify(["サンドボックスを有効にした", ...lines].join("\n"), "info");
-				tellModel(["ユーザーがサンドボックスを有効にした。", ...lines, DENIAL_NOTE].join("\n"));
+				tellModel(["ユーザーがサンドボックスを有効にした。", ...lines, COMMAND_DENIAL_NOTE].join("\n"));
 			} else if (action === "off") {
 				if (!state) {
 					ctx.ui.notify("サンドボックスはもともと無効", "info");
