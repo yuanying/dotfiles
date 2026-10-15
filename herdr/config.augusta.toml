@@ -91,10 +91,10 @@ description = "navigator: list agents"
 new_cwd = "follow"
 
 [theme]
-# Matte Black (Ghostty の組み込みテーマ) の配色。herdr に Matte Black は無いので、
+# Mona Lisa (Ghostty の組み込みテーマ) の配色。herdr に Mona Lisa は無いので、
 # 下の [theme.custom] で全部の色を上書きする。name は上書きが漏れたときの
 # 受け皿 (今後 herdr に色の項目が増えたときなど)。
-# Claude Code / Codex / pi / nvim のテーマ (matteblack / matte-black) と同じパレット。
+# Claude Code / Codex / pi / nvim のテーマ (monalisa / mona-lisa) と同じパレット。
 name = "catppuccin"
 
 # ホスト端末の light/dark には追従せず、上の name で固定する。
@@ -106,30 +106,28 @@ auto_switch = false
 panel_bg = "reset"
 sidebar_bg = "reset"
 
-# Matte Black は灰色が主で、色はアンバー、オレンジ、赤しか無い。Ghostty の
-# パレットと同じく、green にはアンバー、blue にはオレンジを当てる。teal は
-# 明るい灰色、mauve は暗い赤。
-accent = "#e68e0d"         # オレンジ
-active_row_bg = "#1c1c1c"
-selection_bg = "#333333"
-surface0 = "#1c1c1c"
-surface1 = "#333333"
-surface_dim = "#121212"
-overlay0 = "#646466"
-overlay1 = "#8a8a8d"
-text = "#eaeaea"
-subtext0 = "#bebebe"
-mauve = "#b91c1c"
-green = "#ffc107"
-yellow = "#f59e0b"
-red = "#d35f5f"
-blue = "#e68e0d"
-teal = "#eaeaea"
-peach = "#f59e0b"
+# 暗い茶色の背景に黄色の文字。Ghostty のパレットの明るい側の色を使う。
+accent = "#ff9566"         # オレンジ
+active_row_bg = "#24130e"
+selection_bg = "#522917"
+surface0 = "#24130e"
+surface1 = "#522917"
+surface_dim = "#120b0d"
+overlay0 = "#6e5c32"
+overlay1 = "#a78f49"
+text = "#f7d66a"
+subtext0 = "#a78f49"
+mauve = "#ff5b6a"
+green = "#b4b264"
+yellow = "#f7d75c"
+red = "#ff4331"
+blue = "#9eb2b4"
+teal = "#8acd8f"
+peach = "#ff9566"
 
 [ui]
 # 他ホストの accent (zenburn の colour109) は入れない。アクセントは上の
-# [theme.custom] で Matte Black のオレンジにしている。
+# [theme.custom] で Mona Lisa のオレンジにしている。
 
 # タブ作成時に名前を聞かない。名前なしタブのラベルは表示位置の連番に
 # なるだけで cwd もターミナルタイトルも参照されないため、実際の命名は

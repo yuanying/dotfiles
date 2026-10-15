@@ -11,8 +11,8 @@ case ${HOST%%.*} in
     _dotfiles_host_theme=1
     ;;
   augusta)
-    DOTFILES_THEME=matteblack
-    AIRLINE_THEME=base16_grayscale_dark
+    DOTFILES_THEME=monalisa
+    AIRLINE_THEME=base16_woodland
     _dotfiles_host_theme=1
     ;;
   boucherie)
