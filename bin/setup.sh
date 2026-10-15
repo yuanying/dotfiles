@@ -69,6 +69,12 @@ for theme in ${ROOT}/../codex/themes/*.tmTheme; do
     ln -sfn ${theme} ~/.codex/themes/$(basename ${theme})
 done
 
+# merge-toml-config.py は tomllib (Python 3.11 以降) を使う。macOS 同梱の
+# python3 は 3.9 で tomllib が無いので、そのときは更新をスキップして先へ進む。
+has_tomllib() {
+    command -v python3 > /dev/null && python3 -c 'import tomllib' 2> /dev/null
+}
+
 # config.toml は Codex 自身も書き戻すため、symlink ではなくテーマだけを
 # 更新する。model や MCP、権限など、追跡していない手元の設定とコメントは
 # そのまま残す。優先順は共通 < ホスト別。
@@ -77,8 +83,8 @@ CODEX_HOST_SETTINGS=${ROOT}/../codex/config.$(hostname -s).toml
 if [[ ! -f ${CODEX_HOST_SETTINGS} ]]; then
     CODEX_HOST_SETTINGS=${ROOT}/../codex/config.toml
 fi
-if ! command -v python3 > /dev/null; then
-    echo "python3 が無いので ${CODEX_SETTINGS} の更新をスキップした" >&2
+if ! has_tomllib; then
+    echo "python3 で tomllib が使えないので ${CODEX_SETTINGS} の更新をスキップした" >&2
 else
     python3 ${ROOT}/merge-toml-config.py \
         ${CODEX_SETTINGS} \
@@ -109,8 +115,8 @@ HUNK_HOST_SETTINGS=${ROOT}/../hunk/config.$(hostname -s).toml
 if [[ ! -f ${HUNK_HOST_SETTINGS} ]]; then
     HUNK_HOST_SETTINGS=${ROOT}/../hunk/config.toml
 fi
-if ! command -v python3 > /dev/null; then
-    echo "python3 が無いので ${HUNK_SETTINGS} の更新をスキップした" >&2
+if ! has_tomllib; then
+    echo "python3 で tomllib が使えないので ${HUNK_SETTINGS} の更新をスキップした" >&2
 else
     python3 ${ROOT}/merge-toml-config.py \
         ${HUNK_SETTINGS} \
