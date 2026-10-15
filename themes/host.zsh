@@ -10,6 +10,11 @@ case ${HOST%%.*} in
     AIRLINE_THEME=base16_gruvbox_dark_medium
     _dotfiles_host_theme=1
     ;;
+  augusta)
+    DOTFILES_THEME=matteblack
+    AIRLINE_THEME=base16_grayscale_dark
+    _dotfiles_host_theme=1
+    ;;
   boucherie)
     DOTFILES_THEME=tokyonight
     AIRLINE_THEME=base16_tomorrow_night

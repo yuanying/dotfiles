@@ -43,8 +43,9 @@ return {
     opts = {},
   },
   {
-    -- aemilia 用。Lab Fox は nvim の colorscheme が無いので、colors/labfox.lua
-    -- がこれに 16 色を渡して作る。setup() はそちらで呼ぶ。
+    -- aemilia と augusta 用。Lab Fox と Matte Black は nvim の colorscheme が無いので、
+    -- colors/labfox.lua と colors/matteblack.lua がこれに 16 色を渡して作る。
+    -- setup() はそちらで呼ぶ。
     "nvim-mini/mini.base16",
     lazy = false,
     priority = 1000,
