@@ -1,8 +1,8 @@
 # ホストごとのテーマ選択。zshrc から Spaceship より先に読み込む。
 case ${HOST%%.*} in
   aemilia)
-    DOTFILES_THEME=labfox
-    AIRLINE_THEME=base16
+    DOTFILES_THEME=crayonponyfish
+    AIRLINE_THEME=base16_paraiso
     _dotfiles_host_theme=1
     ;;
   anietta)

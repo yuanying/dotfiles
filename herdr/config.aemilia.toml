@@ -91,10 +91,10 @@ description = "navigator: list agents"
 new_cwd = "follow"
 
 [theme]
-# Lab Fox (Ghostty の組み込みテーマ) の配色。herdr に Lab Fox は無いので、
+# Crayon Pony Fish (Ghostty の組み込みテーマ) の配色。herdr に Crayon Pony Fish は無いので、
 # 下の [theme.custom] で全部の色を上書きする。name は上書きが漏れたときの
 # 受け皿 (今後 herdr に色の項目が増えたときなど)。
-# Claude Code / Codex / pi / nvim のテーマ (labfox / lab-fox) と同じパレット。
+# Claude Code / Codex / pi / nvim のテーマ (crayonponyfish / crayon-pony-fish) と同じパレット。
 name = "catppuccin"
 
 # ホスト端末の light/dark には追従せず、上の name で固定する。
@@ -106,28 +106,30 @@ auto_switch = false
 panel_bg = "reset"
 sidebar_bg = "reset"
 
-# Lab Fox には青と水色が無いので、blue には紫、teal にはミントを当てる。
-accent = "#fc6d26"         # オレンジ
-active_row_bg = "#3a3a3a"
-selection_bg = "#535353"
-surface0 = "#3a3a3a"
-surface1 = "#535353"
-surface_dim = "#2e2e2e"
-overlay0 = "#7f7f7f"
-overlay1 = "#b2b2b2"
-text = "#ffffff"
-subtext0 = "#b2b2b2"
-mauve = "#9e7cf0"
-green = "#3eb383"
-yellow = "#fca121"
-red = "#ec5941"
-blue = "#7d53e7"
-teal = "#53eaa8"
-peach = "#fc6d26"
+# 赤黒い背景に灰色がかった桃色の文字。Ghostty の前景色 (#68525a) は文字には
+# 暗すぎるので、パレットの明るい白 (#b0949d) を文字に使う。黄色の枠は
+# 錆色 (#c8381d) で警告には沈むので、yellow には黄土色を当てる。
+accent = "#fc6cba"         # ピンク
+active_row_bg = "#2b1b1d"
+selection_bg = "#4a383b"
+surface0 = "#2b1b1d"
+surface1 = "#4a383b"
+surface_dim = "#150707"
+overlay0 = "#68525a"
+overlay1 = "#8c737c"
+text = "#b0949d"
+subtext0 = "#8c737c"
+mauve = "#fc6cba"
+green = "#8dff57"
+yellow = "#e8a866"
+red = "#c5255d"
+blue = "#cfc9ff"
+teal = "#ffceaf"
+peach = "#e8a866"
 
 [ui]
 # 他ホストの accent (zenburn の colour109) は入れない。アクセントは上の
-# [theme.custom] で Lab Fox のオレンジにしている。
+# [theme.custom] で Crayon Pony Fish のピンクにしている。
 
 # タブ作成時に名前を聞かない。名前なしタブのラベルは表示位置の連番に
 # なるだけで cwd もターミナルタイトルも参照されないため、実際の命名は
