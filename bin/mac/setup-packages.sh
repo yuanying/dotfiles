@@ -26,6 +26,11 @@ brew install rust
 # 保険として入れておく (devbox のイメージが system の node を持っているのと
 # 同じ理由。PATH では asdf 側が勝つ)。
 brew install node
+# setup.sh が呼ぶ merge-toml-config.py は tomllib (Python 3.11 以降) を使うが、
+# macOS 同梱の python3 は 3.9。他の formula の依存として入っているだけだと、
+# brew uninstall の autoremove で消える (sshfs-mac を消したときに python@3.14
+# ごと消えた) ので、明示的に入れておく。
+brew install python
 # frecency でディレクトリを覚える z コマンド。herdr-navigator の
 # zoxide ソースがこの履歴を候補に使う。
 brew install zoxide
