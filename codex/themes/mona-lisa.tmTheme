@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>name</key>
+  <string>Mona Lisa</string>
+  <key>settings</key>
+  <array>
+    <dict>
+      <key>settings</key>
+      <dict>
+        <key>background</key>
+        <string>#120B0D</string>
+        <key>caret</key>
+        <string>#C46C32</string>
+        <key>foreground</key>
+        <string>#F7D66A</string>
+        <key>invisibles</key>
+        <string>#6E5C32</string>
+        <key>lineHighlight</key>
+        <string>#24130E</string>
+        <key>selection</key>
+        <string>#522917</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Comments</string>
+      <key>scope</key>
+      <string>comment, punctuation.definition.comment</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#A78F49</string>
+        <key>fontStyle</key>
+        <string>italic</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Strings</string>
+      <key>scope</key>
+      <string>string, constant.other.symbol</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#B4B264</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Numbers and constants</string>
+      <key>scope</key>
+      <string>constant.numeric, constant.language, constant.character</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#FF9566</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Keywords</string>
+      <key>scope</key>
+      <string>keyword, storage, punctuation.definition.keyword</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#FF5B6A</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Functions</string>
+      <key>scope</key>
+      <string>entity.name.function, support.function</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#9EB2B4</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Types</string>
+      <key>scope</key>
+      <string>entity.name.type, entity.name.class, support.type, storage.type</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#8ACD8F</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Variables</string>
+      <key>scope</key>
+      <string>variable, meta.definition.variable</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#F7D66A</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Tags</string>
+      <key>scope</key>
+      <string>entity.name.tag, punctuation.definition.tag</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#FF4331</string>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>
