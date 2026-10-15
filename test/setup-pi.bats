@@ -377,6 +377,7 @@ resources() {
 @test "each host gets the palette its terminal and Claude Code use" {
     [ "$(jq -r .theme "${REPO}/pi/settings.json")" = "solarized" ]
     [ "$(jq -r .theme "${REPO}/pi/settings.anietta.json")" = "gruvbox" ]
+    [ "$(jq -r .theme "${REPO}/pi/settings.aemilia.json")" = "crayonponyfish" ]
     [ "$(jq -r .theme "${REPO}/pi/settings.augusta.json")" = "monalisa" ]
     [ "$(jq -r .theme "${REPO}/pi/settings.boucherie.json")" = "tokyonight" ]
 }
