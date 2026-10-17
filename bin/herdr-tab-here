@@ -1,0 +1,14 @@
+#!/bin/sh
+# 今いる herdr のタブの名前を、カレントディレクトリの basename に変える。
+#
+# タブ名は cd に追従させていない (zsh.d/extentions/herdr.zsh)。作業場所を
+# 移したあとで名前も合わせたいときに、手で呼ぶ。
+set -eu
+
+if [ "${HERDR_ENV:-}" != 1 ] || [ -z "${HERDR_TAB_ID:-}" ]; then
+    echo "herdr-tab-here: herdr のペインの中で実行すること" >&2
+    exit 1
+fi
+
+name=$(basename "$PWD")
+exec herdr tab rename "$HERDR_TAB_ID" "$name"

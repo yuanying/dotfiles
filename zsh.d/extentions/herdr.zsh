@@ -16,14 +16,13 @@ herdr_window_title() {
   exec {fd}>&-
 }
 
-# タブ名を cwd の basename に追従させる。
+# シェル起動時に、タブ名を cwd の basename にする。
 #
-# config.toml の prefix+c は `herdr tab create --label` で名前を渡すが、
-# セッションやワークスペースの最初のタブは herdr 自身が名前なしで作るため、
-# そこは素通りしてしまう。herdr にタブの自動リネームは無く、名前なしタブの
-# ラベルは表示位置の連番になるだけで cwd を見ない。tmux の
-# `automatic-rename-format '#{b:pane_current_path}'` の代わりに、シェル起動時と
-# cd のたびにこちらから付け直す。
+# herdr にタブの自動リネームは無く、名前なしタブのラベルは表示位置の連番に
+# なるだけで cwd を見ない。そこで新しいシェルが起動したときに一度だけ
+# こちらから付ける。cd のたびには付け直さない (作業中にタブ名が変わり続けると
+# 目当てのタブを見失う)。移動先に名前を合わせたいときは ~/bin/herdr-tab-here
+# を手で呼ぶ。
 #
 # 手動で付けた名前 (prefix+shift+t) は残す。tmux が手動 rename-window で
 # automatic-rename を切るのと同じ扱いで、自分が最後に付けた名前から変わって
@@ -59,12 +58,10 @@ herdr_auto_tab_name() {
 
 # ペインのシェルが起動するたびに送る。どのペインからも値は同じなので、
 # 2 回目以降は herdr 側で変更なしとして無視される。
-# herdr の外ではウィンドウタイトルも chpwd フックも不要なので、まとめて
-# HERDR_ENV で切り分ける (フック自体を登録しない)。
+# herdr の外ではウィンドウタイトルもタブ名も不要なので、まとめて
+# HERDR_ENV で切り分ける。
 if [[ "$HERDR_ENV" == 1 ]]; then
   [[ -n "$HERDR_SESSION" ]] && herdr_window_title "herdr: ${HERDR_SESSION}"
 
-  autoload -Uz add-zsh-hook
-  add-zsh-hook chpwd herdr_auto_tab_name
   herdr_auto_tab_name
 fi
