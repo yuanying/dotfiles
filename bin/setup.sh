@@ -26,6 +26,10 @@ ln -sfn ${HERDR_CONFIG} ~/.config/herdr/config.toml
 mkdir -p ~/bin
 ln -sfn ${ROOT}/herdr-navigator-agents ~/bin/herdr-navigator-agents
 
+# タブ名を今いるディレクトリ名に変える。タブ名は cd に追従させていないので、
+# 合わせたいときに手で呼ぶ。
+ln -sfn ${ROOT}/herdr-tab-here ~/bin/herdr-tab-here
+
 # herdr プラグインの設定。置き場所は herdr が決めるので config-dir に聞く
 # (README に「他の場所のファイルは無視される」と明記されている)。
 # プラグインは設定を読むだけで書き戻さないので、hunk 本体のような merge では
