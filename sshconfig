@@ -10,6 +10,11 @@ Host anietta.oeilvert.org
   Port 3222
   User yuanying
 
+Host jumelle
+  Hostname 192.168.0.1
+  Port 3222
+  User yuanying
+
 Host mosh.fraction.jp
   HostName mosh.fraction.jp
   User yuanying
