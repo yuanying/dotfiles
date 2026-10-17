@@ -38,6 +38,9 @@
   `displayMode` も `subscription-usage.json` に揃える。認証は `/login anthropic`
   だけを使い、Claude Code の `/usage` と同じ非公開 API を読む。
   `/claude-usage` で再取得し、Opus / Sonnet の週間枠も表示する。
+  この API はレート制限が厳しいので、取得は 5 分おきだけにして、結果は
+  `~/.pi/agent/claude-usage-cache.json` に置いて全セッションで共有する。429 が返ると
+  2 分から最大 15 分まで待つ時間を倍々に延ばし、その間は前回の値を出し続ける。
 - pi 本体にはコマンドをバックグラウンドで走らせる機能が無いので、自作の
   `extensions/background-bash.ts` が `bg_run` / `bg_list` / `bg_kill` ツールを足す。
   `bg_run` はすぐに戻り、コマンドが終了すると exit code と出力の末尾を会話へ
