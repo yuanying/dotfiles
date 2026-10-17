@@ -6,8 +6,12 @@
 //
 // 取得先は Claude Code の /usage と同じ非公開エンドポイント。認証は claude-bridge と
 // 同じく pi の anthropic 認証 (/login anthropic) だけを使い、~/.claude は読まない。
+//
+// このエンドポイントはレート制限が厳しく、数秒おきに叩くと 429 が返る。herdr の
+// worker など複数のセッションが同じアカウントで叩くので、取得結果と 429 の後の
+// 待ち時間はファイルに置いてセッションの間で共有する。取れない間は前回の値を出す。
 
-import { readFileSync } from "node:fs";
+import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
@@ -15,7 +19,11 @@ import { getAgentDir } from "@earendil-works/pi-coding-agent";
 const PROVIDERS = new Set(["claude-bridge", "anthropic"]);
 const USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
 const STATUS_KEY = "claude-usage";
+const CACHE_FILE = "claude-usage-cache.json";
 const REFRESH_MS = 5 * 60 * 1_000;
+// 429 の後に待つ時間。続けて 429 が返るたびに倍にする。
+const BACKOFF_MS = 2 * 60 * 1_000;
+const MAX_BACKOFF_MS = 15 * 60 * 1_000;
 const TIMEOUT_MS = 15_000;
 
 type Window = { utilization?: number | null; resets_at?: string | null } | null | undefined;
@@ -32,6 +40,30 @@ type UsageResponse = {
 		utilization?: number | null;
 	} | null;
 };
+
+type Cache = {
+	usage?: UsageResponse;
+	at?: number;
+	retryAt?: number;
+	backoffMs?: number;
+};
+
+class HttpError extends Error {
+	readonly status: number;
+	readonly retryAfterMs: number | undefined;
+
+	constructor(status: number, retryAfterMs: number | undefined) {
+		super(`HTTP ${status}`);
+		this.status = status;
+		this.retryAfterMs = retryAfterMs;
+	}
+}
+
+class RateLimited extends Error {
+	constructor(retryAt: number) {
+		super(`レート制限中 (${new Date(retryAt).toLocaleTimeString()} まで待つ)`);
+	}
+}
 
 type DisplayMode = "used" | "remaining";
 
@@ -126,6 +158,36 @@ function loadDisplayMode(): DisplayMode {
 	}
 }
 
+// 429 の後にいつまで待つか。retry-after があればそれと比べて長い方を取る。
+export function nextBackoff(previousMs: number | undefined, retryAfterMs: number | undefined): number {
+	const doubled = previousMs ? Math.min(MAX_BACKOFF_MS, previousMs * 2) : BACKOFF_MS;
+	return Math.max(doubled, retryAfterMs ?? 0);
+}
+
+function cachePath(): string {
+	return join(getAgentDir(), CACHE_FILE);
+}
+
+function readCache(): Cache {
+	try {
+		return JSON.parse(readFileSync(cachePath(), "utf8")) as Cache;
+	} catch {
+		return {};
+	}
+}
+
+// 他のセッションが読みかけのファイルを壊さないよう、別名で書いてから置き換える。
+function writeCache(cache: Cache): void {
+	const path = cachePath();
+	const tmp = `${path}.${process.pid}.tmp`;
+	try {
+		writeFileSync(tmp, JSON.stringify(cache));
+		renameSync(tmp, path);
+	} catch {
+		// 書けなくても、このセッションの次の取得まで困らない。
+	}
+}
+
 // pi-claude-agent-sdk の buildClaudeChildEnv と同じ読み方で OAuth トークンを取り出す。
 // API キーには利用率がないので undefined を返す。
 async function resolveOAuthToken(ctx: ExtensionContext): Promise<string | undefined> {
@@ -148,13 +210,15 @@ async function fetchUsage(token: string, signal: AbortSignal): Promise<UsageResp
 		},
 		signal: AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]),
 	});
-	if (!response.ok) throw new Error(`HTTP ${response.status}`);
+	if (!response.ok) {
+		const retryAfter = Number(response.headers.get("retry-after"));
+		throw new HttpError(response.status, retryAfter > 0 ? retryAfter * 1_000 : undefined);
+	}
 	return (await response.json()) as UsageResponse;
 }
 
 export default function claudeUsage(pi: ExtensionAPI): void {
 	let displayMode: DisplayMode = "remaining";
-	let last: { usage: UsageResponse; at: number } | undefined;
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let controller: AbortController | undefined;
 
@@ -174,7 +238,13 @@ export default function claudeUsage(pi: ExtensionAPI): void {
 		ctx.ui.setStatus(STATUS_KEY, undefined);
 	}
 
-	async function query(ctx: ExtensionContext): Promise<UsageResponse | undefined> {
+	// 共有の取得結果が maxAgeMs より新しければそれを返し、古ければ取りに行く。
+	// 429 の後の待ち時間の間は取りに行かず RateLimited を投げる。
+	async function query(ctx: ExtensionContext, maxAgeMs: number): Promise<UsageResponse | undefined> {
+		const cache = readCache();
+		const now = Date.now();
+		if (cache.usage && cache.at && now - cache.at < maxAgeMs) return cache.usage;
+		if (cache.retryAt && now < cache.retryAt) throw new RateLimited(cache.retryAt);
 		controller?.abort();
 		const current = new AbortController();
 		controller = current;
@@ -182,42 +252,52 @@ export default function claudeUsage(pi: ExtensionAPI): void {
 			const token = await resolveOAuthToken(ctx);
 			if (!token) return undefined;
 			const usage = await fetchUsage(token, current.signal);
-			last = { usage, at: Date.now() };
+			writeCache({ usage, at: Date.now() });
 			return usage;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 429) {
+				const backoffMs = nextBackoff(cache.backoffMs, error.retryAfterMs);
+				const retryAt = Date.now() + backoffMs;
+				writeCache({ ...readCache(), retryAt, backoffMs });
+				throw new RateLimited(retryAt);
+			}
+			throw error;
 		} finally {
 			if (controller === current) controller = undefined;
 		}
 	}
 
-	async function refresh(ctx: ExtensionContext, force: boolean): Promise<void> {
+	async function refresh(ctx: ExtensionContext): Promise<void> {
 		if (!active(ctx)) {
 			stop(ctx);
 			return;
 		}
 		if (timer) clearTimeout(timer);
-		timer = setTimeout(() => void refresh(ctx, true), REFRESH_MS);
+		timer = setTimeout(() => void refresh(ctx), REFRESH_MS);
 		try {
-			const usage = !force && last && Date.now() - last.at < REFRESH_MS ? last.usage : await query(ctx);
+			const usage = await query(ctx, REFRESH_MS);
 			if (active(ctx)) showUsage(ctx, usage);
 		} catch (error) {
 			if ((error as Error)?.name === "AbortError") return;
-			if (active(ctx)) ctx.ui.setStatus(STATUS_KEY, "claude usage error");
+			if (!active(ctx)) return;
+			const cached = readCache().usage;
+			if (cached) showUsage(ctx, cached);
+			else ctx.ui.setStatus(STATUS_KEY, "claude usage error");
 		}
 	}
 
 	pi.on("session_start", async (_event, ctx) => {
 		displayMode = loadDisplayMode();
-		void refresh(ctx, false);
+		void refresh(ctx);
 	});
-	pi.on("model_select", async (_event, ctx) => void refresh(ctx, false));
-	pi.on("agent_end", async (_event, ctx) => void refresh(ctx, true));
+	pi.on("model_select", async (_event, ctx) => void refresh(ctx));
 	pi.on("session_shutdown", async (_event, ctx) => stop(ctx));
 
 	pi.registerCommand("claude-usage", {
 		description: "Claude サブスクリプションの 5 時間・週間の利用率を表示する",
 		handler: async (_args, ctx) => {
 			try {
-				const usage = await query(ctx);
+				const usage = await query(ctx, 0);
 				if (!usage) {
 					ctx.ui.notify("anthropic の OAuth 認証がない (/login anthropic)", "warning");
 					return;
@@ -225,7 +305,15 @@ export default function claudeUsage(pi: ExtensionAPI): void {
 				if (active(ctx)) showUsage(ctx, usage);
 				ctx.ui.notify(formatDetails(usage, displayMode, Date.now()), "info");
 			} catch (error) {
-				ctx.ui.notify(`Claude usage の取得に失敗した: ${(error as Error)?.message ?? error}`, "error");
+				const message = `Claude usage の取得に失敗した: ${(error as Error)?.message ?? error}`;
+				const cache = readCache();
+				if (cache.usage && cache.at) {
+					const at = new Date(cache.at).toLocaleTimeString();
+					const details = formatDetails(cache.usage, displayMode, Date.now());
+					ctx.ui.notify(`${message}\n${at} に取得した値:\n${details}`, "warning");
+					return;
+				}
+				ctx.ui.notify(message, "error");
 			}
 		},
 	});
