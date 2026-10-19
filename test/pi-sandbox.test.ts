@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { bwrapArgs, unixSocketFilter } from "../pi/extensions/sandbox/bwrap.ts";
+import { dialogQueue } from "../pi/extensions/sandbox/dialog.ts";
 import {
 	addAllowWrite,
 	buildPolicy,
@@ -278,4 +279,79 @@ test("grants: allowWrite is extended and the other keys are kept", () => {
 	assert.deepEqual(readSettingsFile(file), { enabled: true, allowWrite: ["/srv/a", "/srv/b"], excludedCommands: ["herdr"] });
 	writeFileSync(file, "{");
 	assert.throws(() => addAllowWrite(file, "/srv/c"));
+});
+
+/** 外から閉じられるダイアログ。開いたかどうかを opened で見る。 */
+function fakeDialog(): { show: () => Promise<string>; close: (answer: string) => void; opened: () => boolean } {
+	let opened = false;
+	let close = (_answer: string) => {};
+	const show = () => {
+		opened = true;
+		return new Promise<string>((resolve) => {
+			close = resolve;
+		});
+	};
+	return { show, close: (answer) => close(answer), opened: () => opened };
+}
+
+const settle = () => new Promise((resolve) => setImmediate(resolve));
+
+test("dialogs: the next one opens only after the previous one closes", async () => {
+	const queue = dialogQueue();
+	const first = fakeDialog();
+	const second = fakeDialog();
+	const a = queue(first.show);
+	const b = queue(second.show);
+	await settle();
+	assert.equal(first.opened(), true);
+	assert.equal(second.opened(), false);
+	first.close("one");
+	assert.equal(await a, "one");
+	await settle();
+	assert.equal(second.opened(), true);
+	second.close("two");
+	assert.equal(await b, "two");
+});
+
+test("dialogs: aborting while queued returns at once and keeps the order", async () => {
+	const queue = dialogQueue();
+	const first = fakeDialog();
+	const second = fakeDialog();
+	const third = fakeDialog();
+	const controller = new AbortController();
+	const a = queue(first.show);
+	const b = queue(second.show, controller.signal);
+	const c = queue(third.show);
+	await settle();
+	controller.abort();
+	assert.equal(await b, undefined);
+	await settle();
+	assert.equal(second.opened(), false);
+	assert.equal(third.opened(), false);
+	first.close("one");
+	await a;
+	await settle();
+	assert.equal(third.opened(), true);
+	third.close("three");
+	assert.equal(await c, "three");
+});
+
+test("dialogs: an already aborted signal never opens the dialog", async () => {
+	const queue = dialogQueue();
+	const dialog = fakeDialog();
+	const controller = new AbortController();
+	controller.abort();
+	assert.equal(await queue(dialog.show, controller.signal), undefined);
+	assert.equal(dialog.opened(), false);
+});
+
+test("dialogs: a dialog that throws does not block the next one", async () => {
+	const queue = dialogQueue();
+	const next = fakeDialog();
+	await assert.rejects(queue(() => Promise.reject(new Error("boom"))));
+	const b = queue(next.show);
+	await settle();
+	assert.equal(next.opened(), true);
+	next.close("ok");
+	assert.equal(await b, "ok");
 });
