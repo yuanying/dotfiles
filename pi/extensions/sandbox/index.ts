@@ -18,6 +18,7 @@ import {
 	hasTrustRequiringProjectResources,
 	ProjectTrustStore,
 } from "@earendil-works/pi-coding-agent";
+import { dialogQueue } from "./dialog.ts";
 import { spawnInBwrap } from "./linux.ts";
 import { cleanupAfterMacosCommand, resetMacos, wrapForMacos } from "./macos.ts";
 import {
@@ -168,6 +169,8 @@ export default function sandbox(pi: ExtensionAPI): void {
 	// 「このセッションだけ許可」した場所。メモリにだけ持ち、/sandbox off/on では残し、
 	// セッションの終了で消える。モデルからは触れない。
 	let sessionGrants: string[] = [];
+	// bash、bg_run、write / edit が同時に問うても、ダイアログは 1 つずつ出す。
+	const oneDialogAtATime = dialogQueue();
 
 	pi.registerFlag("sandbox", { description: "サンドボックスを有効にして起動する", type: "boolean", default: false });
 	pi.registerFlag("no-sandbox", { description: "設定に関わらずサンドボックスを無効にして起動する", type: "boolean", default: false });
@@ -240,9 +243,15 @@ export default function sandbox(pi: ExtensionAPI): void {
 
 	/**
 	 * コマンドをサンドボックスの外で実行してよいか、実行する前にユーザーに問う。
-	 * 許されなければ、モデルに返す理由を付けて例外にする。
+	 * 許されなければ、モデルに返す理由を付けて例外にする。signal が中断されたら、問うのをやめる。
 	 */
-	async function confirmOutside(ctx: ExtensionContext, command: string, cwd: string, reason: string | undefined): Promise<void> {
+	async function confirmOutside(
+		ctx: ExtensionContext,
+		command: string,
+		cwd: string,
+		reason: string | undefined,
+		signal?: AbortSignal,
+	): Promise<void> {
 		if (!ctx.hasUI) throw new Error("[sandbox] UI が無いので、サンドボックスの外での実行をユーザーに問えない。外では実行しなかった。");
 		const title = [
 			"サンドボックス: このコマンドをサンドボックスの外で実行するよう頼まれた。外では書き込みの制限が何もかからない。",
@@ -251,7 +260,11 @@ export default function sandbox(pi: ExtensionAPI): void {
 			"command:",
 			command,
 		].join("\n");
-		const choice = await ctx.ui.select(title, [CHOICE_DECLINE, CHOICE_RUN_OUTSIDE], { timeout: PROMPT_TIMEOUT_MS });
+		const choice = await oneDialogAtATime(
+			() => ctx.ui.select(title, [CHOICE_DECLINE, CHOICE_RUN_OUTSIDE], { timeout: PROMPT_TIMEOUT_MS, signal }),
+			signal,
+		);
+		if (signal?.aborted) throw new Error("[sandbox] 中断されたので、サンドボックスの外では実行しなかった。");
 		if (choice !== CHOICE_RUN_OUTSIDE) {
 			throw new Error(
 				"[sandbox] ユーザーがサンドボックスの外での実行を許可しなかった。コマンドは実行していない。別の書き方や別の場所で回避しようとせず、ユーザーに判断を仰ぐこと。",
@@ -322,7 +335,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
 			const { outsideSandbox, reason, ...input } = params;
 			if (!outsideSandbox || !state) return bash.execute(toolCallId, input, signal, onUpdate, ctx);
-			await confirmOutside(ctx, input.command, ctx.cwd, reason);
+			await confirmOutside(ctx, input.command, ctx.cwd, reason, signal);
 			return bashOutside.execute(toolCallId, input, signal, onUpdate, ctx);
 		},
 	});
@@ -355,8 +368,12 @@ export default function sandbox(pi: ExtensionAPI): void {
 			`サンドボックス: ${path} への書き込みは許可した場所の外にある。`,
 			`許可すると ${grant} ${grant === path ? "" : "以下"}に書き込めるようになる (bash からも)。`,
 		].join("\n");
-		const choice = await ctx.ui.select(title, choices, { timeout: PROMPT_TIMEOUT_MS });
-		if (choice === undefined || choice === CHOICE_ABORT) return false;
+		const signal = ctx.signal;
+		const choice = await oneDialogAtATime(
+			() => ctx.ui.select(title, choices, { timeout: PROMPT_TIMEOUT_MS, signal }),
+			signal,
+		);
+		if (choice === undefined || choice === CHOICE_ABORT || signal?.aborted) return false;
 		try {
 			if (choice === CHOICE_SESSION) {
 				if (!sessionGrants.includes(grant)) sessionGrants.push(grant);
