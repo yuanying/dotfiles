@@ -12,9 +12,13 @@ FROM nvidia/cuda:13.4.3-runtime-ubuntu24.04
 
 # The first line is what the asdf-built Python links against, the second what
 # opencv, torch and the webui itself load, git included for its version check.
+# The third is for Triton, which torch sends matmuls to and which compiles its
+# CUDA driver module with the system C compiler on first use; Python.h comes
+# from the venv's Python under $HOME.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libbz2-1.0 libffi8 libgdbm6t64 liblzma5 libncursesw6 libreadline8t64 libsqlite3-0 libssl3t64 libuuid1 zlib1g \
         ca-certificates git libgl1 libglib2.0-0t64 libgomp1 libtcmalloc-minimal4t64 \
+        gcc libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # --uv makes the webui install packages with uv.
