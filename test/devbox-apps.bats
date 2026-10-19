@@ -97,6 +97,13 @@ q() {
     [ "$(q '.services.sd-webui.deploy.resources.reservations.devices[0].capabilities | join(" ")')" = "gpu" ]
 }
 
+@test "sd-webui's image has a C compiler, since Triton builds its CUDA driver module on first use" {
+    local packages
+    packages=" $(sed -n '/^RUN apt-get/,/rm -rf/p' "${REPO}/devbox/apps/sd-webui/Dockerfile" | tr -s ' \\\n' ' ') "
+    [[ ${packages} == *" gcc "* ]]
+    [[ ${packages} == *" libc6-dev "* ]]
+}
+
 @test "sd-webui listens on every interface with the API and the shared models" {
     local args
     args=" $(q '.services.sd-webui.command | join(" ")') "
