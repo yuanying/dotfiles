@@ -86,7 +86,7 @@ q() {
 }
 
 @test "the services run from their source directories" {
-    [ "$(q '.services.sd-webui.working_dir')" = "/home/yuanying/src/github.com/Haoming02/sd-webui-forge-classic" ]
+    [ "$(q '.services.sd-webui.working_dir')" = "/home/yuanying/src/github.com/yuanying/sd-webui-forge-neo" ]
     [ "$(q '.services.sd-viewer.working_dir')" = "/home/yuanying/src/github.com/yuanying/sd-viewer" ]
     [ "$(q '.services.tageditor.working_dir')" = "/home/yuanying/src/github.com/iwaco/tageditor" ]
     [ "$(q '.services.lora-compare.working_dir')" = "/home/yuanying/src/github.com/kohya-ss/sd-scripts/outputs/images" ]

@@ -28,7 +28,7 @@ services:
     container_name: sd-webui
     build:
       context: sd-webui
-    working_dir: /home/yuanying/src/github.com/Haoming02/sd-webui-forge-classic
+    working_dir: /home/yuanying/src/github.com/yuanying/sd-webui-forge-neo
     command:
       - --listen
       - --port
