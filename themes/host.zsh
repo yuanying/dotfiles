@@ -1,8 +1,8 @@
 # ホストごとのテーマ選択。zshrc から Spaceship より先に読み込む。
 case ${HOST%%.*} in
   lymJ7DH6V23CQ)
-    DOTFILES_THEME=atomonelight
-    AIRLINE_THEME=base16_one_light
+    DOTFILES_THEME=hopscotch256
+    AIRLINE_THEME=base16_hopscotch
     _dotfiles_host_theme=1
     ;;
   aemilia)

@@ -101,6 +101,7 @@ auto_switch = false
 # tmux の `set -g status-style bg=default` 相当。
 # パネル背景を塗らず、ターミナル側の背景 (透過含む) をそのまま見せる。
 panel_bg = "reset"
+sidebar_bg = "#222436"
 
 [ui]
 # zenburn の colour109 相当。
