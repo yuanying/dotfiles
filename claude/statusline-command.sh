@@ -8,6 +8,12 @@ INPUT=$(cat)
 # 未設定なら solarized。Claude Code の起動時の環境変数を引き継ぐので、
 # 値を変えたら Claude Code を起動し直すこと。
 case "${CLAUDE_STATUSLINE_THEME:-solarized}" in
+  hopscotch256)
+    C_LOW='143;193;62'    # #8fc13e green
+    C_MID='253;204;89'    # #fdcc59 yellow
+    C_HIGH='221;70;76'   # #dd464c red
+    C_DIM='152;148;152'  # #989498
+    ;;
   atomonelight)
     C_LOW='80;161;79'     # #50a14f green
     C_MID='193;132;1'     # #c18401 yellow

@@ -1,15 +1,15 @@
-# This host uses the VS Code Atom One Light palette.
 clipboard-read = allow
 clipboard-write = allow
-theme = Atom One Light
-background = #fafafa
-window-padding-x = 20
-window-padding-y = 5
+theme = Ayu
 window-padding-balance = true
 window-theme = ghostty
-background-opacity = 1
+background-opacity = 0.85
 macos-titlebar-style = transparent
 keybind = global:ctrl+tab=toggle_visibility
 
+font-family = Monaco
 font-family = Hack Nerd Font Mono
-font-thicken = true
+font-size = 12
+font-thicken = false
+
+adjust-cell-height = 5%

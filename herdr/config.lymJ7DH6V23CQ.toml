@@ -91,33 +91,33 @@ description = "navigator: list agents"
 new_cwd = "follow"
 
 [theme]
-# VS Code Atom One Light. Keep the sidebar gray over Ghostty's light background.
-name = "catppuccin-latte"
+# Hopscotch.256 UI colors. Terminal panes use Ghostty's Ayu background.
+name = "catppuccin"
 auto_switch = false
 
 [theme.custom]
 panel_bg = "reset"
-sidebar_bg = "#eaeaeb"
-accent = "#4078f2"
-active_row_bg = "#dbdbdc"
-selection_bg = "#dbdbdc"
-surface0 = "#fafafa"
-surface1 = "#e5e5e6"
-surface_dim = "#eaeaeb"
-overlay0 = "#a0a1a7"
-overlay1 = "#696c77"
-text = "#383a42"
-subtext0 = "#696c77"
-mauve = "#a626a4"
-green = "#50a14f"
-yellow = "#c18401"
-red = "#e45649"
-blue = "#4078f2"
-teal = "#0184bc"
-peach = "#986801"
+sidebar_bg = "#322931"
+accent = "#c85e7c"
+active_row_bg = "#433b42"
+selection_bg = "#5c545b"
+surface0 = "#322931"
+surface1 = "#433b42"
+surface_dim = "#322931"
+overlay0 = "#797379"
+overlay1 = "#989498"
+text = "#b9b5b8"
+subtext0 = "#989498"
+mauve = "#c85e7c"
+green = "#8fc13e"
+yellow = "#fdcc59"
+red = "#dd464c"
+blue = "#1290bf"
+teal = "#149b93"
+peach = "#fd8b19"
 
 [ui]
-# アクセントは [theme.custom] の青を使う。
+# アクセントは [theme.custom] のピンクを使う。
 
 # タブ作成時に名前を聞かない。名前なしタブのラベルは表示位置の連番に
 # なるだけで cwd もターミナルタイトルも参照されないため、実際の命名は

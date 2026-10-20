@@ -102,9 +102,9 @@ auto_switch = false
 
 [theme.custom]
 # tmux の `set -g status-style bg=default` 相当。
-# パネル背景を塗らず、ターミナル側の背景 (透過含む) をそのまま見せる。
+# パネルは端末側の背景を使い、サイドバーはテーマの背景色で塗る。
 panel_bg = "reset"
-sidebar_bg = "reset"
+sidebar_bg = "#120b0d"
 
 # 暗い茶色の背景に黄色の文字。Ghostty のパレットの明るい側の色を使う。
 accent = "#ff9566"         # オレンジ

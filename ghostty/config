@@ -15,5 +15,8 @@ background-blur-radius = 20
 macos-titlebar-style = transparent
 keybind = global:ctrl+tab=toggle_visibility
 
+font-family = Monaco
 font-family = Hack Nerd Font Mono
 font-thicken = true
+
+adjust-cell-height = 5%
