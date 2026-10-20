@@ -43,9 +43,9 @@ return {
     opts = {},
   },
   {
-    -- aemilia と augusta 用。Lab Fox、Matte Black、Mona Lisa、Crayon Pony Fish は
+    -- カスタムテーマ用。Lab Fox、Matte Black、Mona Lisa、Crayon Pony Fish、Atom One Light は
     -- nvim の colorscheme が無いので、colors/ の labfox.lua、matteblack.lua、
-    -- monalisa.lua、crayonponyfish.lua がこれに 16 色を渡して作る。setup() は
+    -- monalisa.lua、crayonponyfish.lua、atomonelight.lua がこれに 16 色を渡して作る。setup() は
     -- そちらで呼ぶ。
     "nvim-mini/mini.base16",
     lazy = false,

@@ -134,8 +134,12 @@ fi
 # (XDG 側の ~/.config/ghostty/config も読むが、既存の設定がこちらにある)。
 if [[ "$(uname)" == "Darwin" ]]; then
     GHOSTTY_DIR="${HOME}/Library/Application Support/com.mitchellh.ghostty"
+    GHOSTTY_CONFIG=${ROOT}/../ghostty/config.$(hostname -s)
+    if [[ ! -f ${GHOSTTY_CONFIG} ]]; then
+        GHOSTTY_CONFIG=${ROOT}/../ghostty/config
+    fi
     mkdir -p "${GHOSTTY_DIR}"
-    ln -sfn ${ROOT}/../ghostty/config "${GHOSTTY_DIR}/config"
+    ln -sfn "${GHOSTTY_CONFIG}" "${GHOSTTY_DIR}/config"
 fi
 
 # Claude Code のカスタムテーマ。どのホストでも両方選べるように全部張る。
