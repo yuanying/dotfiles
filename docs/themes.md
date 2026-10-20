@@ -15,7 +15,9 @@ herdr、Codex、pi、Claude Code はそれぞれ設定形式とテーマ名が�
 1. `themes/host.zsh` にテーマ名と、必要なら対応する vim-airline のテーマ名を追加する。
 2. `themes/spaceship/<theme>.zsh` を作り、既存ファイルと同じ 7 色 (`accent`、`secondary`、`info`、`muted`、`success`、`warning`、`error`) を定義する。Spaceship の各セクションへの割り当ては `spaceshiprc.zsh` にまとめてある。
 3. 各アプリのテーマを用意する。herdr は `herdr/config.<hostname>.toml`、Codex は `codex/config.<hostname>.toml` と必要なら `codex/themes/`、pi は `pi/settings.<hostname>.json` と `pi/themes/`、Claude Code は `claude/settings.<hostname>.json` と必要なら `claude/themes/` を更新する。
-4. `claude/statusline-command.sh` に同じパレットを追加する。Neovim にテーマがなければ `nvim/colors/` または `nvim/lua/lazy/plugins/colorscheme.lua` に登録する。Ghostty の端末全体の配色も合わせる場合は `ghostty/config` を更新する。
+4. `claude/statusline-command.sh` に同じパレットを追加する。Neovim にテーマがなければ `nvim/colors/` または `nvim/lua/lazy/plugins/colorscheme.lua` に登録する。Ghostty の端末全体の配色も合わせる場合は `ghostty/config.<hostname>` を追加する。ホスト別ファイルがない場合は `ghostty/config` を使う。
 5. `bin/setup.sh` を実行し、新しいシェルでプロンプトと Neovim、各アプリのテーマを確認する。
+
+Ghostty の背景を明色・暗色で切り替えた場合、起動中の Codex は端末色を保持して入力欄の文字が読めなくなることがある。Codex を再起動して端末色を読み直す。
 
 テーマ名がアプリで異なる例: `DOTFILES_THEME=labfox`、Codex は `lab-fox`、Claude Code は `custom:labfox`。この対応は各アプリの設定ファイルで明示する。
