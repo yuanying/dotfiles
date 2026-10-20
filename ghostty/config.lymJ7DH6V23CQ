@@ -1,6 +1,6 @@
 clipboard-read = allow
 clipboard-write = allow
-theme = Ayu
+theme = Afterglow
 window-padding-balance = true
 window-theme = ghostty
 background-opacity = 0.85
