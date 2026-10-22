@@ -1,0 +1,527 @@
+{
+  "status": "not_installable_native_and_generated_rocm_gates_pending",
+  "observed_date": "2026-10-22",
+  "engine_revision": "e09322da7209331c57e2a79cfc30d120f0299154",
+  "model_revision": "247ef39b06ff0b0fcba76026429e191b44e0e1f8",
+  "prior_snapshot_sha256": "64343f512b2037dc6a3f5e894ffdb5a17849442b92811d6edea12a5db5431162",
+  "new_wheel_bytes": 3754193585,
+  "model_downloaded": false,
+  "packages": [
+    {
+      "name": "aiohappyeyeballs",
+      "version": "2.7.1",
+      "url": "https://files.pythonhosted.org/packages/71/43/1947f06babed6b3f1d7f38b0c767f52df66bfb2bc10b468c4a7de9eceff2/aiohappyeyeballs-2.7.1-py3-none-any.whl",
+      "bytes": 15038,
+      "publisher_sha256": "9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472",
+      "local_sha256": "9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "aiohttp",
+      "version": "3.14.4",
+      "url": "https://files.pythonhosted.org/packages/11/6c/a7a42701d9ea319140a3d44a24ec72a00b0b46d1b899b26d8a705e65bdd8/aiohttp-3.14.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 1922895,
+      "publisher_sha256": "c5e93ab6e6330dce40f5b43996f1fc5f2543296d263a5e4b59ff09e73870b7d8",
+      "local_sha256": "c5e93ab6e6330dce40f5b43996f1fc5f2543296d263a5e4b59ff09e73870b7d8",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "aiosignal",
+      "version": "1.4.0",
+      "url": "https://files.pythonhosted.org/packages/fb/76/641ae371508676492379f16e2fa48f4e2c11741bd63c48be4b12a6b09cba/aiosignal-1.4.0-py3-none-any.whl",
+      "bytes": 7490,
+      "publisher_sha256": "053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e",
+      "local_sha256": "053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+      "bytes": 13427,
+      "publisher_sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+      "local_sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+      "bytes": 132079,
+      "publisher_sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+      "local_sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+      "bytes": 67548,
+      "publisher_sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+      "local_sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+      "bytes": 125251,
+      "publisher_sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+      "local_sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "filelock",
+      "version": "4.0.12",
+      "url": "https://files.pythonhosted.org/packages/da/a1/b047e1c486a2c66283633b7dbb73872ca16ca1ce6a426f70d4d037fc8e1c/filelock-4.0.12-py3-none-any.whl",
+      "bytes": 111732,
+      "publisher_sha256": "5f17ee83ecee8a6f3e389c75822fb70a1c2f0506b99438a6dffa1d56793588c8",
+      "local_sha256": "5f17ee83ecee8a6f3e389c75822fb70a1c2f0506b99438a6dffa1d56793588c8",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "frozenlist",
+      "version": "1.8.0",
+      "url": "https://files.pythonhosted.org/packages/6a/bd/d91c5e39f490a49df14320f4e8c80161cfcce09f1e2cde1edd16a551abb3/frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+      "bytes": 242411,
+      "publisher_sha256": "494a5952b1c597ba44e0e78113a7266e656b9794eec897b19ead706bd7074383",
+      "local_sha256": "494a5952b1c597ba44e0e78113a7266e656b9794eec897b19ead706bd7074383",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.7.0",
+      "url": "https://files.pythonhosted.org/packages/fd/3c/6a2bf344106328fd04963664a60b9bb6496fc25df8e962fcdc1367285fb9/fsspec-2026.7.0-py3-none-any.whl",
+      "bytes": 206583,
+      "publisher_sha256": "b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279",
+      "local_sha256": "b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+      "bytes": 37515,
+      "publisher_sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "local_sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "hf-xet",
+      "version": "1.7.0",
+      "url": "https://files.pythonhosted.org/packages/a3/4c/2bf3b66c215d409655f28de1622393dde04c9461280d48c7924bb3b2decd/hf_xet-1.7.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "bytes": 4212180,
+      "publisher_sha256": "2814a6e999d13464c4d679b788cc5d784eb5a4edfc638a31f10e9a11ab531ef8",
+      "local_sha256": "2814a6e999d13464c4d679b788cc5d784eb5a4edfc638a31f10e9a11ab531ef8",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "httpcore2",
+      "version": "2.13.1",
+      "url": "https://files.pythonhosted.org/packages/09/ba/a4568248771ce81957bfb7cc600264a40fbcda092391ee1c415c50be4bea/httpcore2-2.13.1-py3-none-any.whl",
+      "bytes": 83423,
+      "publisher_sha256": "e1e05d4f25f7d7d496bfb96748f6f4b67657b03da069b3a68c36069f3db73d0a",
+      "local_sha256": "e1e05d4f25f7d7d496bfb96748f6f4b67657b03da069b3a68c36069f3db73d0a",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "httpx2",
+      "version": "2.13.1",
+      "url": "https://files.pythonhosted.org/packages/d8/9c/6fe8931fd9f381042a9e4c7d5a7b4cbf7016b252bec0c99a49fce42c3326/httpx2-2.13.1-py3-none-any.whl",
+      "bytes": 95597,
+      "publisher_sha256": "6dff50fabc270ee5fd25d845d0b078ed20564579744d6d962850975996d2f9a4",
+      "local_sha256": "6dff50fabc270ee5fd25d845d0b078ed20564579744d6d962850975996d2f9a4",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "huggingface-hub",
+      "version": "2.2.0",
+      "url": "https://files.pythonhosted.org/packages/eb/b0/0f7b430fd100b3a3b037fdbb314878200241082e607b3383c63d91a13a72/huggingface_hub-2.2.0-py3-none-any.whl",
+      "bytes": 839884,
+      "publisher_sha256": "1667f145dc56dc210d60966069397df9ecfca9607a5d43db88b308c89dae56b3",
+      "local_sha256": "1667f145dc56dc210d60966069397df9ecfca9607a5d43db88b308c89dae56b3",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+      "bytes": 69583,
+      "publisher_sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "local_sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "url": "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl",
+      "bytes": 134899,
+      "publisher_sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67",
+      "local_sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "llguidance",
+      "version": "1.9.1",
+      "url": "https://files.pythonhosted.org/packages/46/c3/b50a05a16af0a84f5a9a6fb4707006d3fc377d1b446599d23ac78f3e144c/llguidance-1.9.1-cp39-abi3-manylinux_2_31_x86_64.whl",
+      "bytes": 3071973,
+      "publisher_sha256": "dfac6021d9c4c5ef16b3a1d336c05ca5e8208ff30dec29d1c63ebcafbee3a346",
+      "local_sha256": "dfac6021d9c4c5ef16b3a1d336c05ca5e8208ff30dec29d1c63ebcafbee3a346",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "marisa-trie",
+      "version": "1.4.1",
+      "url": "https://files.pythonhosted.org/packages/bb/95/cd6e73d0857608f2946f3bc5ccac86488073b96fb37bc1b45b0184268bed/marisa_trie-1.4.1-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 1516414,
+      "publisher_sha256": "4d51bdd22a7238ef4d681effd7c224a267ddae054b64b1cec9ce95bbcd2b6a88",
+      "local_sha256": "4d51bdd22a7238ef4d681effd7c224a267ddae054b64b1cec9ce95bbcd2b6a88",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+      "bytes": 91687,
+      "publisher_sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+      "local_sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "url": "https://files.pythonhosted.org/packages/4f/a7/aeedb5140afa41fc74c225e9184ab96723a6e873b6ee1c9fede7283456d8/markupsafe-3.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 22985,
+      "publisher_sha256": "8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581",
+      "local_sha256": "8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+      "bytes": 9979,
+      "publisher_sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+      "local_sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "mpmath",
+      "version": "1.3.0",
+      "url": "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl",
+      "bytes": 536198,
+      "publisher_sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+      "local_sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "multidict",
+      "version": "6.9.1",
+      "url": "https://files.pythonhosted.org/packages/ed/5b/db08419c1e1f7c9d60cfd2787b2b517d7ae4ebbda8281b48a33eb5141467/multidict-6.9.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 336881,
+      "publisher_sha256": "976fd7689d69ec78d67d31d38d396d8adb562f7e8368279f76aed4aa451fa06d",
+      "local_sha256": "976fd7689d69ec78d67d31d38d396d8adb562f7e8368279f76aed4aa451fa06d",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "networkx",
+      "version": "3.7",
+      "url": "https://files.pythonhosted.org/packages/7e/cd/fe58041e9011f307c490e3e17dd48cc516448f7c698a3f2d9d9d65d7e6a8/networkx-3.7-py3-none-any.whl",
+      "bytes": 2142205,
+      "publisher_sha256": "e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0",
+      "local_sha256": "e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "ninja",
+      "version": "1.13.2",
+      "url": "https://files.pythonhosted.org/packages/6e/53/ebfed7b689c338dd8ebeec9c0730c8d56821292f14e2536e5f3ef1a05744/ninja-1.13.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "bytes": 183365,
+      "publisher_sha256": "65a24341b5ac09fcadcc37082660be40a94174e51a937fabf6e2cae26225fa2c",
+      "local_sha256": "65a24341b5ac09fcadcc37082660be40a94174e51a937fabf6e2cae26225fa2c",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.3",
+      "url": "https://files.pythonhosted.org/packages/65/af/aa78d1a88805456e212b65461354cd943197fb9acecc4c90fd12295123a3/numpy-2.5.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 16717410,
+      "publisher_sha256": "b7e18c623bb5c95acb3b3328861272816ba199fb531921c5d6d0b675f1fde9e3",
+      "local_sha256": "b7e18c623bb5c95acb3b3328861272816ba199fb531921c5d6d0b675f1fde9e3",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+      "bytes": 129956,
+      "publisher_sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "local_sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "pillow",
+      "version": "12.3.0",
+      "url": "https://files.pythonhosted.org/packages/84/21/a35af28dcc61f37ed850a2d64c65c701321dfbf25085e469d5559360cbbf/pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 6940830,
+      "publisher_sha256": "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91",
+      "local_sha256": "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "propcache",
+      "version": "0.5.4",
+      "url": "https://files.pythonhosted.org/packages/85/9f/83a07b6ec0e043c050cfdd35fb0cf1b7897b91d554d6eea293740309afe7/propcache-0.5.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 250424,
+      "publisher_sha256": "2814ecd8e818f487bee4b0f921bc4d1c176cc5fc71ac0f072d0fa67eda4ac14b",
+      "local_sha256": "2814ecd8e818f487bee4b0f921bc4d1c176cc5fc71ac0f072d0fa67eda4ac14b",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.0",
+      "url": "https://files.pythonhosted.org/packages/2d/eb/9146591cc819d040475bf7f2be786710c7f7eb8083693bf859728da2ca9c/pydantic-2.14.0-py3-none-any.whl",
+      "bytes": 487109,
+      "publisher_sha256": "15fab1bea6f1dc5003b54fc2ecab230c1fd1dbade2acd4addc52d81e32416d4b",
+      "local_sha256": "15fab1bea6f1dc5003b54fc2ecab230c1fd1dbade2acd4addc52d81e32416d4b",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.50.0",
+      "url": "https://files.pythonhosted.org/packages/ca/e2/2f793fa2f1b338aa03124efd4362956c84d7bf1b331dc86050bc0151e67d/pydantic_core-2.50.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "bytes": 2160358,
+      "publisher_sha256": "f187030fc3d62c668feb0f09e92852e0eb414d7fcefc4748f2e67d245aade37e",
+      "local_sha256": "f187030fc3d62c668feb0f09e92852e0eb414d7fcefc4748f2e67d245aade37e",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "pygments",
+      "version": "2.21.0",
+      "url": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+      "bytes": 1250147,
+      "publisher_sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+      "local_sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "pyyaml",
+      "version": "6.0.3",
+      "url": "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 807870,
+      "publisher_sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+      "local_sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "rich",
+      "version": "15.0.0",
+      "url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+      "bytes": 310654,
+      "publisher_sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+      "local_sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "rocm-sdk-core",
+      "version": "7.13.0a20260411",
+      "url": "https://rocm.nightlies.amd.com/v2/gfx1151/rocm_sdk_core-7.13.0a20260411-py3-none-linux_x86_64.whl",
+      "bytes": 409098742,
+      "publisher_sha256": null,
+      "local_sha256": "bd4589916bdeac291d7ec41262a8b65207c9319d2c78766213a8fcb89b5bc1f7",
+      "etag": "\"6e8eff63fd7dad8706e83e11ddab6a7d-49\"",
+      "storage": "new-v2-selection",
+      "hash_check": "official HTTPS and ETag; local SHA256 only"
+    },
+    {
+      "name": "rocm-sdk-devel",
+      "version": "7.13.0a20260411",
+      "url": "https://rocm.nightlies.amd.com/v2/gfx1151/rocm_sdk_devel-7.13.0a20260411-py3-none-linux_x86_64.whl",
+      "bytes": 1710689059,
+      "publisher_sha256": null,
+      "local_sha256": "78c4c209e4c65f3571674f12127043945ebd3293e899c8da2d8276cc77aa52be",
+      "etag": "\"1d94425fca81d36b7c710ccd9b2edc07-204\"",
+      "storage": "new-v2-selection",
+      "hash_check": "official HTTPS and ETag; local SHA256 only"
+    },
+    {
+      "name": "rocm-sdk-libraries-gfx1151",
+      "version": "7.13.0a20260411",
+      "url": "https://rocm.nightlies.amd.com/v2/gfx1151/rocm_sdk_libraries_gfx1151-7.13.0a20260411-py3-none-linux_x86_64.whl",
+      "bytes": 282682436,
+      "publisher_sha256": null,
+      "local_sha256": "7a72ed95fca54640cc7cbf4d26ac073401b2dce1b836c644be0b52d2de287ba0",
+      "etag": "\"980be07cd07f8ff1c6c92a6abaf582af-34\"",
+      "storage": "new-v2-selection",
+      "hash_check": "official HTTPS and ETag; local SHA256 only"
+    },
+    {
+      "name": "safetensors",
+      "version": "0.8.0",
+      "url": "https://files.pythonhosted.org/packages/28/50/f203ff3a3ddfe19308efc83c5a3a29ed02bf786732ec35e68bf9162f3365/safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "bytes": 516040,
+      "publisher_sha256": "fd6f3f93c9a0a7cc2788ee63fb763353d4bd2e89b0751bc78fcf7dda00bea774",
+      "local_sha256": "fd6f3f93c9a0a7cc2788ee63fb763353d4bd2e89b0751bc78fcf7dda00bea774",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "setuptools",
+      "version": "81.0.0",
+      "url": "https://files.pythonhosted.org/packages/e1/e3/c164c88b2e5ce7b24d667b9bd83589cf4f3520d97cad01534cd3c4f55fdb/setuptools-81.0.0-py3-none-any.whl",
+      "bytes": 1062021,
+      "publisher_sha256": "fdd925d5c5d9f62e4b74b30d6dd7828ce236fd6ed998a08d81de62ce5a6310d6",
+      "local_sha256": "fdd925d5c5d9f62e4b74b30d6dd7828ce236fd6ed998a08d81de62ce5a6310d6",
+      "etag": null,
+      "storage": "new-v2-selection",
+      "hash_check": "publisher SHA256 match"
+    },
+    {
+      "name": "sympy",
+      "version": "1.14.0",
+      "url": "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl",
+      "bytes": 6299353,
+      "publisher_sha256": "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5",
+      "local_sha256": "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "tokenizers",
+      "version": "0.23.3",
+      "url": "https://files.pythonhosted.org/packages/3a/40/6706b82693715581457c6d5423eaa7faae576bb0526c5738a57085eb4449/tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "bytes": 3396193,
+      "publisher_sha256": "376851d22bcf9d650a5c3090bb83e6cf9e895fbf0595369fa4cd43c1f69b5f87",
+      "local_sha256": "376851d22bcf9d650a5c3090bb83e6cf9e895fbf0595369fa4cd43c1f69b5f87",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "torch",
+      "version": "2.12.0a0+rocm7.13.0a20260411",
+      "url": "https://rocm.nightlies.amd.com/v2/gfx1151/torch-2.12.0a0%2Brocm7.13.0a20260411-cp312-cp312-linux_x86_64.whl",
+      "bytes": 712336644,
+      "publisher_sha256": null,
+      "local_sha256": "9b8ca628ab6e107cb5da960b94c877c317a7a655ea05ecb3e8effde1b2f62061",
+      "etag": "\"3c878f34c7b75bc06bdd78f50d16df0a-85\"",
+      "storage": "new-v2-selection",
+      "hash_check": "official HTTPS and ETag; local SHA256 only"
+    },
+    {
+      "name": "tqdm",
+      "version": "4.70.1",
+      "url": "https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl",
+      "bytes": 80199,
+      "publisher_sha256": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+      "local_sha256": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "triton",
+      "version": "3.7.0+git18f89f64.rocm7.13.0a20260411",
+      "url": "https://rocm.nightlies.amd.com/v2/gfx1151/triton-3.7.0%2Bgit18f89f64.rocm7.13.0a20260411-cp312-cp312-linux_x86_64.whl",
+      "bytes": 638324683,
+      "publisher_sha256": null,
+      "local_sha256": "15ef75e4a1d88c2e980a05a8db6fe99266d411865467280b08222392ff70edd0",
+      "etag": "\"084305be47a046390d566dbf0845b85b-77\"",
+      "storage": "new-v2-selection",
+      "hash_check": "official HTTPS and ETag; local SHA256 only"
+    },
+    {
+      "name": "truststore",
+      "version": "0.10.4",
+      "url": "https://files.pythonhosted.org/packages/19/97/56608b2249fe206a67cd573bc93cd9896e1efb9e98bce9c163bcdc704b88/truststore-0.10.4-py3-none-any.whl",
+      "bytes": 18660,
+      "publisher_sha256": "adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981",
+      "local_sha256": "adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "bytes": 45571,
+      "publisher_sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "local_sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "url": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+      "bytes": 14750,
+      "publisher_sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+      "local_sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "wheel",
+      "version": "0.48.0",
+      "url": "https://files.pythonhosted.org/packages/2e/29/69cfbb602cd91690c55d38ba9fe53e6a7e76a6fa647bf38f19c138d25449/wheel-0.48.0-py3-none-any.whl",
+      "bytes": 33320,
+      "publisher_sha256": "3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab",
+      "local_sha256": "3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    },
+    {
+      "name": "yarl",
+      "version": "1.25.1",
+      "url": "https://files.pythonhosted.org/packages/bc/7b/ca212cbe170ac8b96e45317ecbcf9c3c3ecf0cdec98d5b088a9c4088929b/yarl-1.25.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 117050,
+      "publisher_sha256": "c6f117789d22dce188e5754e8bc65b7e6ebf8cb73963b9fa761f672a5883769d",
+      "local_sha256": "c6f117789d22dce188e5754e8bc65b7e6ebf8cb73963b9fa761f672a5883769d",
+      "storage": "prior-compliant-pypi",
+      "hash_check": "reverified by offline full inspection"
+    }
+  ],
+  "rocm_sdist": {
+    "url": "https://rocm.nightlies.amd.com/v2/gfx1151/rocm-7.13.0a20260411.tar.gz",
+    "bytes": 17595,
+    "local_sha256": "babdbc83f93a3cfe4c220aa5b8d669e7e2b9ed676ff0ccf20c269483647d42d3",
+    "publisher_sha256": null,
+    "build_backend": "setuptools.build_meta",
+    "build_requires": "setuptools>=70.2.0",
+    "build_target": "ROCM_SDK_TARGET_FAMILY=gfx1151",
+    "built": false
+  }
+}

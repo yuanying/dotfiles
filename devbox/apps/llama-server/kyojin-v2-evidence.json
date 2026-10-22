@@ -1,0 +1,3370 @@
+{
+  "status": "static_wheel_integrity_and_dependency_projection_passed_not_installable",
+  "engine_revision": "e09322da7209331c57e2a79cfc30d120f0299154",
+  "observed_date": "2026-10-22",
+  "new_wheel_count": 6,
+  "reverified_prior_compliant_pypi_count": 44,
+  "total_wheel_count": 50,
+  "standard_record_content_hash_matches": 22962,
+  "nonstandard_hex_records": 0,
+  "record_issues": 0,
+  "security_issues": 0,
+  "dependency_issues": [],
+  "dependency_scope": "CPython3.12.10/Linux x86_64/default extras, torch requests rocm[libraries]; rocm sdist static edges only, generated wheel not built",
+  "zip_expanded_bytes": 15757764126,
+  "tar_regular_payload_bytes": 9204975498,
+  "notice_count": 144,
+  "new_rows": [
+    {
+      "name": "rocm-sdk-core",
+      "version": "7.13.0a20260411",
+      "filename": "rocm_sdk_core-7.13.0a20260411-py3-none-linux_x86_64.whl",
+      "bytes": 409098742,
+      "sha256": "bd4589916bdeac291d7ec41262a8b65207c9319d2c78766213a8fcb89b5bc1f7",
+      "expanded_bytes": 1481874397,
+      "compressed_member_bytes": 408526438,
+      "record_verified_members": 2859,
+      "record_hex_verified_members": 0,
+      "record_issues": [],
+      "security_issues": [],
+      "record_unlisted_files": [],
+      "record_absent_files": [],
+      "record_unverified_members": [],
+      "record_unhashed": [
+        "rocm_sdk_core-7.13.0a20260411.dist-info/RECORD"
+      ],
+      "requires_python": null,
+      "requires_dist": [],
+      "provides_extra": [],
+      "tags": [
+        "py3-none-linux_x86_64"
+      ],
+      "wheel_version": "1.0",
+      "root_is_purelib": "true",
+      "license_expression": null,
+      "license": null,
+      "license_classifiers": [],
+      "licenses": [
+        {
+          "path": "_rocm_sdk_core/share/amd_smi/amdsmi/LICENSE",
+          "bytes": 1088,
+          "sha256": "91452fe01aabb20286da0b0f4db72bec60f14beb85926befcee56814a5a09337"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/amd_comgr/LICENSE.txt",
+          "bytes": 15014,
+          "sha256": "6ad4983498652cb8c73c70a705a0d9175c5e3ff5db93c799d8e09557a04af140"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/hipcc/LICENSE.txt",
+          "bytes": 1079,
+          "sha256": "0c421a032ba7b3ce6cc1fa0282b5d33d4a2d646404c07b90b3b2c1bd073286d6"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/hsa-amd-aqlprofile/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/rocminfo/License.txt",
+          "bytes": 1696,
+          "sha256": "cf5d3123797c393397bdb5b0e727b77301f2f622028b2ea580b29d825d24e8e2"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/rocprofiler-register/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/rocr/LICENSE.md",
+          "bytes": 1770,
+          "sha256": "dac0a5360f50972cceaed16767bc9e94642aa497d558a74471e842f7192c7403"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/roctracer/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "_rocm_sdk_core/share/doc/roctracer-asan/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        }
+      ],
+      "nested_archives": []
+    },
+    {
+      "name": "rocm-sdk-devel",
+      "version": "7.13.0a20260411",
+      "filename": "rocm_sdk_devel-7.13.0a20260411-py3-none-linux_x86_64.whl",
+      "bytes": 1710689059,
+      "sha256": "78c4c209e4c65f3571674f12127043945ebd3293e899c8da2d8276cc77aa52be",
+      "expanded_bytes": 9252282765,
+      "compressed_member_bytes": 1710687795,
+      "record_verified_members": 7,
+      "record_hex_verified_members": 0,
+      "record_issues": [],
+      "security_issues": [],
+      "record_unlisted_files": [],
+      "record_absent_files": [],
+      "record_unverified_members": [],
+      "record_unhashed": [
+        "rocm_sdk_devel-7.13.0a20260411.dist-info/RECORD"
+      ],
+      "requires_python": null,
+      "requires_dist": [],
+      "provides_extra": [],
+      "tags": [
+        "py3-none-linux_x86_64"
+      ],
+      "wheel_version": "1.0",
+      "root_is_purelib": "true",
+      "license_expression": null,
+      "license": null,
+      "license_classifiers": [],
+      "licenses": [
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/lib/rocm_sysdeps/share/doc/mpfr/COPYING",
+          "bytes": 35149,
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/lib/rocm_sysdeps/share/doc/mpfr/COPYING.LESSER",
+          "bytes": 7652,
+          "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/lib/llvm/include/llvm/Support/LICENSE.TXT",
+          "bytes": 303,
+          "sha256": "54cbc326a78b9400065bfc5830a57fdcdaf808286d4ac35d8a9e324aa77b7241"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/NOTICES.txt",
+          "bytes": 40897,
+          "sha256": "52d2c9ea42f14953ba8383c373a41fba2d7d841dd0c2ca2e5a67833dba948b4c"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocroller/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocm-debug-agent/LICENSE.txt",
+          "bytes": 1595,
+          "sha256": "d40e425f5a4b928d7a65474e48267053423c309c30d33145b950fc116f88eef4"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipfft/LICENSE.md",
+          "bytes": 2799,
+          "sha256": "dc73cef4d65dbb7ef98c9dc1af26edd3528d5d2f6dca59f78d6b5cb6940204bc"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocjpeg/LICENSE",
+          "bytes": 1086,
+          "sha256": "643a8b40f1eff8c33bd58cc611f0f808ff457b88e470d5ec1241058c56a074cb"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocprofiler-sdk-rocpd/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocprofiler-sdk/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocm-debug-agent-asan/LICENSE.txt",
+          "bytes": 1595,
+          "sha256": "d40e425f5a4b928d7a65474e48267053423c309c30d33145b950fc116f88eef4"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocdecode/LICENSE",
+          "bytes": 1653,
+          "sha256": "db7d401d14f442a8f203edd76f8d8e065d2c9882e1866b609ee1362696ee80ba"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/miopen-hip/LICENSE.md",
+          "bytes": 4844,
+          "sha256": "f64af72ceda1fcee344f64d9dc7ebb0d3d46963d41ce2b82353858e4b59c4606"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocm-core/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocprim/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/opencl/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocm-dbgapi/LICENSE.txt",
+          "bytes": 1077,
+          "sha256": "16cdacb8cab51bba6b5ca7866e4b93adfd6b74228cc0f12651e86af11aa02f50"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocthrust/LICENSE",
+          "bytes": 10174,
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocfft/LICENSE.md",
+          "bytes": 2800,
+          "sha256": "bff8e2d1d03f313c95f39be2aa1fbdb545baa170bd07b077172539f1114afd0b"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/amd-smi-lib/copyright",
+          "bytes": 1296,
+          "sha256": "42ea4869743f05f865021689a2c50ef9456fadeda394a7d632dff9053ac27640"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/amd-smi-lib/LICENSE.txt",
+          "bytes": 1088,
+          "sha256": "91452fe01aabb20286da0b0f4db72bec60f14beb85926befcee56814a5a09337"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipcub/LICENSE.txt",
+          "bytes": 1671,
+          "sha256": "af1b0bce89e2ab523e43a09ddb8a2e52838e8d772fe89d4c29e86965cb627bc1"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rccl-tests/LICENSE.txt",
+          "bytes": 1603,
+          "sha256": "409e811deabc267411f4e8659e7c21784d907eba90d6e5c36a709cd847d3a900"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipsolver/LICENSE.md",
+          "bytes": 1090,
+          "sha256": "67db69484a5bb6ec5a2d6e7738f036eb76d2d611fde7b763bab4ff1edfcd5e13"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocm-cmake/LICENSE",
+          "bytes": 1085,
+          "sha256": "88d4e50ccb9e041cd667888f9639d21a9caf600b4aca5f899ea03f30752ba5f1"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocblas/LICENSE.md",
+          "bytes": 9200,
+          "sha256": "b57f384b03b348ca6dc3694dafa3ed7e69003a910fcd9e402eca514f4d86af83"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/half/LICENSE.txt",
+          "bytes": 1100,
+          "sha256": "1269110471a5506d5cc9c115c57b855206f69a90cc57bbbf27860907067ed946"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocsparse/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/opencl-asan/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocm-dbgapi-asan/LICENSE.txt",
+          "bytes": 1077,
+          "sha256": "16cdacb8cab51bba6b5ca7866e4b93adfd6b74228cc0f12651e86af11aa02f50"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rccl/LICENSE.txt",
+          "bytes": 2089,
+          "sha256": "df3a5e9aee2c34d6d41408bffa743f750cf8025c3374b91a19c8bfdcbc9fbdeb"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocrand/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipsparse/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocprofiler-sdk-rocattach/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocprofiler-sdk-tests/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocm-smi-lib/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocsolver/LICENSE.md",
+          "bytes": 5128,
+          "sha256": "a037bdde286c83bb33b905fbabe2aa4187553b7abe41ae281aa1b2dab89ef95a"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hiprand/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hip-asan/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipsparselt/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipblaslt/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipblas-common/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hipblas/LICENSE.md",
+          "bytes": 3479,
+          "sha256": "fec91d5fe42b9fef3e0d8088e769c113f8dd6eda614b6bc5a646feacb16c88a4"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/hip/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        },
+        {
+          "path": "rocm_sdk_devel/_devel.tar!_rocm_sdk_devel/share/doc/rocprofiler-sdk-roctx/LICENSE.md",
+          "bytes": 1080,
+          "sha256": "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+        }
+      ],
+      "nested_archives": [
+        {
+          "path": "rocm_sdk_devel/_devel.tar",
+          "members": 54452,
+          "regular_bytes": 9204975498,
+          "unresolved_link_count": 3398,
+          "unresolved_links_sha256": "6c9f963d24dfb516e48f32f9bac4666364101cab26a60f9c743b1c598405668b"
+        }
+      ]
+    },
+    {
+      "name": "rocm-sdk-libraries-gfx1151",
+      "version": "7.13.0a20260411",
+      "filename": "rocm_sdk_libraries_gfx1151-7.13.0a20260411-py3-none-linux_x86_64.whl",
+      "bytes": 282682436,
+      "sha256": "7a72ed95fca54640cc7cbf4d26ac073401b2dce1b836c644be0b52d2de287ba0",
+      "expanded_bytes": 1499739327,
+      "compressed_member_bytes": 282574218,
+      "record_verified_members": 356,
+      "record_hex_verified_members": 0,
+      "record_issues": [],
+      "security_issues": [],
+      "record_unlisted_files": [],
+      "record_absent_files": [],
+      "record_unverified_members": [],
+      "record_unhashed": [
+        "rocm_sdk_libraries_gfx1151-7.13.0a20260411.dist-info/RECORD"
+      ],
+      "requires_python": null,
+      "requires_dist": [],
+      "provides_extra": [],
+      "tags": [
+        "py3-none-linux_x86_64"
+      ],
+      "wheel_version": "1.0",
+      "root_is_purelib": "true",
+      "license_expression": null,
+      "license": null,
+      "license_classifiers": [],
+      "licenses": [],
+      "nested_archives": []
+    },
+    {
+      "name": "setuptools",
+      "version": "81.0.0",
+      "filename": "setuptools-81.0.0-py3-none-any.whl",
+      "bytes": 1062021,
+      "sha256": "fdd925d5c5d9f62e4b74b30d6dd7828ce236fd6ed998a08d81de62ce5a6310d6",
+      "expanded_bytes": 3652286,
+      "compressed_member_bytes": 988855,
+      "record_verified_members": 457,
+      "record_hex_verified_members": 0,
+      "record_issues": [],
+      "security_issues": [],
+      "record_unlisted_files": [],
+      "record_absent_files": [],
+      "record_unverified_members": [],
+      "record_unhashed": [
+        "setuptools-81.0.0.dist-info/RECORD"
+      ],
+      "requires_python": ">=3.9",
+      "requires_dist": [
+        "pytest!=8.1.*,>=6; extra == \"test\"",
+        "virtualenv>=13.0.0; extra == \"test\"",
+        "wheel>=0.44.0; extra == \"test\"",
+        "pip>=19.1; extra == \"test\"",
+        "packaging>=24.2; extra == \"test\"",
+        "jaraco.envs>=2.2; extra == \"test\"",
+        "pytest-xdist>=3; extra == \"test\"",
+        "jaraco.path>=3.7.2; extra == \"test\"",
+        "build[virtualenv]>=1.0.3; extra == \"test\"",
+        "filelock>=3.4.0; extra == \"test\"",
+        "ini2toml[lite]>=0.14; extra == \"test\"",
+        "tomli-w>=1.0.0; extra == \"test\"",
+        "pytest-timeout; extra == \"test\"",
+        "pytest-perf; sys_platform != \"cygwin\" and extra == \"test\"",
+        "jaraco.develop>=7.21; (python_version >= \"3.9\" and sys_platform != \"cygwin\") and extra == \"test\"",
+        "pytest-home>=0.5; extra == \"test\"",
+        "pytest-subprocess; extra == \"test\"",
+        "pyproject-hooks!=1.1; extra == \"test\"",
+        "jaraco.test>=5.5; extra == \"test\"",
+        "sphinx>=3.5; extra == \"doc\"",
+        "jaraco.packaging>=9.3; extra == \"doc\"",
+        "rst.linker>=1.9; extra == \"doc\"",
+        "furo; extra == \"doc\"",
+        "sphinx-lint; extra == \"doc\"",
+        "jaraco.tidelift>=1.4; extra == \"doc\"",
+        "pygments-github-lexers==0.0.5; extra == \"doc\"",
+        "sphinx-favicon; extra == \"doc\"",
+        "sphinx-inline-tabs; extra == \"doc\"",
+        "sphinx-reredirects; extra == \"doc\"",
+        "sphinxcontrib-towncrier; extra == \"doc\"",
+        "sphinx-notfound-page<2,>=1; extra == \"doc\"",
+        "pyproject-hooks!=1.1; extra == \"doc\"",
+        "towncrier<24.7; extra == \"doc\"",
+        "packaging>=24.2; extra == \"core\"",
+        "more_itertools>=8.8; extra == \"core\"",
+        "jaraco.text>=3.7; extra == \"core\"",
+        "importlib_metadata>=6; python_version < \"3.10\" and extra == \"core\"",
+        "tomli>=2.0.1; python_version < \"3.11\" and extra == \"core\"",
+        "wheel>=0.43.0; extra == \"core\"",
+        "platformdirs>=4.2.2; extra == \"core\"",
+        "jaraco.functools>=4; extra == \"core\"",
+        "more_itertools; extra == \"core\"",
+        "pytest-checkdocs>=2.4; extra == \"check\"",
+        "pytest-ruff>=0.2.1; sys_platform != \"cygwin\" and extra == \"check\"",
+        "ruff>=0.13.0; sys_platform != \"cygwin\" and extra == \"check\"",
+        "pytest-cov; extra == \"cover\"",
+        "pytest-enabler>=2.2; extra == \"enabler\"",
+        "pytest-mypy; extra == \"type\"",
+        "mypy==1.18.*; extra == \"type\"",
+        "importlib_metadata>=7.0.2; python_version < \"3.10\" and extra == \"type\"",
+        "jaraco.develop>=7.21; sys_platform != \"cygwin\" and extra == \"type\""
+      ],
+      "provides_extra": [
+        "test",
+        "doc",
+        "ssl",
+        "certs",
+        "core",
+        "check",
+        "cover",
+        "enabler",
+        "type"
+      ],
+      "tags": [
+        "py3-none-any"
+      ],
+      "wheel_version": "1.0",
+      "root_is_purelib": "true",
+      "license_expression": "MIT",
+      "license": null,
+      "license_classifiers": [],
+      "licenses": [
+        {
+          "path": "setuptools/_vendor/importlib_metadata-8.7.1.dist-info/licenses/LICENSE",
+          "bytes": 10278,
+          "sha256": "458502e12d97bbf64438606a20044aa85eb05fb0a8a807bb35dbec253fd1fc04"
+        },
+        {
+          "path": "setuptools/_vendor/jaraco_context-6.1.0.dist-info/licenses/LICENSE",
+          "bytes": 1076,
+          "sha256": "9755a18519666e5f0f4cae3daad3d7012bcae48a600b31237d75e9fe134e6683"
+        },
+        {
+          "path": "setuptools/_vendor/jaraco_functools-4.4.0.dist-info/licenses/LICENSE",
+          "bytes": 1076,
+          "sha256": "5a57cb4db85e2a2dd88c290628908add57e3451449e0a9a71fdfb38776fd759d"
+        },
+        {
+          "path": "setuptools/_vendor/more_itertools-10.8.0.dist-info/licenses/LICENSE",
+          "bytes": 1053,
+          "sha256": "09f1c8c9e941af3e584d59641ea9b87d83c0cb0fd007eb5ef391a7e2643c1a46"
+        },
+        {
+          "path": "setuptools/_vendor/packaging-26.0.dist-info/licenses/LICENSE",
+          "bytes": 197,
+          "sha256": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48"
+        },
+        {
+          "path": "setuptools/_vendor/packaging-26.0.dist-info/licenses/LICENSE.APACHE",
+          "bytes": 10174,
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "path": "setuptools/_vendor/packaging-26.0.dist-info/licenses/LICENSE.BSD",
+          "bytes": 1344,
+          "sha256": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5"
+        },
+        {
+          "path": "setuptools/_vendor/platformdirs-4.4.0.dist-info/licenses/LICENSE",
+          "bytes": 1089,
+          "sha256": "29e0fd62e929850e86eb28c3fdccf0cefdf4fa94879011cffb3d0d4bed6d4db6"
+        },
+        {
+          "path": "setuptools/_vendor/tomli-2.4.0.dist-info/licenses/LICENSE",
+          "bytes": 1072,
+          "sha256": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe"
+        },
+        {
+          "path": "setuptools/_vendor/wheel-0.46.3.dist-info/licenses/LICENSE.txt",
+          "bytes": 1107,
+          "sha256": "30c23618679108f3e8ea1d2a658c7ca417bdfc891c98ef1a89fa4ff0c9828654"
+        },
+        {
+          "path": "setuptools/_vendor/zipp-3.23.0.dist-info/licenses/LICENSE",
+          "bytes": 1076,
+          "sha256": "5a57cb4db85e2a2dd88c290628908add57e3451449e0a9a71fdfb38776fd759d"
+        },
+        {
+          "path": "setuptools/config/NOTICE",
+          "bytes": 493,
+          "sha256": "2dddf08818297a3b89d43d95ff659d8da85741108c9136dfa3a4d856c0623bd8"
+        },
+        {
+          "path": "setuptools/config/_validate_pyproject/NOTICE",
+          "bytes": 18737,
+          "sha256": "5d300dbfa643138b013b75ac9caeee591f951b8b0ee24288c34ccd926c4780c8"
+        },
+        {
+          "path": "setuptools-81.0.0.dist-info/licenses/LICENSE",
+          "bytes": 1023,
+          "sha256": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741"
+        },
+        {
+          "path": "setuptools/_vendor/autocommand-2.2.2.dist-info/LICENSE",
+          "bytes": 7634,
+          "sha256": "ade78d04982d69972d444a8e14a94f87a2334dd3855cc80348ea8e240aa0df2d"
+        },
+        {
+          "path": "setuptools/_vendor/backports.tarfile-1.2.0.dist-info/LICENSE",
+          "bytes": 1023,
+          "sha256": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741"
+        },
+        {
+          "path": "setuptools/_vendor/jaraco.text-4.0.0.dist-info/LICENSE",
+          "bytes": 1023,
+          "sha256": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741"
+        }
+      ],
+      "nested_archives": []
+    },
+    {
+      "name": "torch",
+      "version": "2.12.0a0+rocm7.13.0a20260411",
+      "filename": "torch-2.12.0a0+rocm7.13.0a20260411-cp312-cp312-linux_x86_64.whl",
+      "bytes": 712336644,
+      "sha256": "9b8ca628ab6e107cb5da960b94c877c317a7a655ea05ecb3e8effde1b2f62061",
+      "expanded_bytes": 1291833471,
+      "compressed_member_bytes": 709718446,
+      "record_verified_members": 14061,
+      "record_hex_verified_members": 0,
+      "record_issues": [],
+      "security_issues": [],
+      "record_unlisted_files": [],
+      "record_absent_files": [],
+      "record_unverified_members": [],
+      "record_unhashed": [
+        "torch-2.12.0a0+rocm7.13.0a20260411.dist-info/RECORD"
+      ],
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "filelock",
+        "typing-extensions>=4.10.0",
+        "setuptools<82",
+        "sympy>=1.13.3",
+        "networkx>=2.5.1",
+        "jinja2",
+        "fsspec>=0.8.5",
+        "rocm[libraries]==7.13.0a20260411",
+        "triton==3.7.0+git18f89f64.rocm7.13.0a20260411",
+        "optree>=0.13.0; extra == \"optree\"",
+        "opt-einsum>=3.3; extra == \"opt-einsum\"",
+        "pyyaml; extra == \"pyyaml\""
+      ],
+      "provides_extra": [
+        "optree",
+        "opt-einsum",
+        "pyyaml"
+      ],
+      "tags": [
+        "cp312-cp312-linux_x86_64"
+      ],
+      "wheel_version": "1.0",
+      "root_is_purelib": "false",
+      "license_expression": null,
+      "license": "BSD-3-Clause",
+      "license_classifiers": [],
+      "licenses": [
+        {
+          "path": "torch-2.12.0a0+rocm7.13.0a20260411.dist-info/licenses/LICENSE",
+          "bytes": 385104,
+          "sha256": "9f4e90fab486b999fbf5393970422d542b9964e2e8851629615640e3882d4605"
+        },
+        {
+          "path": "torch-2.12.0a0+rocm7.13.0a20260411.dist-info/licenses/NOTICE",
+          "bytes": 23632,
+          "sha256": "c2cc7bf0caec7652c2b460a8a470bea1677f241e4ab8e431df34cf17f5a9fec0"
+        }
+      ],
+      "nested_archives": []
+    },
+    {
+      "name": "triton",
+      "version": "3.7.0+git18f89f64.rocm7.13.0a20260411",
+      "filename": "triton-3.7.0+git18f89f64.rocm7.13.0a20260411-cp312-cp312-linux_x86_64.whl",
+      "bytes": 638324683,
+      "sha256": "15ef75e4a1d88c2e980a05a8db6fe99266d411865467280b08222392ff70edd0",
+      "expanded_bytes": 2042898972,
+      "compressed_member_bytes": 638264403,
+      "record_verified_members": 358,
+      "record_hex_verified_members": 0,
+      "record_issues": [],
+      "security_issues": [],
+      "record_unlisted_files": [],
+      "record_absent_files": [],
+      "record_unverified_members": [],
+      "record_unhashed": [
+        "triton-3.7.0+git18f89f64.rocm7.13.0a20260411.dist-info/RECORD"
+      ],
+      "requires_python": ">=3.10,<3.15",
+      "requires_dist": [
+        "importlib-metadata; python_version < \"3.10\"",
+        "cmake<4.0,>=3.20; extra == \"build\"",
+        "lit; extra == \"build\"",
+        "autopep8; extra == \"tests\"",
+        "isort; extra == \"tests\"",
+        "numpy; extra == \"tests\"",
+        "pytest; extra == \"tests\"",
+        "pytest-forked; extra == \"tests\"",
+        "pytest-xdist; extra == \"tests\"",
+        "scipy>=1.7.1; extra == \"tests\"",
+        "llnl-hatchet; extra == \"tests\"",
+        "matplotlib; extra == \"tutorials\"",
+        "pandas; extra == \"tutorials\"",
+        "tabulate; extra == \"tutorials\""
+      ],
+      "provides_extra": [
+        "build",
+        "tests",
+        "tutorials"
+      ],
+      "tags": [
+        "cp312-cp312-linux_x86_64"
+      ],
+      "wheel_version": "1.0",
+      "root_is_purelib": "false",
+      "license_expression": null,
+      "license": null,
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "licenses": [
+        {
+          "path": "triton-3.7.0+git18f89f64.rocm7.13.0a20260411.dist-info/LICENSE",
+          "bytes": 1132,
+          "sha256": "92640fb97222fd0a698ff28ce0c3782c172623f8d6c609b557636a80f28fb946"
+        }
+      ],
+      "nested_archives": []
+    }
+  ],
+  "prior_pypi_reverification": {
+    "count": 44,
+    "record_content_hash_matches": 4864,
+    "rows_sha256": "b40958c461a9568e1b7bc9433e840f2cbeb06c39a27eb3c43722b34e0fd84578"
+  },
+  "initial_unmodified_verifier_failure": [
+    {
+      "name": "rocm-sdk-devel",
+      "error": "ZIP expansion budget exceeded"
+    }
+  ],
+  "initial_full_report_sha256": "4fa5c62028c1417ad6a91b8da48e876d520ed565cad0d681f6b8640df7548fb9",
+  "sdk_override": {
+    "reference_sha256": "3a12637c49b98c5c33f8623e2ee44f5d9a165b083b2505f9a3c19028c2cfddce",
+    "derived_source_sha256": "78c1734fa2c2c55bb9173ce2e63383600b2c587cd65d131315463381d527dbb1",
+    "resource_adjustment_only": true,
+    "member_budget_gib": 12,
+    "tar_regular_aggregate_budget_gib": 12,
+    "other_member_budget_gib": 8,
+    "reason": "pinned _devel.tar is 9252270080 bytes; read-only streaming, no extraction or link following",
+    "whole_wheel_hash_origin": "local SHA256 from official HTTPS/ETag acquisition, not publisher SHA256",
+    "wheel_integrity_and_record_passed": true,
+    "install_performed": false,
+    "full_report_sha256": "aa5c75b159664fd2e62fa5414fac5e3319cd8480d1f8bf22bf1fba76cc8fd587"
+  },
+  "rocm_static": {
+    "name": "rocm",
+    "version": "7.13.0a20260411",
+    "provides_extra": [
+      "libraries",
+      "device",
+      "devel",
+      "profiler"
+    ],
+    "requires_dist": [
+      "rocm==7.13.0a20260411",
+      "rocm-sdk-core==7.13.0a20260411",
+      "rocm-sdk-libraries-gfx1151==7.13.0a20260411; extra == \"libraries\"",
+      "rocm-sdk-devel==7.13.0a20260411; extra == \"devel\"",
+      "rocm-sdk-device-gfx1151==7.13.0a20260411; extra == \"device\"",
+      "rocm-profiler==7.13.0a20260411; extra == \"profiler\""
+    ],
+    "metadata_source": "statically reviewed sdist, not built"
+  },
+  "evaluated_dependency_edges": [
+    {
+      "from": "aiohttp",
+      "requirement": "aiohappyeyeballs>=2.5.0",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "aiosignal>=1.4.0",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "async-timeout<6.0,>=4.0; python_version < \"3.11\"",
+      "active": false
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "attrs>=17.3.0",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "frozenlist>=1.1.1",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "multidict<7.0,>=4.5",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "propcache>=0.2.0",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "typing_extensions>=4.4; python_version < \"3.13\"",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "yarl<2.0,>=1.25.1",
+      "active": true
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "aiodns>=3.3.0; (sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\"",
+      "active": false
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "Brotli>=1.2; (platform_python_implementation == \"CPython\" and sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\"",
+      "active": false
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "brotlicffi>=1.2; platform_python_implementation != \"CPython\" and extra == \"speedups\"",
+      "active": false
+    },
+    {
+      "from": "aiohttp",
+      "requirement": "backports.zstd; (platform_python_implementation == \"CPython\" and python_version < \"3.14\" and sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\"",
+      "active": false
+    },
+    {
+      "from": "aiosignal",
+      "requirement": "frozenlist>=1.1.0",
+      "active": true
+    },
+    {
+      "from": "aiosignal",
+      "requirement": "typing-extensions>=4.2; python_version < \"3.13\"",
+      "active": true
+    },
+    {
+      "from": "anyio",
+      "requirement": "exceptiongroup>=1.0.2; python_version < \"3.11\"",
+      "active": false
+    },
+    {
+      "from": "anyio",
+      "requirement": "idna>=2.8",
+      "active": true
+    },
+    {
+      "from": "anyio",
+      "requirement": "typing_extensions>=4.16.0; python_version < \"3.15\"",
+      "active": true
+    },
+    {
+      "from": "anyio",
+      "requirement": "trio>=0.32.0; extra == \"trio\"",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "adlfs; extra == 'abfs'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "adlfs; extra == 'adl'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pyarrow>=1; extra == 'arrow'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dask; extra == 'dask'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "distributed; extra == 'dask'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pre-commit; extra == 'dev'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "ruff>=0.5; extra == 'dev'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "numpydoc; extra == 'doc'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "sphinx; extra == 'doc'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "sphinx-design; extra == 'doc'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "sphinx-rtd-theme; extra == 'doc'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "yarl; extra == 'doc'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dropbox; extra == 'dropbox'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dropboxdrivefs; extra == 'dropbox'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "requests; extra == 'dropbox'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "adlfs; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "aiohttp!=4.0.0a0,!=4.0.0a1; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dask; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "distributed; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dropbox; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dropboxdrivefs; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "fusepy; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "gcsfs>=2026.4.0; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "libarchive-c; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "ocifs; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "panel; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "paramiko; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pyarrow>=1; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pygit2; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "requests; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "s3fs>=2026.6.0; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "smbprotocol; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "tqdm; extra == 'full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "fusepy; extra == 'fuse'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "gcsfs>=2026.4.0; extra == 'gcs'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pygit2; extra == 'git'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "requests; extra == 'github'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "gcsfs>=2026.4.0; extra == 'gs'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "panel; extra == 'gui'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pyarrow>=1; extra == 'hdfs'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "aiohttp!=4.0.0a0,!=4.0.0a1; extra == 'http'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "libarchive-c; extra == 'libarchive'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "ocifs; extra == 'oci'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "s3fs>=2026.6.0; extra == 's3'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "paramiko; extra == 'sftp'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "smbprotocol; extra == 'smb'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "paramiko; extra == 'ssh'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "aiohttp!=4.0.0a0,!=4.0.0a1; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "numpy; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-asyncio!=0.22.0; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-benchmark; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-cov; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-mock; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-recording; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-rerunfailures; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "requests; extra == 'test'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "aiobotocore<3.0.0,>=2.5.4; extra == 'test-downstream'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dask[dataframe,test]; extra == 'test-downstream'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "moto[server]<5,>4; extra == 'test-downstream'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-timeout; extra == 'test-downstream'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "xarray; extra == 'test-downstream'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "adlfs; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "aiohttp!=4.0.0a0,!=4.0.0a1; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "backports-zstd; (python_version < '3.14') and extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "cloudpickle; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dask; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "distributed; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dropbox; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "dropboxdrivefs; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "fastparquet; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "fusepy; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "gcsfs>=2026.4.0; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "jinja2; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "kerchunk; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "libarchive-c; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "lz4; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "notebook; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "numpy; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "ocifs; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pandas<3.0.0; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "panel; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "paramiko; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pyarrow>=1; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pyftpdlib; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pygit2; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-asyncio!=0.22.0; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-benchmark; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-cov; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-mock; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-recording; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "pytest-rerunfailures; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "python-snappy; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "requests; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "s3fs>=2026.6.0; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "smbprotocol; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "tqdm; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "urllib3; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "zarr<3.2.0; extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "zstandard; (python_version < '3.14') and extra == 'test-full'",
+      "active": false
+    },
+    {
+      "from": "fsspec",
+      "requirement": "tqdm; extra == 'tqdm'",
+      "active": false
+    },
+    {
+      "from": "hf-xet",
+      "requirement": "pytest ; extra == 'tests'",
+      "active": false
+    },
+    {
+      "from": "httpcore2",
+      "requirement": "h11>=0.16",
+      "active": true
+    },
+    {
+      "from": "httpcore2",
+      "requirement": "truststore>=0.10",
+      "active": true
+    },
+    {
+      "from": "httpcore2",
+      "requirement": "anyio<5.0,>=4.5.0; extra == 'asyncio'",
+      "active": false
+    },
+    {
+      "from": "httpcore2",
+      "requirement": "h2<5,>=3; extra == 'http2'",
+      "active": false
+    },
+    {
+      "from": "httpcore2",
+      "requirement": "socksio==1.*; extra == 'socks'",
+      "active": false
+    },
+    {
+      "from": "httpcore2",
+      "requirement": "trio<1.0,>=0.34.0; extra == 'trio'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "anyio>=4.10; sys_platform != 'emscripten'",
+      "active": true
+    },
+    {
+      "from": "httpx2",
+      "requirement": "httpcore2==2.13.1; sys_platform != 'emscripten'",
+      "active": true
+    },
+    {
+      "from": "httpx2",
+      "requirement": "httpx2-jsfetch; sys_platform == 'emscripten' and python_version >= '3.12'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "idna>=3.18",
+      "active": true
+    },
+    {
+      "from": "httpx2",
+      "requirement": "truststore>=0.10; sys_platform != 'emscripten'",
+      "active": true
+    },
+    {
+      "from": "httpx2",
+      "requirement": "typing-extensions>=4.5.0; python_version < '3.13'",
+      "active": true
+    },
+    {
+      "from": "httpx2",
+      "requirement": "brotli>=1.2.0; (platform_python_implementation == 'CPython') and extra == 'brotli'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "brotlicffi>=1.2.0.2; (platform_python_implementation != 'CPython') and extra == 'brotli'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "click>=8.4.2; extra == 'cli'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "pygments==2.*; extra == 'cli'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "rich<16,>=10; extra == 'cli'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "h2<5,>=3; extra == 'http2'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "socksio==1.*; extra == 'socks'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "wsproto>=1.2; extra == 'ws'",
+      "active": false
+    },
+    {
+      "from": "httpx2",
+      "requirement": "backports-zstd>=1.0.0; (python_version <= '3.13') and extra == 'zstd'",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "click<9.0.0,>=8.4.2",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "filelock>=3.10.0",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fsspec>=2023.5.0",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "hf-xet<2.0.0,>=1.6.0; platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"ARM64\" or platform_machine == \"aarch64\"",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "httpx2<3,>=2.0.0",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "packaging>=20.9",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pyyaml>=5.1",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "tomli>=1.1.0; python_version < \"3.11\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "tqdm>=4.42.1",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "typing-extensions>=4.1.0",
+      "active": true
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "authlib>=1.8.0; extra == \"oauth\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastapi; extra == \"oauth\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "itsdangerous; extra == \"oauth\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "torch; extra == \"torch\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "safetensors[torch]; extra == \"torch\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "toml; extra == \"fastai\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastai>=2.4; extra == \"fastai\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastcore>=1.3.27; extra == \"fastai\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "hf-xet<2.0.0,>=1.6.0; extra == \"hf-xet\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "mcp<2.0.0,>=1.9.4; extra == \"mcp\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "authlib>=1.8.0; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastapi; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "itsdangerous; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "jedi; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "Jinja2; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest>=8.4.2; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-cov; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-env; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-xdist; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-vcr; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-asyncio; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-rerunfailures>=16.2; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-mock; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "urllib3<2.0; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "soundfile; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "Pillow; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "numpy; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "duckdb; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastapi; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "gradio>=5.0.0; extra == \"gradio\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "requests; extra == \"gradio\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "typing-extensions>=4.8.0; extra == \"typing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-PyYAML; extra == \"typing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-simplejson; extra == \"typing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-toml; extra == \"typing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-tqdm; extra == \"typing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-urllib3; extra == \"typing\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "ruff>=0.9.0; extra == \"quality\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "mypy==1.15.0; extra == \"quality\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "libcst>=1.4.0; extra == \"quality\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "ty; extra == \"quality\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "authlib>=1.8.0; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastapi; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "itsdangerous; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "jedi; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "Jinja2; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest>=8.4.2; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-cov; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-env; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-xdist; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-vcr; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-asyncio; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-rerunfailures>=16.2; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-mock; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "urllib3<2.0; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "soundfile; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "Pillow; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "numpy; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "duckdb; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastapi; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "ruff>=0.9.0; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "mypy==1.15.0; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "libcst>=1.4.0; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "ty; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "typing-extensions>=4.8.0; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-PyYAML; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-simplejson; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-toml; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-tqdm; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-urllib3; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "authlib>=1.8.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastapi; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "itsdangerous; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "jedi; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "Jinja2; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest>=8.4.2; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-cov; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-env; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-xdist; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-vcr; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-asyncio; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-rerunfailures>=16.2; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "pytest-mock; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "urllib3<2.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "soundfile; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "Pillow; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "numpy; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "duckdb; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "fastapi; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "ruff>=0.9.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "mypy==1.15.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "libcst>=1.4.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "ty; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "typing-extensions>=4.8.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-PyYAML; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-simplejson; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-toml; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-tqdm; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "huggingface-hub",
+      "requirement": "types-urllib3; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "idna",
+      "requirement": "ruff >= 0.16.0 ; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "idna",
+      "requirement": "mypy >= 1.11.2 ; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "idna",
+      "requirement": "ty >= 0.0.37 ; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "idna",
+      "requirement": "pytest >= 8.3.2 ; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "idna",
+      "requirement": "hypothesis >= 6.141.1 ; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "idna",
+      "requirement": "coverage >= 7.10.0 ; extra == \"all\"",
+      "active": false
+    },
+    {
+      "from": "jinja2",
+      "requirement": "MarkupSafe>=2.0",
+      "active": true
+    },
+    {
+      "from": "jinja2",
+      "requirement": "Babel>=2.7 ; extra == \"i18n\"",
+      "active": false
+    },
+    {
+      "from": "marisa-trie",
+      "requirement": "hypothesis; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "marisa-trie",
+      "requirement": "pytest; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "marisa-trie",
+      "requirement": "readme_renderer; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "marisa-trie",
+      "requirement": "pytest-run-parallel; python_version >= \"3.13\" and extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "marisa-trie",
+      "requirement": "hypothesis>=6.136.9; python_version >= \"3.13\" and extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "mdurl~=0.1",
+      "active": true
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "psutil ; extra == \"benchmarking\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "pytest ; extra == \"benchmarking\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "pytest-benchmark ; extra == \"benchmarking\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "commonmark~=0.9 ; extra == \"compare\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "markdown~=3.4 ; extra == \"compare\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "mistletoe~=1.0 ; extra == \"compare\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "mistune~=3.0 ; extra == \"compare\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "panflute~=2.3 ; extra == \"compare\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "markdown-it-pyrs ; extra == \"compare\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "linkify-it-py>=1,<3 ; extra == \"linkify\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "mdit-py-plugins>=0.5.0 ; extra == \"plugins\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "gprof2dot ; extra == \"profiling\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "mdit-py-plugins>=0.5.0 ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "myst-parser ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "pyyaml ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "sphinx ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "sphinx-copybutton ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "sphinx-design ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "sphinx-book-theme~=1.0 ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "jupyter_sphinx ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "ipykernel ; extra == \"rtd\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "coverage ; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "pytest ; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "pytest-cov ; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "pytest-regressions ; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "pytest-timeout ; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "markdown-it-py",
+      "requirement": "requests ; extra == \"testing\"",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "pytest (>=4.6) ; extra == 'develop'",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "pycodestyle ; extra == 'develop'",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "pytest-cov ; extra == 'develop'",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "codecov ; extra == 'develop'",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "wheel ; extra == 'develop'",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "sphinx ; extra == 'docs'",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "gmpy2 (>=2.1.0a4) ; (platform_python_implementation != \"PyPy\") and extra == 'gmpy'",
+      "active": false
+    },
+    {
+      "from": "mpmath",
+      "requirement": "pytest (>=4.6) ; extra == 'tests'",
+      "active": false
+    },
+    {
+      "from": "multidict",
+      "requirement": "typing-extensions>=4.1.0; python_version < \"3.11\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "asv>=0.6.5; extra == \"benchmarking\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "py-rattler<0.22,>=0.21; extra == \"benchmarking\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "virtualenv; extra == \"benchmarking\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "numpy>=2.2; extra == \"default\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "scipy>=1.15; extra == \"default\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "matplotlib>=3.10; extra == \"default\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pandas>=2.3; extra == \"default\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pre-commit>=4.1; extra == \"developer\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "mypy>=1.15; extra == \"developer\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "sphinx>=8.0; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pydata-sphinx-theme>=0.16; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "sphinx-gallery>=0.18; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "numpydoc>=1.8.0; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pillow>=10; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "texext>=0.6.7; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "myst-nb>=1.1; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "intersphinx-registry; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "osmnx>=2.0.0; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "momepy>=0.7.2; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "contextily>=1.6; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "seaborn>=0.13; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "cairocffi>=1.7; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "igraph>=0.11; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "scikit-learn>=1.6; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "iplotx>=0.9.0; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "hiveplotlib>=0.28; extra == \"example\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "lxml>=4.6; extra == \"extra\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pygraphviz>=2.0; extra == \"extra\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pydot>=3.0.1; extra == \"extra\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "sympy>=1.10; extra == \"extra\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "build>=0.10; extra == \"release\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "twine>=4.0; extra == \"release\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "wheel>=0.40; extra == \"release\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "changelist==0.5; extra == \"release\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pytest>=7.2; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pytest-cov>=4.0; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pytest-xdist>=3.0; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pytest-mpl; extra == \"test-extras\"",
+      "active": false
+    },
+    {
+      "from": "networkx",
+      "requirement": "pytest-randomly; extra == \"test-extras\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "furo; extra == \"docs\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "olefile; extra == \"docs\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "sphinx>=8.2; extra == \"docs\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "sphinx-autobuild; extra == \"docs\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "sphinx-copybutton; extra == \"docs\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "sphinx-inline-tabs; extra == \"docs\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "sphinxext-opengraph; extra == \"docs\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "olefile; extra == \"fpx\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "olefile; extra == \"mic\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "arro3-compute; extra == \"test-arrow\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "arro3-core; extra == \"test-arrow\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "nanoarrow; extra == \"test-arrow\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "pyarrow; extra == \"test-arrow\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "coverage>=7.4.2; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "defusedxml; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "markdown2; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "olefile; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "packaging; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "pytest; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "pytest-cov; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "pytest-timeout; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "pytest-xdist; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "setuptools; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "trove-classifiers>=2024.10.12; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "pillow",
+      "requirement": "defusedxml; extra == \"xmp\"",
+      "active": false
+    },
+    {
+      "from": "pydantic",
+      "requirement": "annotated-types>=0.6.0",
+      "active": true
+    },
+    {
+      "from": "pydantic",
+      "requirement": "pydantic-core==2.50.0",
+      "active": true
+    },
+    {
+      "from": "pydantic",
+      "requirement": "typing-extensions>=4.16.0",
+      "active": true
+    },
+    {
+      "from": "pydantic",
+      "requirement": "typing-inspection>=0.4.4",
+      "active": true
+    },
+    {
+      "from": "pydantic",
+      "requirement": "email-validator>=2.0.0; extra == 'email'",
+      "active": false
+    },
+    {
+      "from": "pydantic",
+      "requirement": "tzdata; (platform_system == 'Windows') and extra == 'timezone'",
+      "active": false
+    },
+    {
+      "from": "pydantic-core",
+      "requirement": "typing-extensions>=4.16.0",
+      "active": true
+    },
+    {
+      "from": "pygments",
+      "requirement": "colorama>=0.4.6; extra == 'windows-terminal'",
+      "active": false
+    },
+    {
+      "from": "rich",
+      "requirement": "ipywidgets (>=7.5.1,<9) ; extra == \"jupyter\"",
+      "active": false
+    },
+    {
+      "from": "rich",
+      "requirement": "markdown-it-py (>=2.2.0)",
+      "active": true
+    },
+    {
+      "from": "rich",
+      "requirement": "pygments (>=2.13.0,<3.0.0)",
+      "active": true
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[torch] ; extra == 'all'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'all'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[jax] ; extra == 'all'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[paddlepaddle] ; extra == 'all'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[convert] ; extra == 'all'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[quality] ; extra == 'all'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[testing] ; extra == 'all'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[torch] ; extra == 'convert'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "huggingface-hub>=1.4 ; extra == 'convert'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[all] ; extra == 'dev'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[pinned-tf] ; extra == 'dev'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'jax'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "flax>=0.6.3 ; extra == 'jax'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "jax>=0.3.25 ; extra == 'jax'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "jaxlib>=0.3.25 ; extra == 'jax'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "mlx>=0.0.9 ; extra == 'mlx'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "numpy>=1.24.6 ; extra == 'numpy'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'paddlepaddle'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "paddlepaddle>=2.4.1 ; extra == 'paddlepaddle'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'pinned-tf'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "tensorflow==2.18.0 ; extra == 'pinned-tf'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "ruff ; extra == 'quality'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'tensorflow'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "tensorflow>=2.11.0 ; extra == 'tensorflow'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "h5py>=3.7.0 ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "setuptools-rust>=1.12.0 ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "pytest>=9.0 ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "pytest-benchmark>=5.2 ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "hypothesis>=6.70.2 ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "fsspec>=2024.6.0 ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "s3fs>=2024.6.0 ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'tf-nightly'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "tf-nightly ; extra == 'tf-nightly'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "safetensors[numpy] ; extra == 'torch'",
+      "active": false
+    },
+    {
+      "from": "safetensors",
+      "requirement": "torch>=2.4 ; extra == 'torch'",
+      "active": false
+    },
+    {
+      "from": "sympy",
+      "requirement": "mpmath<1.4,>=1.1.0",
+      "active": true
+    },
+    {
+      "from": "sympy",
+      "requirement": "pytest>=7.1.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "sympy",
+      "requirement": "hypothesis>=6.70.0; extra == \"dev\"",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "huggingface-hub>=0.16.4,<3.0",
+      "active": true
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "tokenizers[testing] ; extra == 'dev'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "sphinx ; extra == 'docs'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "sphinx-rtd-theme ; extra == 'docs'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "setuptools-rust ; extra == 'docs'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "pytest ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "pytest-asyncio ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "requests ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "numpy ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "datasets ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "ruff ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "tokenizers",
+      "requirement": "ty ; extra == 'testing'",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "colorama; platform_system == \"Windows\"",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "requests; extra == \"discord\"",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "envwrap; extra == \"discord\"",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "slack-sdk; extra == \"slack\"",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "envwrap; extra == \"slack\"",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "requests; extra == \"telegram\"",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "envwrap; extra == \"telegram\"",
+      "active": false
+    },
+    {
+      "from": "tqdm",
+      "requirement": "ipywidgets>=6; extra == \"notebook\"",
+      "active": false
+    },
+    {
+      "from": "typing-inspection",
+      "requirement": "typing-extensions>=4.15.0",
+      "active": true
+    },
+    {
+      "from": "wheel",
+      "requirement": "packaging >= 24.0",
+      "active": true
+    },
+    {
+      "from": "yarl",
+      "requirement": "idna>=2.0",
+      "active": true
+    },
+    {
+      "from": "yarl",
+      "requirement": "multidict>=4.0",
+      "active": true
+    },
+    {
+      "from": "yarl",
+      "requirement": "propcache>=0.2.1",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "filelock",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "typing-extensions>=4.10.0",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "setuptools<82",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "sympy>=1.13.3",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "networkx>=2.5.1",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "jinja2",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "fsspec>=0.8.5",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "rocm[libraries]==7.13.0a20260411",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "triton==3.7.0+git18f89f64.rocm7.13.0a20260411",
+      "active": true
+    },
+    {
+      "from": "torch",
+      "requirement": "optree>=0.13.0; extra == \"optree\"",
+      "active": false
+    },
+    {
+      "from": "torch",
+      "requirement": "opt-einsum>=3.3; extra == \"opt-einsum\"",
+      "active": false
+    },
+    {
+      "from": "torch",
+      "requirement": "pyyaml; extra == \"pyyaml\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "importlib-metadata; python_version < \"3.10\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "cmake<4.0,>=3.20; extra == \"build\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "lit; extra == \"build\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "autopep8; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "isort; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "numpy; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "pytest; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "pytest-forked; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "pytest-xdist; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "scipy>=1.7.1; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "llnl-hatchet; extra == \"tests\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "matplotlib; extra == \"tutorials\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "pandas; extra == \"tutorials\"",
+      "active": false
+    },
+    {
+      "from": "triton",
+      "requirement": "tabulate; extra == \"tutorials\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest!=8.1.*,>=6; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "virtualenv>=13.0.0; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "wheel>=0.44.0; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pip>=19.1; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "packaging>=24.2; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.envs>=2.2; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-xdist>=3; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.path>=3.7.2; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "build[virtualenv]>=1.0.3; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "filelock>=3.4.0; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "ini2toml[lite]>=0.14; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "tomli-w>=1.0.0; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-timeout; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-perf; sys_platform != \"cygwin\" and extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.develop>=7.21; (python_version >= \"3.9\" and sys_platform != \"cygwin\") and extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-home>=0.5; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-subprocess; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pyproject-hooks!=1.1; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.test>=5.5; extra == \"test\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "sphinx>=3.5; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.packaging>=9.3; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "rst.linker>=1.9; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "furo; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "sphinx-lint; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.tidelift>=1.4; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pygments-github-lexers==0.0.5; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "sphinx-favicon; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "sphinx-inline-tabs; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "sphinx-reredirects; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "sphinxcontrib-towncrier; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "sphinx-notfound-page<2,>=1; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pyproject-hooks!=1.1; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "towncrier<24.7; extra == \"doc\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "packaging>=24.2; extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "more_itertools>=8.8; extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.text>=3.7; extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "importlib_metadata>=6; python_version < \"3.10\" and extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "tomli>=2.0.1; python_version < \"3.11\" and extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "wheel>=0.43.0; extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "platformdirs>=4.2.2; extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.functools>=4; extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "more_itertools; extra == \"core\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-checkdocs>=2.4; extra == \"check\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-ruff>=0.2.1; sys_platform != \"cygwin\" and extra == \"check\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "ruff>=0.13.0; sys_platform != \"cygwin\" and extra == \"check\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-cov; extra == \"cover\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-enabler>=2.2; extra == \"enabler\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "pytest-mypy; extra == \"type\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "mypy==1.18.*; extra == \"type\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "importlib_metadata>=7.0.2; python_version < \"3.10\" and extra == \"type\"",
+      "active": false
+    },
+    {
+      "from": "setuptools",
+      "requirement": "jaraco.develop>=7.21; sys_platform != \"cygwin\" and extra == \"type\"",
+      "active": false
+    },
+    {
+      "from": "rocm",
+      "requirement": "rocm==7.13.0a20260411",
+      "active": true
+    },
+    {
+      "from": "rocm",
+      "requirement": "rocm-sdk-core==7.13.0a20260411",
+      "active": true
+    },
+    {
+      "from": "rocm",
+      "requirement": "rocm-sdk-libraries-gfx1151==7.13.0a20260411; extra == \"libraries\"",
+      "active": true
+    },
+    {
+      "from": "rocm",
+      "requirement": "rocm-sdk-devel==7.13.0a20260411; extra == \"devel\"",
+      "active": false
+    },
+    {
+      "from": "rocm",
+      "requirement": "rocm-sdk-device-gfx1151==7.13.0a20260411; extra == \"device\"",
+      "active": false
+    },
+    {
+      "from": "rocm",
+      "requirement": "rocm-profiler==7.13.0a20260411; extra == \"profiler\"",
+      "active": false
+    }
+  ],
+  "blocked_by": [
+    "sandbox external service identification not permitted; no bypass",
+    "native ABI/driver/compiler/HSA and restoration unknown",
+    "rocm wheel not built or inspected",
+    "SDK links not approved for deployment; notice-to-binary mapping incomplete"
+  ],
+  "installed": false,
+  "model_downloaded": false,
+  "service_modified": false,
+  "benchmarked": false
+}
