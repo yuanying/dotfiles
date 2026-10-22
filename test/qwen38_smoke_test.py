@@ -46,8 +46,8 @@ class SmokeTest(unittest.TestCase):
 
     def test_japanese_and_thinking(self):
         self.smoke.validate("japanese", response())
-        self.smoke.validate("thinking-off", response(reasoning=""))
-        self.smoke.validate("thinking-on", response(reasoning="確認します。"))
+        self.smoke.validate("thinking-off", response("323", reasoning=""))
+        self.smoke.validate("thinking-on", response("323です。", reasoning="確認します。"))
         self.smoke.validate("tool", tool_response())
 
     def test_reject_incomplete_or_missing_japanese(self):
@@ -57,15 +57,30 @@ class SmokeTest(unittest.TestCase):
             with self.subTest(fixture=fixture), self.assertRaises(ValueError):
                 self.smoke.validate("japanese", fixture)
 
+    def test_arithmetic_checks_answer_not_language(self):
+        for text in ("323", "323です。", "答えは **323** です。", "17 × 19 = 323", "17×19は323です。"):
+            for case in ("thinking-off", "thinking-on"):
+                with self.subTest(text=text, case=case):
+                    self.smoke.validate(case, response(text, reasoning="計算を確認しました。" if case == "thinking-on" else None))
+        for text in ("324", "正常な日本語です。", "", "323ではなく324", "323ではありません。", "1323", "3230", "323.5", "-323", "<think>323</think>323"):
+            for case in ("thinking-off", "thinking-on"):
+                with self.subTest(text=text, case=case), self.assertRaises(ValueError):
+                    self.smoke.validate(case, response(text, reasoning="確認。" if case == "thinking-on" else None))
+        for case in ("thinking-off", "thinking-on"):
+            with self.assertRaises(ValueError):
+                self.smoke.validate(case, response("323", finish="length", reasoning="確認。"))
+
     def test_thinking_paths_are_distinct(self):
         with self.assertRaises(ValueError):
-            self.smoke.validate("thinking-on", response())
+            self.smoke.validate("thinking-on", response("323"))
         with self.assertRaises(ValueError):
-            self.smoke.validate("thinking-off", response(reasoning="考えます。"))
+            self.smoke.validate("thinking-off", response("323", reasoning="考えます。"))
         with self.assertRaises(ValueError):
             self.smoke.validate("thinking-off", response("<think>思考</think>回答です。"))
-        with self.assertRaises(ValueError):
-            self.smoke.validate("thinking-on", response(reasoning=42))
+        for invalid in (42, False, [], {}):
+            for case in ("thinking-off", "thinking-on"):
+                with self.subTest(case=case, invalid=invalid), self.assertRaises(ValueError):
+                    self.smoke.validate(case, response("323", reasoning=invalid))
 
     def test_tools_require_json_schema_and_finish_reason(self):
         for arguments in ('not json', '[]', '{}', '{"city":42}', '{"city":"大阪"}',

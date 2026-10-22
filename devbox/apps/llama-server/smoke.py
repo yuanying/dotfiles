@@ -7,6 +7,11 @@ import sys
 
 CASES = ("japanese", "thinking-off", "thinking-on", "tool")
 JAPANESE = re.compile(r"[ぁ-んァ-ヶ一-龯]")
+# Deliberately bounded answer grammar, not a substring search for any number.
+ARITHMETIC_ANSWER = re.compile(
+    r"(?:答えは\s*)?(?:17\s*[×*]\s*19\s*[=＝は]\s*)?"
+    r"(?:\*\*323\*\*|323)\s*(?:です)?[。.!！]?"
+)
 
 
 def request(case):
@@ -68,7 +73,10 @@ def validate(case, reply):
         require(choice.get("finish_reason") == "stop", "expected finish_reason=stop (length is not a pass)")
         content = message.get("content")
         require(isinstance(content, str) and bool(content.strip()), "expected nonempty content")
-        require(JAPANESE.search(content) is not None, "expected Japanese content")
+        if case == "japanese":
+            require(JAPANESE.search(content) is not None, "expected Japanese content")
+        else:
+            require(ARITHMETIC_ANSWER.fullmatch(content.strip()) is not None, "expected the answer 323")
         require("<think>" not in content and "</think>" not in content, "reasoning leaked into content")
         require(not message.get("tool_calls"), "unexpected tool calls")
         reasoning = message.get("reasoning_content")

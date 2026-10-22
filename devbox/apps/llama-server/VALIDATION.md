@@ -65,15 +65,21 @@ do not automatically retry or restart the service. A client timeout need not
 cancel inference: check health/activity and coordinate before the next case.
 Retain responses privately only as long as needed; do not commit raw replies.
 
-The validator requires `finish_reason=stop`, nonempty Japanese content and no
-thinking tags in text replies. Thinking ON requires nonempty `reasoning_content`;
-OFF requires it to be absent/empty. The tool case forces `get_temperature` and
+The validator requires `finish_reason=stop`, nonempty content and no thinking
+tags in text replies. Only the `japanese` case requires Japanese characters.
+The arithmetic thinking cases require the answer **323**, with a bounded answer
+grammar allowing a bare number, Japanese answer prefix/suffix, bold answer or
+`17 × 19 = 323` form. They reject wrong numbers, negations and unrelated prose;
+an unrecognized phrasing is inconclusive, not proof of incorrect reasoning.
+Thinking ON additionally requires nonempty string `reasoning_content`; OFF
+requires it to be absent/empty. The tool case forces `get_temperature` and
 requires `finish_reason=tool_calls` and the exact JSON arguments `{"city":"東京"}`.
 It checks parser/schema compatibility, **not** autonomous tool selection or real
 weather. The tool is never executed. Low-effort thinking is capped at 256 total
 completion tokens: reaching `length` is a failed/inconclusive bounded test, not
 proof that reasoning is unsupported. Do not silently increase the budget.
-Japanese-character presence is a smoke heuristic, not an answer-quality grade.
+Japanese-character presence in the separate language case is a smoke heuristic,
+not an answer-quality grade.
 
 All cases use temperature 0 and seed 42 for a functional comparison, not the
 model's recommended creative sampling. Request fields unsupported by a runtime
