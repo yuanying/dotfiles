@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "purpose": "Synthetic comparison corpus; contains no network client or tool executor. Nominal token tiers require runtime tokenizer verification.",
+  "long_input_contract": {
+    "encoding": "UTF-8, LF, no BOM",
+    "filler_line": "This is synthetic benchmark background. The archive contains ordinary records, and this line does not change the requested task.\n",
+    "nominal_tiers": {"2K": 64, "8K": 256, "32K": 1024, "128K": 4096},
+    "assembly": "Join in this exact order, without extra separators: needle_start, N/2 copies of filler_line, needle_middle, N/2 copies of filler_line, needle_end, selected task prompt. N is the nominal_tiers value. Hash the final UTF-8 bytes as well as this corpus. These names are nominal tiers, NOT observed token counts; count the final template-wrapped prompt on each runtime before inference and reapprove an out-of-budget case.",
+    "needle_start": "記録Aの合言葉は青い彗星です。\n",
+    "needle_middle": "記録Bの合言葉は銀の灯台です。\n",
+    "needle_end": "記録Cの合言葉は赤い砂丘です。\n"
+  },
+  "tasks": {
+    "prose": {
+      "prompt": "上の背景中の記録A、B、Cの合言葉を順に引用してください。続いて、海風が生じる理由を日本語で150文字程度で説明してください。背景の英語は翻訳しないでください。\n",
+      "checks": ["青い彗星", "銀の灯台", "赤い砂丘", "Japanese explanation of differential land/sea heating; human rubric, not a character-presence-only pass"]
+    },
+    "code": {
+      "prompt": "最初に記録A、B、Cの合言葉をPythonコメントで順に書いてください。続いて次の関数を修正し、Pythonコードだけを返してください。目的は偶数だけを元の順序で返すことです。入力を変更してはいけません。\ndef even_only(values):\n    return [x for x in values if x % 2]\n",
+      "expected_tests": ["even_only([]) == []", "even_only([1,2,3,4]) == [2,4]", "even_only([-2,-1,0,2,2]) == [-2,0,2,2]", "input list unchanged"],
+      "execution_policy": "Inspect or execute only in a separately approved isolated evaluator with no network, secrets or host mounts; never execute model output in the service shell."
+    }
+  },
+  "tool_heavy": {
+    "tools": [
+      {"type": "function", "function": {"name": "lookup_stock", "description": "合成在庫を読み取る。書込みはしない。", "parameters": {"type": "object", "properties": {"sku": {"type": "string"}}, "required": ["sku"], "additionalProperties": false}}},
+      {"type": "function", "function": {"name": "lookup_price", "description": "合成価格を読み取る。購入しない。", "parameters": {"type": "object", "properties": {"sku": {"type": "string"}}, "required": ["sku"], "additionalProperties": false}}}
+    ],
+    "user_turns": ["SKU-42の在庫を調べてください。推測は禁止です。", "同じ商品の価格を調べてください。", "在庫と単価を使って在庫全体の金額を日本語で答えてください。"],
+    "synthetic_results": [{"stock": 7, "sku": "SKU-42"}, {"price_yen": 300, "sku": "SKU-42"}],
+    "expected": "auto tool_choice: lookup_stock then lookup_price, sku=SKU-42 with schema-valid JSON; final answer 2100 yen. Preserve real call IDs when supplying synthetic tool messages. No tools actually executed."
+  },
+  "vision": {
+    "mime": "image/png",
+    "base64": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR4nO3NsQ0AAAzCMP5/un0CNkuZ41wybXsHAAAAAAAAAAAAxR4yw/wuPL6QkAAAAABJRU5ErkJggg==",
+    "dimensions": [32, 32],
+    "pixel_rgb": [255, 0, 0],
+    "questions": ["この画像の主な色を日本語の一語で答えてください。", "この画像は単色ですか。はい、またはいいえで答えてください。"],
+    "expected": ["赤", "はい"],
+    "scope": "Minimal image-path and gross color check, not OCR/counting/general vision quality. Use data URI; do not fetch remote image URLs."
+  }
+}

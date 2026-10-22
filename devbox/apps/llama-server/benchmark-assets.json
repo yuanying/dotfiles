@@ -1,0 +1,88 @@
+{
+  "observed_date": "2026-10-22",
+  "scope": "Public metadata only; no weights, images or runtime binaries downloaded. Byte counts are disk/network sizes, not RAM.",
+  "comparison_scope": {
+    "active_candidates": ["kyojin", "halo", "upstream", "halogen"],
+    "deferred_candidates": ["gufo", "halo-UD-Q4_K_XL-control"],
+    "deferred_reason": "User deferred Gufo on 2026-10-22 for the current uncensored-model requirement. Historical metadata only; not a claim of policy prohibition or permanent incompatibility.",
+    "active_disk_budget_gib": {"kyojin": 260, "halo": 30, "upstream": 30, "halogen": 40},
+    "active_disk_budget_total_gib": 360,
+    "safety_margin_gib": 50
+  },
+  "models": {
+    "kyojin": {
+      "status": "active",
+      "repo": "yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz",
+      "revision": "247ef39b06ff0b0fcba76026429e191b44e0e1f8",
+      "selection": "all files except assets/**",
+      "bytes": 95370160976,
+      "large_files": {
+        "model-00001-of-00009.safetensors": 7982890445,
+        "model-00002-of-00009.safetensors": 7975746352,
+        "model-00003-of-00009.safetensors": 7971893306,
+        "model-00004-of-00009.safetensors": 7975777278,
+        "model-00005-of-00009.safetensors": 7971893306,
+        "model-00006-of-00009.safetensors": 7975777278,
+        "model-00007-of-00009.safetensors": 7971893306,
+        "model-00008-of-00009.safetensors": 7975777278,
+        "model-00009-of-00009.safetensors": 4211318336,
+        "ngram_embedding.safetensors": 26240152672,
+        "draft2s.st": 331430480,
+        "hc_gs_sidecar.safetensors": 633103152
+      }
+    },
+    "gufo": {
+      "status": "deferred",
+      "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+      "revision": "38bb39ee97821de2c9009abb7e93950eec396e66",
+      "bytes": 115028765984,
+      "files": [
+        {"path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf", "bytes": 10946624, "sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082"},
+        {"path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf", "bytes": 49859583136, "sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9"},
+        {"path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf", "bytes": 49376141504, "sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3"},
+        {"path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf", "bytes": 12087983520, "sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a"},
+        {"path": "MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf", "bytes": 2786568256, "sha256": "5ff54097406a905cf3a724c709124ceb0e3e10235ee862298969e91c96fa96e6"},
+        {"path": "mmproj-BF16.gguf", "bytes": 907542944, "sha256": "2e788f8c511d8093c7b43cb87b2fd7e14228340318057f8fb20c86df2efe2355"}
+      ]
+    },
+    "halogen": {
+      "status": "active",
+      "repo": "peonist-ai/halogen-qwen3.8-flash-next",
+      "revision": "647e3814953e8435d58f5d5aa13b97aca85a7d93",
+      "selection": ["qwen38-flash-next-mtp.hgn", "tokenizer/**"],
+      "bytes": 1546479140,
+      "head_bytes": 1523566720,
+      "head_sha256": "0f50e9626df98168e7c6e0cc264e2a92b5184dd885a175a06628d979b5edceeb",
+      "optional_vision": {
+        "path": "qwen38-flash-next-vision.hgn",
+        "bytes": 897916416,
+        "sha256": "d62e0ae553fe88afd3833733d4a4c669f34d20fd8dfce4b9610525bed2134b10"
+      }
+    }
+  },
+  "images": {
+    "halogen": {
+      "status": "active",
+      "repository": "ghcr.io/peonist-ai/halogen-flash-server",
+      "observed_tag": "0.18.14",
+      "amd64_manifest_digest": "sha256:e0c1d1b48e07c8acdd204fbdbafbb421a395a73cf704271845a1846ad1fd767f",
+      "compressed_layer_bytes": 925174958,
+      "version_label": "0.18.14",
+      "revision_label": "9a80df1a2e68"
+    },
+    "gufo": {
+      "status": "deferred",
+      "repository": "ghcr.io/gufo-org/toolboxes/gufo-runtime",
+      "observed_tag": "latest",
+      "amd64_manifest_digest": "sha256:2b481357c27c2634deef4901aeb7018814e6552a9b4ea49a43e7aa70db71d867",
+      "compressed_layer_bytes": 2890833952,
+      "version_label": "0.21.0",
+      "engine_revision_label": "7110c7954ebc85d4a4d96aa0643b102615adca27"
+    }
+  },
+  "existing_local_files": [
+    {"path": "/home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf", "bytes": 97473155360},
+    {"path": "/home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.mmproj-f16.gguf", "bytes": 904004352},
+    {"path": "/home/yuanying/models/qwen3.8-flash-next-mtp/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf", "bytes": 2786568256}
+  ]
+}
