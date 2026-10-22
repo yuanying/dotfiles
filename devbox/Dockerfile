@@ -364,7 +364,7 @@ RUN \
 # bin/mac/setup-packages.sh reads this ARG so a Mac runs the same pi.
 # --ignore-scripts is what pi's own docs give for an npm install.
 # renovate: datasource=npm depName=@earendil-works/pi-coding-agent
-ARG PI_VERSION=1.3.0
+ARG PI_VERSION=1.4.0
 RUN sudo /usr/local/bin/npm install -g --ignore-scripts @earendil-works/pi-coding-agent@${PI_VERSION}
 
 # herdr plugins
