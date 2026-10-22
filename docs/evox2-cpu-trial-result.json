@@ -1,5 +1,6 @@
 {
   "date": "2026-10-22",
+  "attempt": "initial_before_diagnostic_revision",
   "result": "apply_aborted_original_state_verified",
   "watt_cap": false,
   "requested_ceiling_khz": 3000000,

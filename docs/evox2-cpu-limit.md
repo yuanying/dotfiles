@@ -141,7 +141,9 @@ failed with only policy0's write intent journaled. The original implementation
 reported `apply failed; snapshot limits restored` but did **not** retain the
 underlying errno or immediate failed readback. There were **zero limited-state
 samples**. Whether the cause was open/write rejection, frequency rounding, an
-external controller or an implementation issue is unknown; no retry was made.
+external controller or an implementation issue is unknown; no automatic retry
+was made. The separately authorized diagnostic attempt below does not resolve
+the first attempt's missing evidence.
 
 Read-only verification afterward compared all32 policies' entire saved fields:
 no differences, all maxima5,187,500kHz/minima2,000,000kHz, boost1 and CPUs0–31;
@@ -155,11 +157,10 @@ privileged with seccomp unconfined and effective root capabilities. No new
 privilege was added. These observations do not suggest a simple read-only mount
 or missing-capability explanation, but **do not prove driver write acceptance**.
 
-The diagnostic improvements were tested offline after that abort, not by another
-real write. A possible next experiment is one separately approved repetition of
-the same bounded idle trial with these diagnostics; no new privileges, alternate
-path, fan/SMU changes, workload or automatic retry. A success must include target
-readbacks and successful restoration, not just a generic cleanup message.
+The diagnostic improvements were first tested offline. The user subsequently
+approved exactly one repetition of the same bounded idle trial with diagnostics,
+using the existing sudo/sysfs route and fresh private snapshot/telemetry. No new
+privileges, alternate path, fan/SMU changes or workload were included.
 
 ### Executed source versus diagnostic revision
 
@@ -193,8 +194,37 @@ The revision is **not behaviorally identical logging-only instrumentation**:
   instead of only a generic cleanup message.
 
 The requested value, sysfs open/write flags, no-buffered-flush semantics, target
-scope and trial intervals are unchanged. No hardware rerun tested the revised
-checks or diagnostic overhead; neither success nor a driver fix is claimed.
+scope and trial intervals are unchanged. The second attempt below tests this
+revision, but its success does not establish a driver fix or the original cause.
+
+## Separately authorized diagnostic attempt: apply and restore PASS
+
+The diagnostic attempt used head `2902567` and source SHA `bd59f915…` above,
+with new private files. It completed once with exit0 in about184 seconds.
+All32 maxima read back at3,000,000kHz during the limited phase and returned to
+5,187,500kHz afterward. Minima/governor/EPP/boost/topology and all other snapshot
+fields stayed unchanged. The final journal was `restored`:320 events,
+64 successful opens,64 writes,128 before/after readbacks and64 flush events
+marked not-applicable; no error events. An independent read after exit matched
+**every** saved field, and health was normal.
+
+| Phase | Samples / sampled span | Max kHz (all32) | Tctl range °C | Minimum available bytes | Health |
+|---|---|---:|---|---:|---|
+| Before |58 /59.998s|5,187,500|27.75–31.25|17,129,832,448|all OK|
+| Limited |57 /60.017s|3,000,000|27.0–44.25|17,138,593,792|all OK|
+| Restored |58 /60.015s|5,187,500|26.625–64.75|17,212,948,480|all OK|
+
+[Diagnostic attempt results](evox2-cpu-diagnostic-trial-result.json) preserve
+these observations separately from the initial failed attempt. The script sent
+only health GETs and started no workload. Host-wide competing activity and
+ambient conditions were not controlled; the varying temperatures do **not**
+demonstrate thermal improvement, wattage savings or under-load stability.
+The existing production service remained resident and was not reconfigured.
+
+The current state is the original5.1875GHz ceiling, not a persistent3GHz limit.
+Fan compatibility, SMU wattage settings and the first abort's cause remain
+unresolved. No third build or additional retry was started. Any longer setting,
+load test or fan/SMU operation requires its own explicit decision.
 
 ## Offline verification
 
