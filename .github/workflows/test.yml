@@ -1,0 +1,58 @@
+name: test
+
+on:
+  push:
+    branches: [lua]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bats:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # The pins are devbox/Dockerfile's, the only place Renovate updates them.
+      - name: Read the pinned versions
+        id: pins
+        run: |
+          arg() { sed -n "s/^ARG $1=\\(.*\\)/\\1/p" devbox/Dockerfile; }
+          {
+            echo "node=$(sed -n 's/^FROM node:\([0-9.]*\)-.*/\1/p' devbox/Dockerfile)"
+            echo "pi=$(arg PI_VERSION)"
+            echo "yq=$(arg YQ_VERSION)"
+            echo "bats=$(arg BATS_VERSION)"
+          } | tee -a "${GITHUB_OUTPUT}"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ steps.pins.outputs.node }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: devbox/proxy/proxyd/go.mod
+          cache-dependency-path: devbox/proxy/proxyd/go.sum
+
+      - name: Install the tools the tests need
+        env:
+          PI_VERSION: ${{ steps.pins.outputs.pi }}
+          YQ_VERSION: ${{ steps.pins.outputs.yq }}
+          BATS_VERSION: ${{ steps.pins.outputs.bats }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends zsh bubblewrap
+          # Ubuntu 24.04 keeps unprivileged user namespaces from bwrap.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo curl -fsSL -o /usr/local/bin/yq \
+            "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
+          curl -fsSL "https://github.com/bats-core/bats-core/archive/refs/tags/v${BATS_VERSION}.tar.gz" |
+            tar zx -C "${RUNNER_TEMP}"
+          sudo "${RUNNER_TEMP}/bats-core-${BATS_VERSION}/install.sh" /usr/local
+          npm install -g --ignore-scripts "@earendil-works/pi-coding-agent@${PI_VERSION}"
+          (cd pi/extensions/sandbox && npm ci --omit=dev --ignore-scripts --no-audit --no-fund)
+
+      - name: Run the tests
+        run: bats -r .

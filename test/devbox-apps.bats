@@ -78,10 +78,10 @@ q() {
     done
 }
 
-@test "every image builds on the host's network, since docker0 reaches nothing on a regied host" {
+@test "every image builds on the default bridge, which reaches the network on a regied host" {
     local s
     for s in $(q '.services | keys | .[]'); do
-        [ "$(q ".services.\"${s}\".build.network")" = "host" ] || { echo "${s}"; return 1; }
+        [ "$(q ".services.\"${s}\".build.network")" = "null" ] || { echo "${s}"; return 1; }
     done
 }
 

@@ -391,7 +391,7 @@ resources() {
     pi_root=$(cd "$(dirname "$(readlink -f "$(command -v pi)")")/../.." && pwd)
     run node --input-type=module -e '
         const root = process.argv[1];
-        const { validateThemeJson } = await import(root + "/dist/modes/interactive/theme/theme-json.js");
+        const { validateThemeJson } = await import(root + "/dist/modes/interactive/theme/theme-schema.js");
         const fs = await import("node:fs");
         for (const f of process.argv.slice(2)) validateThemeJson(f, JSON.parse(fs.readFileSync(f, "utf8")));
     ' "${pi_root}" "${REPO}"/pi/themes/*.json
