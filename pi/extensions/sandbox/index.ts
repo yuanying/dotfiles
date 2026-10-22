@@ -57,7 +57,7 @@ const CHOICE_RUN_OUTSIDE = "今回だけサンドボックスの外で実行";
 const DENIAL_NOTE =
 	"サンドボックスによる拒否なので、別の書き方や別の場所で回避しようとせず、何が拒否されたかをユーザーに伝えること。";
 const OUTSIDE_NOTE =
-	"拒否されると分かっているコマンドや、拒否されたコマンドを外で実行する必要があるなら、bash / bg_run に outsideSandbox: true と reason を付けて頼める。外で実行するかは、実行前にユーザーが決める。";
+	"事前許可済みコマンドの除外条件を満たす場合は、通常の bash / bg_run 呼び出しで自動的に外で実行されるので、outsideSandbox: true の指定やサンドボックス外実行の追加確認は不要。それ以外で、拒否されると分かっているコマンドや、拒否されたコマンドを外で実行する必要があるなら、outsideSandbox: true と reason を付けて頼める。外で実行するかは、実行前にユーザーが決める。";
 // bash の拒否と、サンドボックスの状態を伝えるときに添える。
 const COMMAND_DENIAL_NOTE =
 	"サンドボックスによる拒否なので、別の書き方や別の場所で回避しようとしないこと。" +
@@ -434,10 +434,11 @@ export default function sandbox(pi: ExtensionAPI): void {
 		return [
 			`書き込める場所: ${policy.writable.join(", ")}`,
 			"書き込みを禁じた場所: 起動ディレクトリの .git/hooks、.git/config、.pi、.claude、.envrc など (一覧は /sandbox)",
-			`サンドボックスの外で実行するコマンド (単独のコマンドとして呼んだときだけ): ${policy.excludedCommands.join(", ") || "なし"}`,
-			`Unix ソケット: ${policy.allowAllUnixSockets ? "許可" : "塞いでいる (herdr、docker などは使えない)"}`,
+			`事前許可済みコマンド (除外条件を満たす場合、サンドボックス外実行の追加確認は不要): ${policy.excludedCommands.join(", ") || "なし"}`,
+			"除外条件: 展開済みの具体的な引数を渡す単独コマンドであること。シェル変数・コマンド置換・パイプ・&&・;・リダイレクト・変数代入は使わない。実行ファイルの実体が書き込み可能な場所にある場合は除外されず、サンドボックス内で実行される。",
+			`サンドボックス内の Unix ソケット: ${policy.allowAllUnixSockets ? "許可" : "塞いでいる (事前許可済みコマンドが外で実行される場合には適用されない)"}`,
 			"ネットワーク: 制限しない",
-			`サンドボックスの外での実行: ${OUTSIDE_NOTE}`,
+			`サンドボックス外での実行方法: ${OUTSIDE_NOTE}`,
 		];
 	}
 
