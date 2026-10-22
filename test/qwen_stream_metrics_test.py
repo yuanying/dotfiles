@@ -137,6 +137,15 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(doc['known_artifact_bytes'], total)
         self.assertEqual(packages['rocm']['kind'], 'sdist_or_missing')
         self.assertTrue(doc['blockers'])
+        review = doc['rocm_sdist_review']
+        self.assertTrue(review['archive_sha256_verified'])
+        self.assertFalse(review['source_or_backend_executed'])
+        self.assertEqual(review['build_system']['build-backend'], 'setuptools.build_meta')
+        self.assertEqual(review['proposed_build_pins'], {
+            'setuptools': packages['setuptools']['version'],
+            'wheel': packages['wheel']['version'],
+            'packaging': packages['packaging']['version']})
+        self.assertEqual(review['proposed_build_environment'], {'ROCM_SDK_TARGET_FAMILY': 'gfx1151'})
 
     def test_summary_preserves_missing_and_rejects_mixed_failure(self):
         rows = [run([(n, event({'content': 'a'}, 'stop')), (4, DONE)]) for n in [1, 3, 2]]

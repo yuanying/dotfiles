@@ -111,8 +111,9 @@ CPython 3.12, gfx1151, upstream's pinned alternative multi-arch ROCm stack.
 It is not a requirements lock or permission to install. All 17 requirements.txt
 entries plus AMD/build/transitive candidates have URL/version/publisher SHA256
 and compressed size claims (55 artifacts, 2,412,447,088 bytes, about 2.247 GiB).
-All artifact HEADs returned 200; no artifact bodies were fetched. Forty-five
-PyPI artifact hashes/sizes also match version-specific JSON metadata.
+All artifact HEADs returned 200; no wheel bodies were fetched. The explicitly
+approved 27,362-byte rocm sdist alone was fetched and locally hash-verified.
+Forty-five PyPI artifact hashes/sizes also match version-specific JSON metadata.
 
 The fixed engine already includes `uv.lock` (SHA256
 `a0de566b8231a0fe387a655e08707a0317c59b5d6e49e08f3f8970f33255442e`).
@@ -123,15 +124,48 @@ The projection evaluated dependency markers for Linux/Python 3.12 and the
 from the source lock and added from exact-version PyPI JSON, including its
 packaging dependency. Optional eval/examples/CUDA/Windows extras are excluded.
 
-**Blocking:** `rocm==10.1.0a20260822` has only an sdist, no wheel in the public
-index; build-isolation dependencies and a reviewed reproducible wheel are not
-locked. The 10 AMD wheel `.metadata` URLs returned 404, so their actual
-Requires-Dist/license closure cannot be independently validated via PEP658.
-Do not extract metadata by downloading huge wheels, run pip install/download,
-initialize SDK, compile, import torch or run env.sh --check to bypass this gate.
-Review/approve small source/build metadata or a trusted complete wheel manifest
-next. The original v2/gfx1151 nightly recipe is mutable; it is not the same stack
-as this upstream-pinned multi-arch alternative and is not silently substituted.
+**Blocking:** `rocm==10.1.0a20260822` has only an sdist, no public wheel.
+Its approved read-only archive review confirmed `setuptools.build_meta` with
+`setuptools>=70.2.0`; propose already-listed setuptools84.0.0/wheel0.48.0/
+packaging26.3 as build pins. PKG-INFO's selected dependencies match core/devel/
+device-gfx1151/libraries pins. But metadata is dynamic: setup.py imports
+_dist_info.py and can run `offload-arch`, falling back to gfx1010. A future
+CPU-only/offline build must explicitly set `ROCM_SDK_TARGET_FAMILY=gfx1151`,
+forbid unlisted dependencies and review the generated wheel/hash/METADATA before
+installation. No source/backend was executed and no files were extracted.
+Static inspection is not proof of backend-hook closure or reproducibility.
+
+The 10 AMD wheel `.metadata` URLs returned 404, so actual Requires-Dist/license
+closure still cannot be independently validated via PEP658. Do not download huge
+wheels, run pip install/download, initialize SDK, compile, import torch or run
+env.sh --check to bypass this gate. The original v2/gfx1151 nightly recipe is
+mutable; it is not the same stack as this upstream-pinned multi-arch first
+proposal and is not silently substituted.
+
+### Minimal next approval proposal (not performed)
+
+1. Fetch **only** the 54 fixed wheels remaining in the snapshot, verify their
+   hashes, read ZIP METADATA/WHEEL/license manifests safely, and stop on any
+   missing dependency, incompatible tag or license condition. Total list is
+   2,412,447,088 bytes including the already-reviewed sdist; remaining wheel
+   bytes are 2,412,419,726. Propose a 3 GiB transfer/staging cap, no retries or
+   extra resolver downloads. This is an acquisition/metadata gate, not install.
+2. Only after that review, approve a fresh candidate CPython3.12 venv plus a
+   CPU-only rocm meta-wheel build with the above pinned build set, explicit
+   gfx1151 environment, no network/GPU, no build isolation/resolution and no
+   other source execution. Inspect generated metadata/hash, then install only
+   the reviewed local wheel set without index/network and run dependency checks
+   without importing torch. Propose a hard 20 GiB candidate dependency workspace
+   cap and 50 GiB free-space reserve; stop/reapprove rather than exceed. This
+   cap is not an estimated expansion size or permission for SDK init.
+
+These are sequential approvals, not an unconditional pip command. Record the
+installer/venv bootstrap version (current preflight interpreter has pip25.0.1)
+and confirm target Python headers/glibc before installation. Any missing bootstrap
+artifact requires another explicit pin/review, not network fallback. No model
+DL, SDK expansion, engine extension/build/JIT, GPU probe, launch, service stop or
+OS change is included. Those remain separate approvals after the full lock and
+G0/G1. Keep the broader 260 GiB model/runtime plan provisional.
 
 Compressed bytes do not bound SDK expansion (upstream says about 12 GB), venv,
 source/extension build, JIT/cache or peak disk/RAM. Keep the plan's 260 GiB plus

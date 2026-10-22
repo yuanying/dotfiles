@@ -1774,11 +1774,37 @@
     "missing_or_incompatible_selected_dependencies": [],
     "note": "PyPI Requires-Dist version constraints checked against the selected set using pip vendored packaging; AMD wheel METADATA and rocm sdist build dependencies remain unverified. This is not resolver validation."
   },
+  "rocm_sdist_review": {
+    "approved_scope": "Only the 27362-byte rocm sdist fetched to /tmp, hash checked, selected regular archive members read without extraction or execution",
+    "archive_bytes": 27362,
+    "archive_sha256_verified": true,
+    "source_or_backend_executed": false,
+    "build_system": {
+      "requires": ["setuptools>=70.2.0"],
+      "build-backend": "setuptools.build_meta"
+    },
+    "proposed_build_pins": {"setuptools": "84.0.0", "wheel": "0.48.0", "packaging": "26.3"},
+    "proposed_build_environment": {"ROCM_SDK_TARGET_FAMILY": "gfx1151"},
+    "static_runtime_requires_for_selected_extras": [
+      "rocm-sdk-core==10.1.0a20260822",
+      "rocm-sdk-devel==10.1.0a20260822",
+      "rocm-sdk-device-gfx1151==10.1.0a20260822",
+      "rocm-sdk-libraries==10.1.0a20260822"
+    ],
+    "reviewed_members_sha256": {
+      "pyproject.toml": "454694f4a24f1911a90b52e28f9ac289908652cd84c13b5c8be8d0391eb5e8bf",
+      "PKG-INFO": "40d7c32eb864ac4439c842e2ce53b261415c54a1a8120cbabb13f5650087fab1",
+      "setup.py": "3000c6c838bbfc54447b85aabed545cb4244d17571131a11fbf58c2af0da0a85",
+      "src/rocm_sdk/_dist_info.py": "02a9dd3cab91285761e9f78e9775b0ff92f62449344dd3d1519412d163df3e29"
+    },
+    "dynamic_metadata_warning": "setup.py imports _dist_info.py; without explicit ROCM_SDK_TARGET_FAMILY it invokes offload-arch and may fall back to gfx1010. PKG-INFO declares Dynamic requires-dist/provides-extra. Static inspection is not a backend execution test.",
+    "proposed_build_policy": "Future approval only: no network/GPU, pinned build wheels, no build isolation or dependency resolution, explicit target family; stop on any unlisted requirement. Generated rocm wheel hash and actual METADATA require review before install."
+  },
   "blockers": [
-    "rocm meta package has only sdist in upstream lock; approved wheel/build closure absent",
+    "rocm meta package remains sdist-only; static build requirements pinned but backend hooks/generated wheel metadata and wheel hash unverified",
     "AMD PEP658 metadata unavailable where status=404; transitive dependency closure is projected from source lock, not independently verified wheel METADATA",
     "Host glibc/driver/HSA/compiler/header compatibility and expanded SDK/JIT sizes unverified",
-    "Artifact hashes are publisher lock claims, no wheel bodies downloaded or locally hashed",
+    "Wheel hashes are publisher lock claims, no wheel bodies downloaded or locally hashed; only the explicitly approved 27362-byte rocm sdist was downloaded and locally hash-verified",
     "All license notices and approval for selected multi-arch stack required before installation"
   ],
   "wheel_metadata_source": "wheel 0.48.0 from https://pypi.org/pypi/wheel/0.48.0/json (absent from upstream uv.lock); other pins from upstream lock"
