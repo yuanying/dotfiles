@@ -161,6 +161,41 @@ the same bounded idle trial with these diagnostics; no new privileges, alternate
 path, fan/SMU changes, workload or automatic retry. A success must include target
 readbacks and successful restoration, not just a generic cleanup message.
 
+### Executed source versus diagnostic revision
+
+The executed source SHA256 was
+`643eb069c9bd3d150d3f3afbe345f508f0ff22708d67c7e5402c764a30e3003b`.
+Reversing the known diagnostic edits in memory reproduced that **exact hash**;
+this comparison is to the executed bytes, not merely an inferred earlier draft.
+The diagnostic source at commit `f70dd28` has SHA256
+`bd59f915a62609223507c6eabd38e6b0bfb52d48e866e51b8a9911582a7d5cb0`.
+
+Unchanged syscall path in both versions:
+- Open only the fixed `scaling_max_freq` attribute with
+  `O_WRONLY | O_NOFOLLOW`. Neither uses `O_CREAT` or `O_TRUNC` on sysfs.
+- Perform one unbuffered `os.write` of decimal kHz plus newline, check its byte
+  count, then close. Neither calls `fsync` or buffered `flush` on the sysfs FD.
+- `flush`/`fsync` of the regular-file journal, atomic replace and parent-directory
+  fsync were already present in the executed version. These are not sysfs flushes.
+
+Thus a newly removed sysfs fsync/flush or O_TRUNC flag does **not** explain the
+original failure: none was present in that source. Driver rejection, rounding,
+competition and implementation issues remain unseparated without its errno or
+immediate readback.
+
+The revision is **not behaviorally identical logging-only instrumentation**:
+- It adds per-operation journal saves/fsyncs and before/after sysfs reads, changing
+  timing and I/O. Those operations can themselves fail and trigger cleanup.
+- It adds a fresh snapshot-versus-preflight equality check and another immediate
+  pre-write global/surrounding-policy/value check. Drift can now abort earlier.
+- Journal format changes to version2 with bounded events; version1 remains
+  recoverable. Error reporting now retains original class/errno/exception chain
+  instead of only a generic cleanup message.
+
+The requested value, sysfs open/write flags, no-buffered-flush semantics, target
+scope and trial intervals are unchanged. No hardware rerun tested the revised
+checks or diagnostic overhead; neither success nor a driver fix is claimed.
+
 ## Offline verification
 
 ```sh
