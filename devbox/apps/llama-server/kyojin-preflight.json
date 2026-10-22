@@ -1,0 +1,1811 @@
+{
+  "status": "incomplete_not_installable",
+  "observed_date": "2026-10-22",
+  "engine_revision": "e09322da7209331c57e2a79cfc30d120f0299154",
+  "model_revision": "247ef39b06ff0b0fcba76026429e191b44e0e1f8",
+  "lock_source": "https://raw.githubusercontent.com/Yamz-Labs/kyojin/e09322da7209331c57e2a79cfc30d120f0299154/uv.lock",
+  "lock_sha256": "a0de566b8231a0fe387a655e08707a0317c59b5d6e49e08f3f8970f33255442e",
+  "target": {
+    "python": "CPython 3.12.10 cp312",
+    "platform": "Linux x86_64, gfx1151",
+    "marker_extra": "extra-9-exllamav3-rocm",
+    "selection_note": "upstream uv.lock marker projection using pip vendored packaging and current devbox sys_tags; not a resolver/install/build test"
+  },
+  "packages": [
+    {
+      "name": "aiohappyeyeballs",
+      "version": "2.7.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/71/43/1947f06babed6b3f1d7f38b0c767f52df66bfb2bc10b468c4a7de9eceff2/aiohappyeyeballs-2.7.1-py3-none-any.whl",
+        "hash": "sha256:9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472",
+        "size": 15038,
+        "upload-time": "2026-07-01T17:11:54.055Z",
+        "head_status": 200,
+        "head_bytes": 15038
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/aiohappyeyeballs/2.7.1/json",
+        "requires_python": ">=3.10",
+        "requires_dist": null,
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: Python Software Foundation License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "aiohttp",
+      "version": "3.14.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/11/6c/a7a42701d9ea319140a3d44a24ec72a00b0b46d1b899b26d8a705e65bdd8/aiohttp-3.14.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:c5e93ab6e6330dce40f5b43996f1fc5f2543296d263a5e4b59ff09e73870b7d8",
+        "size": 1922895,
+        "upload-time": "2026-10-05T17:39:04.638Z",
+        "head_status": 200,
+        "head_bytes": 1922895
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "aiohappyeyeballs",
+        "aiosignal",
+        "attrs",
+        "frozenlist",
+        "multidict",
+        "propcache",
+        "typing-extensions",
+        "yarl"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/aiohttp/3.14.4/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "aiohappyeyeballs>=2.5.0",
+          "aiosignal>=1.4.0",
+          "async-timeout<6.0,>=4.0; python_version < \"3.11\"",
+          "attrs>=17.3.0",
+          "frozenlist>=1.1.1",
+          "multidict<7.0,>=4.5",
+          "propcache>=0.2.0",
+          "typing_extensions>=4.4; python_version < \"3.13\"",
+          "yarl<2.0,>=1.25.1",
+          "aiodns>=3.3.0; (sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\"",
+          "Brotli>=1.2; (platform_python_implementation == \"CPython\" and sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\"",
+          "brotlicffi>=1.2; platform_python_implementation != \"CPython\" and extra == \"speedups\"",
+          "backports.zstd; (platform_python_implementation == \"CPython\" and python_version < \"3.14\" and sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\""
+        ],
+        "license_expression": "Apache-2.0 AND MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "aiosignal",
+      "version": "1.4.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/fb/76/641ae371508676492379f16e2fa48f4e2c11741bd63c48be4b12a6b09cba/aiosignal-1.4.0-py3-none-any.whl",
+        "hash": "sha256:053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e",
+        "size": 7490,
+        "upload-time": "2025-07-03T22:54:42.156Z",
+        "head_status": 200,
+        "head_bytes": 7490
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "frozenlist",
+        "typing-extensions"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/aiosignal/1.4.0/json",
+        "requires_python": ">=3.9",
+        "requires_dist": [
+          "frozenlist>=1.1.0",
+          "typing-extensions>=4.2; python_version < \"3.13\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: Apache Software License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "amd-torch-device-gfx1151",
+      "version": "2.14.0+rocm10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/amd_torch_device_gfx1151-2.14.0%2Brocm10.1.0a20260822-cp312-cp312-linux_x86_64.whl",
+        "hash": "sha256:611e758836bb44b4265ac3ae5432fa1014af52fae37cb2b371c37227662e2a98",
+        "head_status": 200,
+        "head_bytes": 50206425,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "rocm-sdk-device-gfx1151",
+        "torch"
+      ]
+    },
+    {
+      "name": "amd-torch-device-gfx115x",
+      "version": "2.14.0+rocm10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/amd_torch_device_gfx115x-2.14.0%2Brocm10.1.0a20260822-cp312-cp312-linux_x86_64.whl",
+        "hash": "sha256:447c63ec9fe8630bf1205e207e1b48aea235240b3bde3c374b0879b4d7a81e32",
+        "head_status": 200,
+        "head_bytes": 187801052,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "torch"
+      ]
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+        "hash": "sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+        "size": 13427,
+        "upload-time": "2026-07-23T20:16:12.938Z",
+        "head_status": 200,
+        "head_bytes": 13427
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/annotated-types/0.8.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": null,
+        "license_expression": "MIT",
+        "license_classifiers": [
+          "License :: OSI Approved :: MIT License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+        "hash": "sha256:6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+        "size": 132079,
+        "upload-time": "2026-09-05T10:42:37.923Z",
+        "head_status": 200,
+        "head_bytes": 132079
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "idna",
+        "typing-extensions"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/anyio/4.15.1/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "exceptiongroup>=1.0.2; python_version < \"3.11\"",
+          "idna>=2.8",
+          "typing_extensions>=4.16.0; python_version < \"3.15\"",
+          "trio>=0.32.0; extra == \"trio\""
+        ],
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+        "hash": "sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+        "size": 67548,
+        "upload-time": "2026-03-19T14:22:23.645Z",
+        "head_status": 200,
+        "head_bytes": 67548
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/attrs/26.1.0/json",
+        "requires_python": ">=3.9",
+        "requires_dist": null,
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+        "hash": "sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+        "size": 125251,
+        "upload-time": "2026-08-26T13:33:12.928Z",
+        "head_status": 200,
+        "head_bytes": 125251
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/click/8.5.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": null,
+        "license_expression": "BSD-3-Clause",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "filelock",
+      "version": "4.0.12",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/da/a1/b047e1c486a2c66283633b7dbb73872ca16ca1ce6a426f70d4d037fc8e1c/filelock-4.0.12-py3-none-any.whl",
+        "hash": "sha256:5f17ee83ecee8a6f3e389c75822fb70a1c2f0506b99438a6dffa1d56793588c8",
+        "size": 111732,
+        "upload-time": "2026-10-05T13:17:42.361Z",
+        "head_status": 200,
+        "head_bytes": 111732
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/filelock/4.0.12/json",
+        "requires_python": ">=3.10",
+        "requires_dist": null,
+        "license_expression": "MIT",
+        "license_classifiers": [
+          "License :: OSI Approved :: MIT License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "frozenlist",
+      "version": "1.8.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/6a/bd/d91c5e39f490a49df14320f4e8c80161cfcce09f1e2cde1edd16a551abb3/frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+        "hash": "sha256:494a5952b1c597ba44e0e78113a7266e656b9794eec897b19ead706bd7074383",
+        "size": 242411,
+        "upload-time": "2025-10-06T05:36:09.801Z",
+        "head_status": 200,
+        "head_bytes": 242411
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/frozenlist/1.8.0/json",
+        "requires_python": ">=3.9",
+        "requires_dist": null,
+        "license_expression": null,
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.7.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/fd/3c/6a2bf344106328fd04963664a60b9bb6496fc25df8e962fcdc1367285fb9/fsspec-2026.7.0-py3-none-any.whl",
+        "hash": "sha256:b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279",
+        "size": 206583,
+        "upload-time": "2026-07-28T16:34:49.538Z",
+        "head_status": 200,
+        "head_bytes": 206583
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/fsspec/2026.7.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "adlfs; extra == \"abfs\"",
+          "adlfs; extra == \"adl\"",
+          "pyarrow>=1; extra == \"arrow\"",
+          "dask; extra == \"dask\"",
+          "distributed; extra == \"dask\"",
+          "pre-commit; extra == \"dev\"",
+          "ruff>=0.5; extra == \"dev\"",
+          "numpydoc; extra == \"doc\"",
+          "sphinx; extra == \"doc\"",
+          "sphinx-design; extra == \"doc\"",
+          "sphinx-rtd-theme; extra == \"doc\"",
+          "yarl; extra == \"doc\"",
+          "dropbox; extra == \"dropbox\"",
+          "dropboxdrivefs; extra == \"dropbox\"",
+          "requests; extra == \"dropbox\"",
+          "adlfs; extra == \"full\"",
+          "aiohttp!=4.0.0a0,!=4.0.0a1; extra == \"full\"",
+          "dask; extra == \"full\"",
+          "distributed; extra == \"full\"",
+          "dropbox; extra == \"full\"",
+          "dropboxdrivefs; extra == \"full\"",
+          "fusepy; extra == \"full\"",
+          "gcsfs>=2026.4.0; extra == \"full\"",
+          "libarchive-c; extra == \"full\"",
+          "ocifs; extra == \"full\"",
+          "panel; extra == \"full\"",
+          "paramiko; extra == \"full\"",
+          "pyarrow>=1; extra == \"full\"",
+          "pygit2; extra == \"full\"",
+          "requests; extra == \"full\"",
+          "s3fs>=2026.6.0; extra == \"full\"",
+          "smbprotocol; extra == \"full\"",
+          "tqdm; extra == \"full\"",
+          "fusepy; extra == \"fuse\"",
+          "gcsfs>=2026.4.0; extra == \"gcs\"",
+          "pygit2; extra == \"git\"",
+          "requests; extra == \"github\"",
+          "gcsfs>=2026.4.0; extra == \"gs\"",
+          "panel; extra == \"gui\"",
+          "pyarrow>=1; extra == \"hdfs\"",
+          "aiohttp!=4.0.0a0,!=4.0.0a1; extra == \"http\"",
+          "libarchive-c; extra == \"libarchive\"",
+          "ocifs; extra == \"oci\"",
+          "s3fs>=2026.6.0; extra == \"s3\"",
+          "paramiko; extra == \"sftp\"",
+          "smbprotocol; extra == \"smb\"",
+          "paramiko; extra == \"ssh\"",
+          "aiohttp!=4.0.0a0,!=4.0.0a1; extra == \"test\"",
+          "numpy; extra == \"test\"",
+          "pytest; extra == \"test\"",
+          "pytest-asyncio!=0.22.0; extra == \"test\"",
+          "pytest-benchmark; extra == \"test\"",
+          "pytest-cov; extra == \"test\"",
+          "pytest-mock; extra == \"test\"",
+          "pytest-recording; extra == \"test\"",
+          "pytest-rerunfailures; extra == \"test\"",
+          "requests; extra == \"test\"",
+          "aiobotocore<3.0.0,>=2.5.4; extra == \"test-downstream\"",
+          "dask[dataframe,test]; extra == \"test-downstream\"",
+          "moto[server]<5,>4; extra == \"test-downstream\"",
+          "pytest-timeout; extra == \"test-downstream\"",
+          "xarray; extra == \"test-downstream\"",
+          "adlfs; extra == \"test-full\"",
+          "aiohttp!=4.0.0a0,!=4.0.0a1; extra == \"test-full\"",
+          "backports-zstd; python_version < \"3.14\" and extra == \"test-full\"",
+          "cloudpickle; extra == \"test-full\"",
+          "dask; extra == \"test-full\"",
+          "distributed; extra == \"test-full\"",
+          "dropbox; extra == \"test-full\"",
+          "dropboxdrivefs; extra == \"test-full\"",
+          "fastparquet; extra == \"test-full\"",
+          "fusepy; extra == \"test-full\"",
+          "gcsfs>=2026.4.0; extra == \"test-full\"",
+          "jinja2; extra == \"test-full\"",
+          "kerchunk; extra == \"test-full\"",
+          "libarchive-c; extra == \"test-full\"",
+          "lz4; extra == \"test-full\"",
+          "notebook; extra == \"test-full\"",
+          "numpy; extra == \"test-full\"",
+          "ocifs; extra == \"test-full\"",
+          "pandas<3.0.0; extra == \"test-full\"",
+          "panel; extra == \"test-full\"",
+          "paramiko; extra == \"test-full\"",
+          "pyarrow>=1; extra == \"test-full\"",
+          "pyftpdlib; extra == \"test-full\"",
+          "pygit2; extra == \"test-full\"",
+          "pytest; extra == \"test-full\"",
+          "pytest-asyncio!=0.22.0; extra == \"test-full\"",
+          "pytest-benchmark; extra == \"test-full\"",
+          "pytest-cov; extra == \"test-full\"",
+          "pytest-mock; extra == \"test-full\"",
+          "pytest-recording; extra == \"test-full\"",
+          "pytest-rerunfailures; extra == \"test-full\"",
+          "python-snappy; extra == \"test-full\"",
+          "requests; extra == \"test-full\"",
+          "s3fs>=2026.6.0; extra == \"test-full\"",
+          "smbprotocol; extra == \"test-full\"",
+          "tqdm; extra == \"test-full\"",
+          "urllib3; extra == \"test-full\"",
+          "zarr<3.2.0; extra == \"test-full\"",
+          "zstandard; python_version < \"3.14\" and extra == \"test-full\"",
+          "tqdm; extra == \"tqdm\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+        "hash": "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+        "size": 37515,
+        "upload-time": "2025-04-24T03:35:24.344Z",
+        "head_status": 200,
+        "head_bytes": 37515
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/h11/0.16.0/json",
+        "requires_python": ">=3.8",
+        "requires_dist": null,
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: MIT License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "hf-xet",
+      "version": "1.7.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a3/4c/2bf3b66c215d409655f28de1622393dde04c9461280d48c7924bb3b2decd/hf_xet-1.7.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "hash": "sha256:2814a6e999d13464c4d679b788cc5d784eb5a4edfc638a31f10e9a11ab531ef8",
+        "size": 4212180,
+        "upload-time": "2026-10-06T20:18:32.292Z",
+        "head_status": 200,
+        "head_bytes": 4212180
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/hf-xet/1.7.0/json",
+        "requires_python": ">=3.8",
+        "requires_dist": [
+          "pytest; extra == \"tests\""
+        ],
+        "license_expression": "Apache-2.0",
+        "license_classifiers": [
+          "License :: OSI Approved :: Apache Software License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "httpcore2",
+      "version": "2.13.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/09/ba/a4568248771ce81957bfb7cc600264a40fbcda092391ee1c415c50be4bea/httpcore2-2.13.1-py3-none-any.whl",
+        "hash": "sha256:e1e05d4f25f7d7d496bfb96748f6f4b67657b03da069b3a68c36069f3db73d0a",
+        "size": 83423,
+        "upload-time": "2026-09-23T07:47:19.365Z",
+        "head_status": 200,
+        "head_bytes": 83423
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "h11",
+        "truststore"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/httpcore2/2.13.1/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "h11>=0.16",
+          "truststore>=0.10",
+          "anyio<5.0,>=4.5.0; extra == \"asyncio\"",
+          "h2<5,>=3; extra == \"http2\"",
+          "socksio==1.*; extra == \"socks\"",
+          "trio<1.0,>=0.34.0; extra == \"trio\""
+        ],
+        "license_expression": "BSD-3-Clause",
+        "license_classifiers": [
+          "License :: OSI Approved :: BSD License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "httpx2",
+      "version": "2.13.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/d8/9c/6fe8931fd9f381042a9e4c7d5a7b4cbf7016b252bec0c99a49fce42c3326/httpx2-2.13.1-py3-none-any.whl",
+        "hash": "sha256:6dff50fabc270ee5fd25d845d0b078ed20564579744d6d962850975996d2f9a4",
+        "size": 95597,
+        "upload-time": "2026-09-23T07:47:20.995Z",
+        "head_status": 200,
+        "head_bytes": 95597
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "anyio",
+        "httpcore2",
+        "idna",
+        "truststore",
+        "typing-extensions"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/httpx2/2.13.1/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "anyio>=4.10; sys_platform != \"emscripten\"",
+          "httpcore2==2.13.1; sys_platform != \"emscripten\"",
+          "httpx2-jsfetch; sys_platform == \"emscripten\" and python_version >= \"3.12\"",
+          "idna>=3.18",
+          "truststore>=0.10; sys_platform != \"emscripten\"",
+          "typing-extensions>=4.5.0; python_version < \"3.13\"",
+          "brotli>=1.2.0; platform_python_implementation == \"CPython\" and extra == \"brotli\"",
+          "brotlicffi>=1.2.0.2; platform_python_implementation != \"CPython\" and extra == \"brotli\"",
+          "click>=8.4.2; extra == \"cli\"",
+          "pygments==2.*; extra == \"cli\"",
+          "rich<16,>=10; extra == \"cli\"",
+          "h2<5,>=3; extra == \"http2\"",
+          "socksio==1.*; extra == \"socks\"",
+          "wsproto>=1.2; extra == \"ws\"",
+          "backports-zstd>=1.0.0; python_version <= \"3.13\" and extra == \"zstd\""
+        ],
+        "license_expression": "BSD-3-Clause",
+        "license_classifiers": [
+          "License :: OSI Approved :: BSD License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "huggingface-hub",
+      "version": "2.2.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/eb/b0/0f7b430fd100b3a3b037fdbb314878200241082e607b3383c63d91a13a72/huggingface_hub-2.2.0-py3-none-any.whl",
+        "hash": "sha256:1667f145dc56dc210d60966069397df9ecfca9607a5d43db88b308c89dae56b3",
+        "size": 839884,
+        "upload-time": "2026-10-08T15:30:57.914Z",
+        "head_status": 200,
+        "head_bytes": 839884
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "click",
+        "filelock",
+        "fsspec",
+        "hf-xet",
+        "httpx2",
+        "packaging",
+        "pyyaml",
+        "tqdm",
+        "typing-extensions"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/huggingface-hub/2.2.0/json",
+        "requires_python": ">=3.10.0",
+        "requires_dist": [
+          "click<9.0.0,>=8.4.2",
+          "filelock>=3.10.0",
+          "fsspec>=2023.5.0",
+          "hf-xet<2.0.0,>=1.6.0; platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"ARM64\" or platform_machine == \"aarch64\"",
+          "httpx2<3,>=2.0.0",
+          "packaging>=20.9",
+          "pyyaml>=5.1",
+          "tomli>=1.1.0; python_version < \"3.11\"",
+          "tqdm>=4.42.1",
+          "typing-extensions>=4.1.0",
+          "authlib>=1.8.0; extra == \"oauth\"",
+          "fastapi; extra == \"oauth\"",
+          "itsdangerous; extra == \"oauth\"",
+          "torch; extra == \"torch\"",
+          "safetensors[torch]; extra == \"torch\"",
+          "toml; extra == \"fastai\"",
+          "fastai>=2.4; extra == \"fastai\"",
+          "fastcore>=1.3.27; extra == \"fastai\"",
+          "hf-xet<2.0.0,>=1.6.0; extra == \"hf-xet\"",
+          "mcp<2.0.0,>=1.9.4; extra == \"mcp\"",
+          "authlib>=1.8.0; extra == \"testing\"",
+          "fastapi; extra == \"testing\"",
+          "itsdangerous; extra == \"testing\"",
+          "jedi; extra == \"testing\"",
+          "Jinja2; extra == \"testing\"",
+          "pytest>=8.4.2; extra == \"testing\"",
+          "pytest-cov; extra == \"testing\"",
+          "pytest-env; extra == \"testing\"",
+          "pytest-xdist; extra == \"testing\"",
+          "pytest-vcr; extra == \"testing\"",
+          "pytest-asyncio; extra == \"testing\"",
+          "pytest-rerunfailures>=16.2; extra == \"testing\"",
+          "pytest-mock; extra == \"testing\"",
+          "urllib3<2.0; extra == \"testing\"",
+          "soundfile; extra == \"testing\"",
+          "Pillow; extra == \"testing\"",
+          "numpy; extra == \"testing\"",
+          "duckdb; extra == \"testing\"",
+          "fastapi; extra == \"testing\"",
+          "gradio>=5.0.0; extra == \"gradio\"",
+          "requests; extra == \"gradio\"",
+          "typing-extensions>=4.8.0; extra == \"typing\"",
+          "types-PyYAML; extra == \"typing\"",
+          "types-simplejson; extra == \"typing\"",
+          "types-toml; extra == \"typing\"",
+          "types-tqdm; extra == \"typing\"",
+          "types-urllib3; extra == \"typing\"",
+          "ruff>=0.9.0; extra == \"quality\"",
+          "mypy==1.15.0; extra == \"quality\"",
+          "libcst>=1.4.0; extra == \"quality\"",
+          "ty; extra == \"quality\"",
+          "authlib>=1.8.0; extra == \"all\"",
+          "fastapi; extra == \"all\"",
+          "itsdangerous; extra == \"all\"",
+          "jedi; extra == \"all\"",
+          "Jinja2; extra == \"all\"",
+          "pytest>=8.4.2; extra == \"all\"",
+          "pytest-cov; extra == \"all\"",
+          "pytest-env; extra == \"all\"",
+          "pytest-xdist; extra == \"all\"",
+          "pytest-vcr; extra == \"all\"",
+          "pytest-asyncio; extra == \"all\"",
+          "pytest-rerunfailures>=16.2; extra == \"all\"",
+          "pytest-mock; extra == \"all\"",
+          "urllib3<2.0; extra == \"all\"",
+          "soundfile; extra == \"all\"",
+          "Pillow; extra == \"all\"",
+          "numpy; extra == \"all\"",
+          "duckdb; extra == \"all\"",
+          "fastapi; extra == \"all\"",
+          "ruff>=0.9.0; extra == \"all\"",
+          "mypy==1.15.0; extra == \"all\"",
+          "libcst>=1.4.0; extra == \"all\"",
+          "ty; extra == \"all\"",
+          "typing-extensions>=4.8.0; extra == \"all\"",
+          "types-PyYAML; extra == \"all\"",
+          "types-simplejson; extra == \"all\"",
+          "types-toml; extra == \"all\"",
+          "types-tqdm; extra == \"all\"",
+          "types-urllib3; extra == \"all\"",
+          "authlib>=1.8.0; extra == \"dev\"",
+          "fastapi; extra == \"dev\"",
+          "itsdangerous; extra == \"dev\"",
+          "jedi; extra == \"dev\"",
+          "Jinja2; extra == \"dev\"",
+          "pytest>=8.4.2; extra == \"dev\"",
+          "pytest-cov; extra == \"dev\"",
+          "pytest-env; extra == \"dev\"",
+          "pytest-xdist; extra == \"dev\"",
+          "pytest-vcr; extra == \"dev\"",
+          "pytest-asyncio; extra == \"dev\"",
+          "pytest-rerunfailures>=16.2; extra == \"dev\"",
+          "pytest-mock; extra == \"dev\"",
+          "urllib3<2.0; extra == \"dev\"",
+          "soundfile; extra == \"dev\"",
+          "Pillow; extra == \"dev\"",
+          "numpy; extra == \"dev\"",
+          "duckdb; extra == \"dev\"",
+          "fastapi; extra == \"dev\"",
+          "ruff>=0.9.0; extra == \"dev\"",
+          "mypy==1.15.0; extra == \"dev\"",
+          "libcst>=1.4.0; extra == \"dev\"",
+          "ty; extra == \"dev\"",
+          "typing-extensions>=4.8.0; extra == \"dev\"",
+          "types-PyYAML; extra == \"dev\"",
+          "types-simplejson; extra == \"dev\"",
+          "types-toml; extra == \"dev\"",
+          "types-tqdm; extra == \"dev\"",
+          "types-urllib3; extra == \"dev\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: Apache Software License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+        "hash": "sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+        "size": 69583,
+        "upload-time": "2026-09-17T14:11:03.168Z",
+        "head_status": 200,
+        "head_bytes": 69583
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/idna/3.20/json",
+        "requires_python": ">=3.9",
+        "requires_dist": [
+          "ruff>=0.16.0; extra == \"all\"",
+          "mypy>=1.11.2; extra == \"all\"",
+          "ty>=0.0.37; extra == \"all\"",
+          "pytest>=8.3.2; extra == \"all\"",
+          "hypothesis>=6.141.1; extra == \"all\"",
+          "coverage>=7.10.0; extra == \"all\""
+        ],
+        "license_expression": "BSD-3-Clause",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl",
+        "hash": "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67",
+        "size": 134899,
+        "upload-time": "2025-03-05T20:05:00.369Z",
+        "head_status": 200,
+        "head_bytes": 134899
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "markupsafe"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/jinja2/3.1.6/json",
+        "requires_python": ">=3.7",
+        "requires_dist": [
+          "MarkupSafe>=2.0",
+          "Babel>=2.7; extra == \"i18n\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: BSD License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "llguidance",
+      "version": "1.9.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/46/c3/b50a05a16af0a84f5a9a6fb4707006d3fc377d1b446599d23ac78f3e144c/llguidance-1.9.1-cp39-abi3-manylinux_2_31_x86_64.whl",
+        "hash": "sha256:dfac6021d9c4c5ef16b3a1d336c05ca5e8208ff30dec29d1c63ebcafbee3a346",
+        "size": 3071973,
+        "upload-time": "2026-09-30T19:13:27.331Z",
+        "head_status": 200,
+        "head_bytes": 3071973
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/llguidance/1.9.1/json",
+        "requires_python": ">=3.10",
+        "requires_dist": null,
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "marisa-trie",
+      "version": "1.4.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/bb/95/cd6e73d0857608f2946f3bc5ccac86488073b96fb37bc1b45b0184268bed/marisa_trie-1.4.1-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:4d51bdd22a7238ef4d681effd7c224a267ddae054b64b1cec9ce95bbcd2b6a88",
+        "size": 1516414,
+        "upload-time": "2026-04-08T07:16:41.4Z",
+        "head_status": 200,
+        "head_bytes": 1516414
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/marisa-trie/1.4.1/json",
+        "requires_python": ">=3.9",
+        "requires_dist": [
+          "hypothesis; extra == \"test\"",
+          "pytest; extra == \"test\"",
+          "readme_renderer; extra == \"test\"",
+          "pytest-run-parallel; python_version >= \"3.13\" and extra == \"test\"",
+          "hypothesis>=6.136.9; python_version >= \"3.13\" and extra == \"test\""
+        ],
+        "license_expression": "MIT AND (BSD-2-Clause OR LGPL-2.1-or-later)",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+        "hash": "sha256:9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+        "size": 91687,
+        "upload-time": "2026-05-07T12:08:27.182Z",
+        "head_status": 200,
+        "head_bytes": 91687
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "mdurl"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/markdown-it-py/4.2.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "mdurl~=0.1",
+          "psutil; extra == \"benchmarking\"",
+          "pytest; extra == \"benchmarking\"",
+          "pytest-benchmark; extra == \"benchmarking\"",
+          "commonmark~=0.9; extra == \"compare\"",
+          "markdown~=3.4; extra == \"compare\"",
+          "mistletoe~=1.0; extra == \"compare\"",
+          "mistune~=3.0; extra == \"compare\"",
+          "panflute~=2.3; extra == \"compare\"",
+          "markdown-it-pyrs; extra == \"compare\"",
+          "linkify-it-py<3,>=1; extra == \"linkify\"",
+          "mdit-py-plugins>=0.5.0; extra == \"plugins\"",
+          "gprof2dot; extra == \"profiling\"",
+          "mdit-py-plugins>=0.5.0; extra == \"rtd\"",
+          "myst-parser; extra == \"rtd\"",
+          "pyyaml; extra == \"rtd\"",
+          "sphinx; extra == \"rtd\"",
+          "sphinx-copybutton; extra == \"rtd\"",
+          "sphinx-design; extra == \"rtd\"",
+          "sphinx-book-theme~=1.0; extra == \"rtd\"",
+          "jupyter_sphinx; extra == \"rtd\"",
+          "ipykernel; extra == \"rtd\"",
+          "coverage; extra == \"testing\"",
+          "pytest; extra == \"testing\"",
+          "pytest-cov; extra == \"testing\"",
+          "pytest-regressions; extra == \"testing\"",
+          "pytest-timeout; extra == \"testing\"",
+          "requests; extra == \"testing\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: MIT License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/4f/a7/aeedb5140afa41fc74c225e9184ab96723a6e873b6ee1c9fede7283456d8/markupsafe-3.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581",
+        "size": 22985,
+        "upload-time": "2026-10-02T23:04:57.521Z",
+        "head_status": 200,
+        "head_bytes": 22985
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/markupsafe/3.0.4/json",
+        "requires_python": ">=3.9",
+        "requires_dist": null,
+        "license_expression": "BSD-3-Clause",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+        "hash": "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+        "size": 9979,
+        "upload-time": "2022-08-14T12:40:09.779Z",
+        "head_status": 200,
+        "head_bytes": 9979
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/mdurl/0.1.2/json",
+        "requires_python": ">=3.7",
+        "requires_dist": null,
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: MIT License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "mpmath",
+      "version": "1.3.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl",
+        "hash": "sha256:a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+        "size": 536198,
+        "upload-time": "2023-03-07T16:47:09.197Z",
+        "head_status": 200,
+        "head_bytes": 536198
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/mpmath/1.3.0/json",
+        "requires_python": "",
+        "requires_dist": [
+          "pytest (>=4.6) ; extra == 'develop'",
+          "pycodestyle ; extra == 'develop'",
+          "pytest-cov ; extra == 'develop'",
+          "codecov ; extra == 'develop'",
+          "wheel ; extra == 'develop'",
+          "sphinx ; extra == 'docs'",
+          "gmpy2 (>=2.1.0a4) ; (platform_python_implementation != \"PyPy\") and extra == 'gmpy'",
+          "pytest (>=4.6) ; extra == 'tests'"
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: BSD License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "multidict",
+      "version": "6.9.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/ed/5b/db08419c1e1f7c9d60cfd2787b2b517d7ae4ebbda8281b48a33eb5141467/multidict-6.9.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:976fd7689d69ec78d67d31d38d396d8adb562f7e8368279f76aed4aa451fa06d",
+        "size": 336881,
+        "upload-time": "2026-09-21T17:55:23.699Z",
+        "head_status": 200,
+        "head_bytes": 336881
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/multidict/6.9.1/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "typing-extensions>=4.1.0; python_version < \"3.11\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "networkx",
+      "version": "3.7",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/7e/cd/fe58041e9011f307c490e3e17dd48cc516448f7c698a3f2d9d9d65d7e6a8/networkx-3.7-py3-none-any.whl",
+        "hash": "sha256:e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0",
+        "size": 2142205,
+        "upload-time": "2026-09-21T16:45:14.609Z",
+        "head_status": 200,
+        "head_bytes": 2142205
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/networkx/3.7/json",
+        "requires_python": "!=3.14.1,>=3.12",
+        "requires_dist": [
+          "asv>=0.6.5; extra == \"benchmarking\"",
+          "py-rattler<0.22,>=0.21; extra == \"benchmarking\"",
+          "virtualenv; extra == \"benchmarking\"",
+          "numpy>=2.2; extra == \"default\"",
+          "scipy>=1.15; extra == \"default\"",
+          "matplotlib>=3.10; extra == \"default\"",
+          "pandas>=2.3; extra == \"default\"",
+          "pre-commit>=4.1; extra == \"developer\"",
+          "mypy>=1.15; extra == \"developer\"",
+          "sphinx>=8.0; extra == \"doc\"",
+          "pydata-sphinx-theme>=0.16; extra == \"doc\"",
+          "sphinx-gallery>=0.18; extra == \"doc\"",
+          "numpydoc>=1.8.0; extra == \"doc\"",
+          "pillow>=10; extra == \"doc\"",
+          "texext>=0.6.7; extra == \"doc\"",
+          "myst-nb>=1.1; extra == \"doc\"",
+          "intersphinx-registry; extra == \"doc\"",
+          "osmnx>=2.0.0; extra == \"example\"",
+          "momepy>=0.7.2; extra == \"example\"",
+          "contextily>=1.6; extra == \"example\"",
+          "seaborn>=0.13; extra == \"example\"",
+          "cairocffi>=1.7; extra == \"example\"",
+          "igraph>=0.11; extra == \"example\"",
+          "scikit-learn>=1.6; extra == \"example\"",
+          "iplotx>=0.9.0; extra == \"example\"",
+          "hiveplotlib>=0.28; extra == \"example\"",
+          "lxml>=4.6; extra == \"extra\"",
+          "pygraphviz>=2.0; extra == \"extra\"",
+          "pydot>=3.0.1; extra == \"extra\"",
+          "sympy>=1.10; extra == \"extra\"",
+          "build>=0.10; extra == \"release\"",
+          "twine>=4.0; extra == \"release\"",
+          "wheel>=0.40; extra == \"release\"",
+          "changelist==0.5; extra == \"release\"",
+          "pytest>=7.2; extra == \"test\"",
+          "pytest-cov>=4.0; extra == \"test\"",
+          "pytest-xdist>=3.0; extra == \"test\"",
+          "pytest-mpl; extra == \"test-extras\"",
+          "pytest-randomly; extra == \"test-extras\""
+        ],
+        "license_expression": "BSD-3-Clause",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "ninja",
+      "version": "1.13.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/6e/53/ebfed7b689c338dd8ebeec9c0730c8d56821292f14e2536e5f3ef1a05744/ninja-1.13.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "hash": "sha256:65a24341b5ac09fcadcc37082660be40a94174e51a937fabf6e2cae26225fa2c",
+        "size": 183365,
+        "upload-time": "2026-08-30T15:49:34.53Z",
+        "head_status": 200,
+        "head_bytes": 183365
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/ninja/1.13.2/json",
+        "requires_python": ">=3.8",
+        "requires_dist": null,
+        "license_expression": "Apache-2.0",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/65/af/aa78d1a88805456e212b65461354cd943197fb9acecc4c90fd12295123a3/numpy-2.5.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:b7e18c623bb5c95acb3b3328861272816ba199fb531921c5d6d0b675f1fde9e3",
+        "size": 16717410,
+        "upload-time": "2026-09-06T16:24:42.745Z",
+        "head_status": 200,
+        "head_bytes": 16717410
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/numpy/2.5.3/json",
+        "requires_python": ">=3.12",
+        "requires_dist": null,
+        "license_expression": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+        "hash": "sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+        "size": 129956,
+        "upload-time": "2026-08-04T18:15:27.159Z",
+        "head_status": 200,
+        "head_bytes": 129956
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/packaging/26.3/json",
+        "requires_python": ">=3.9",
+        "requires_dist": null,
+        "license_expression": "Apache-2.0 OR BSD-2-Clause",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "pillow",
+      "version": "12.3.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/84/21/a35af28dcc61f37ed850a2d64c65c701321dfbf25085e469d5559360cbbf/pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91",
+        "size": 6940830,
+        "upload-time": "2026-07-01T11:54:13.732Z",
+        "head_status": 200,
+        "head_bytes": 6940830
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/pillow/12.3.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "furo; extra == \"docs\"",
+          "olefile; extra == \"docs\"",
+          "sphinx>=8.2; extra == \"docs\"",
+          "sphinx-autobuild; extra == \"docs\"",
+          "sphinx-copybutton; extra == \"docs\"",
+          "sphinx-inline-tabs; extra == \"docs\"",
+          "sphinxext-opengraph; extra == \"docs\"",
+          "olefile; extra == \"fpx\"",
+          "olefile; extra == \"mic\"",
+          "arro3-compute; extra == \"test-arrow\"",
+          "arro3-core; extra == \"test-arrow\"",
+          "nanoarrow; extra == \"test-arrow\"",
+          "pyarrow; extra == \"test-arrow\"",
+          "coverage>=7.4.2; extra == \"tests\"",
+          "defusedxml; extra == \"tests\"",
+          "markdown2; extra == \"tests\"",
+          "olefile; extra == \"tests\"",
+          "packaging; extra == \"tests\"",
+          "pytest; extra == \"tests\"",
+          "pytest-cov; extra == \"tests\"",
+          "pytest-timeout; extra == \"tests\"",
+          "pytest-xdist; extra == \"tests\"",
+          "setuptools; extra == \"tests\"",
+          "trove-classifiers>=2024.10.12; extra == \"tests\"",
+          "defusedxml; extra == \"xmp\""
+        ],
+        "license_expression": "MIT-CMU",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "propcache",
+      "version": "0.5.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/85/9f/83a07b6ec0e043c050cfdd35fb0cf1b7897b91d554d6eea293740309afe7/propcache-0.5.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:2814ecd8e818f487bee4b0f921bc4d1c176cc5fc71ac0f072d0fa67eda4ac14b",
+        "size": 250424,
+        "upload-time": "2026-09-16T00:14:36.894Z",
+        "head_status": 200,
+        "head_bytes": 250424
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/propcache/0.5.4/json",
+        "requires_python": ">=3.10",
+        "requires_dist": null,
+        "license_expression": null,
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/2d/eb/9146591cc819d040475bf7f2be786710c7f7eb8083693bf859728da2ca9c/pydantic-2.14.0-py3-none-any.whl",
+        "hash": "sha256:15fab1bea6f1dc5003b54fc2ecab230c1fd1dbade2acd4addc52d81e32416d4b",
+        "size": 487109,
+        "upload-time": "2026-10-08T14:34:46.864Z",
+        "head_status": 200,
+        "head_bytes": 487109
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "annotated-types",
+        "pydantic-core",
+        "typing-extensions",
+        "typing-inspection"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/pydantic/2.14.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "annotated-types>=0.6.0",
+          "pydantic-core==2.50.0",
+          "typing-extensions>=4.16.0",
+          "typing-inspection>=0.4.4",
+          "email-validator>=2.0.0; extra == \"email\"",
+          "tzdata; platform_system == \"Windows\" and extra == \"timezone\""
+        ],
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.50.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/ca/e2/2f793fa2f1b338aa03124efd4362956c84d7bf1b331dc86050bc0151e67d/pydantic_core-2.50.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "hash": "sha256:f187030fc3d62c668feb0f09e92852e0eb414d7fcefc4748f2e67d245aade37e",
+        "size": 2160358,
+        "upload-time": "2026-10-08T14:26:50.74Z",
+        "head_status": 200,
+        "head_bytes": 2160358
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "typing-extensions"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/pydantic-core/2.50.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "typing-extensions>=4.16.0"
+        ],
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "pygments",
+      "version": "2.21.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+        "hash": "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+        "size": 1250147,
+        "upload-time": "2026-08-17T08:02:44.912Z",
+        "head_status": 200,
+        "head_bytes": 1250147
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/pygments/2.21.0/json",
+        "requires_python": ">=3.9",
+        "requires_dist": [
+          "colorama>=0.4.6; extra == \"windows-terminal\""
+        ],
+        "license_expression": "BSD-2-Clause",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "pyyaml",
+      "version": "6.0.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+        "size": 807870,
+        "upload-time": "2025-09-25T21:32:16.431Z",
+        "head_status": 200,
+        "head_bytes": 807870
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/pyyaml/6.0.3/json",
+        "requires_python": ">=3.8",
+        "requires_dist": null,
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: MIT License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "rich",
+      "version": "15.0.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+        "hash": "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+        "size": 310654,
+        "upload-time": "2026-04-12T08:24:02.83Z",
+        "head_status": 200,
+        "head_bytes": 310654
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "markdown-it-py",
+        "pygments"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/rich/15.0.0/json",
+        "requires_python": ">=3.9.0",
+        "requires_dist": [
+          "ipywidgets<9,>=7.5.1; extra == \"jupyter\"",
+          "markdown-it-py>=2.2.0",
+          "pygments<3.0.0,>=2.13.0"
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: MIT License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "rocm",
+      "version": "10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/rocm-10.1.0a20260822.tar.gz",
+        "hash": "sha256:a716097245003c1de6531e495be9ad1948feacfff9c606c7b80659d6a26569cc",
+        "head_status": 200,
+        "head_bytes": 27362
+      },
+      "kind": "sdist_or_missing",
+      "dependency_names": [
+        "rocm-sdk-core"
+      ]
+    },
+    {
+      "name": "rocm-bootstrap",
+      "version": "0.1.0",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/rocm_bootstrap-0.1.0-py3-none-any.whl",
+        "hash": "sha256:33e3d4dad086b1f0e06bc049a618ca874d4fb72f758fff00676e23d2a644b652",
+        "head_status": 200,
+        "head_bytes": 27015,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": []
+    },
+    {
+      "name": "rocm-sdk-core",
+      "version": "10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/rocm_sdk_core-10.1.0a20260822-py3-none-linux_x86_64.whl",
+        "hash": "sha256:cf376d3465cffd0c755a1e1ec08324c519eaf3d79c56778ffede1f6a7a2a5729",
+        "head_status": 200,
+        "head_bytes": 416591253,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": []
+    },
+    {
+      "name": "rocm-sdk-devel",
+      "version": "10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/rocm_sdk_devel-10.1.0a20260822-py3-none-linux_x86_64.whl",
+        "hash": "sha256:56e218658527558a213514e82f733ad492d03f6cdc5c6f667fc7ba0f8c5ec8af",
+        "head_status": 200,
+        "head_bytes": 611337392,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": []
+    },
+    {
+      "name": "rocm-sdk-device-gfx1151",
+      "version": "10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/rocm_sdk_device_gfx1151-10.1.0a20260822-py3-none-linux_x86_64.whl",
+        "hash": "sha256:36a68809080d3bb0640f57de070a35af7a5f2deaae505e7c1cae75712aa5654e",
+        "head_status": 200,
+        "head_bytes": 178489548,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "rocm-sdk-libraries"
+      ]
+    },
+    {
+      "name": "rocm-sdk-libraries",
+      "version": "10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/rocm_sdk_libraries-10.1.0a20260822-py3-none-linux_x86_64.whl",
+        "hash": "sha256:61f0b7ac01b1d0557b6caf261d5a2516ac1dce796047f2088ca12ec771d7d8c2",
+        "head_status": 200,
+        "head_bytes": 270346334,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": []
+    },
+    {
+      "name": "safetensors",
+      "version": "0.8.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/28/50/f203ff3a3ddfe19308efc83c5a3a29ed02bf786732ec35e68bf9162f3365/safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "hash": "sha256:fd6f3f93c9a0a7cc2788ee63fb763353d4bd2e89b0751bc78fcf7dda00bea774",
+        "size": 516040,
+        "upload-time": "2026-06-09T07:52:16.29Z",
+        "head_status": 200,
+        "head_bytes": 516040
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/safetensors/0.8.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "safetensors[torch]; extra == \"all\"",
+          "safetensors[numpy]; extra == \"all\"",
+          "safetensors[jax]; extra == \"all\"",
+          "safetensors[paddlepaddle]; extra == \"all\"",
+          "safetensors[convert]; extra == \"all\"",
+          "safetensors[quality]; extra == \"all\"",
+          "safetensors[testing]; extra == \"all\"",
+          "safetensors[torch]; extra == \"convert\"",
+          "huggingface-hub>=1.4; extra == \"convert\"",
+          "safetensors[all]; extra == \"dev\"",
+          "safetensors[pinned-tf]; extra == \"dev\"",
+          "safetensors[numpy]; extra == \"jax\"",
+          "flax>=0.6.3; extra == \"jax\"",
+          "jax>=0.3.25; extra == \"jax\"",
+          "jaxlib>=0.3.25; extra == \"jax\"",
+          "mlx>=0.0.9; extra == \"mlx\"",
+          "numpy>=1.24.6; extra == \"numpy\"",
+          "safetensors[numpy]; extra == \"paddlepaddle\"",
+          "paddlepaddle>=2.4.1; extra == \"paddlepaddle\"",
+          "safetensors[numpy]; extra == \"pinned-tf\"",
+          "tensorflow==2.18.0; extra == \"pinned-tf\"",
+          "ruff; extra == \"quality\"",
+          "safetensors[numpy]; extra == \"tensorflow\"",
+          "tensorflow>=2.11.0; extra == \"tensorflow\"",
+          "safetensors[numpy]; extra == \"testing\"",
+          "h5py>=3.7.0; extra == \"testing\"",
+          "setuptools-rust>=1.12.0; extra == \"testing\"",
+          "pytest>=9.0; extra == \"testing\"",
+          "pytest-benchmark>=5.2; extra == \"testing\"",
+          "hypothesis>=6.70.2; extra == \"testing\"",
+          "fsspec>=2024.6.0; extra == \"testing\"",
+          "s3fs>=2024.6.0; extra == \"testing\"",
+          "safetensors[numpy]; extra == \"tf-nightly\"",
+          "tf-nightly; extra == \"tf-nightly\"",
+          "safetensors[numpy]; extra == \"torch\"",
+          "torch>=2.4; extra == \"torch\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: Apache Software License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "setuptools",
+      "version": "84.0.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/95/9c/c510029fc6ef33a6275cd2c5d3cecd6613dfd6aa401d57c54f1c18852ccf/setuptools-84.0.0-py3-none-any.whl",
+        "hash": "sha256:51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670",
+        "size": 818216,
+        "upload-time": "2026-08-08T18:27:56.719Z",
+        "head_status": 200,
+        "head_bytes": 818216
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/setuptools/84.0.0/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "pytest!=8.1.*,>=6; extra == \"test\"",
+          "virtualenv>=13.0.0; extra == \"test\"",
+          "wheel>=0.44.0; extra == \"test\"",
+          "pip>=19.1; extra == \"test\"",
+          "packaging>=24.2; extra == \"test\"",
+          "jaraco.envs>=2.2; extra == \"test\"",
+          "pytest-xdist>=3; extra == \"test\"",
+          "jaraco.path>=3.7.2; extra == \"test\"",
+          "build[virtualenv]>=1.0.3; extra == \"test\"",
+          "filelock>=3.4.0; extra == \"test\"",
+          "ini2toml[lite]>=0.14; extra == \"test\"",
+          "tomli-w>=1.0.0; extra == \"test\"",
+          "pytest-timeout; extra == \"test\"",
+          "pytest-perf; sys_platform != \"cygwin\" and extra == \"test\"",
+          "jaraco.develop>=7.21; (python_version >= \"3.9\" and sys_platform != \"cygwin\") and extra == \"test\"",
+          "pytest-home>=0.5; extra == \"test\"",
+          "pytest-subprocess; extra == \"test\"",
+          "pyproject-hooks!=1.1; extra == \"test\"",
+          "jaraco.test>=5.5; extra == \"test\"",
+          "sphinx>=3.5; extra == \"doc\"",
+          "jaraco.packaging>=9.3; extra == \"doc\"",
+          "rst.linker>=1.9; extra == \"doc\"",
+          "furo; extra == \"doc\"",
+          "sphinx-lint; extra == \"doc\"",
+          "jaraco.tidelift>=1.4; extra == \"doc\"",
+          "pygments-github-lexers==0.0.5; extra == \"doc\"",
+          "sphinx-favicon; extra == \"doc\"",
+          "sphinx-inline-tabs; extra == \"doc\"",
+          "sphinx-reredirects; extra == \"doc\"",
+          "sphinxcontrib-towncrier; extra == \"doc\"",
+          "sphinx-notfound-page<2,>=1; extra == \"doc\"",
+          "pyproject-hooks!=1.1; extra == \"doc\"",
+          "towncrier<24.7; extra == \"doc\"",
+          "packaging>=24.2; extra == \"core\"",
+          "more_itertools>=8.8; extra == \"core\"",
+          "jaraco.text>=3.7; extra == \"core\"",
+          "importlib_metadata>=6; python_version < \"3.10\" and extra == \"core\"",
+          "tomli>=2.0.1; python_version < \"3.11\" and extra == \"core\"",
+          "wheel>=0.43.0; extra == \"core\"",
+          "jaraco.functools>=4; extra == \"core\"",
+          "more_itertools; extra == \"core\"",
+          "pytest-checkdocs>=2.14; extra == \"check\"",
+          "pytest-ruff>=0.2.1; sys_platform != \"cygwin\" and extra == \"check\"",
+          "ruff>=0.13.0; sys_platform != \"cygwin\" and extra == \"check\"",
+          "pytest-cov; extra == \"cover\"",
+          "pytest-enabler>=3.4; extra == \"enabler\"",
+          "pytest-mypy>=1.0.1; platform_python_implementation != \"PyPy\" and extra == \"type\"",
+          "mypy==1.18.*; extra == \"type\"",
+          "importlib_metadata>=7.0.2; python_version < \"3.10\" and extra == \"type\"",
+          "jaraco.develop>=7.21; sys_platform != \"cygwin\" and extra == \"type\""
+        ],
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "sympy",
+      "version": "1.14.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl",
+        "hash": "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5",
+        "size": 6299353,
+        "upload-time": "2025-04-27T18:04:59.103Z",
+        "head_status": 200,
+        "head_bytes": 6299353
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "mpmath"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/sympy/1.14.0/json",
+        "requires_python": ">=3.9",
+        "requires_dist": [
+          "mpmath<1.4,>=1.1.0",
+          "pytest>=7.1.0; extra == \"dev\"",
+          "hypothesis>=6.70.0; extra == \"dev\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: BSD License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "tokenizers",
+      "version": "0.23.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/3a/40/6706b82693715581457c6d5423eaa7faae576bb0526c5738a57085eb4449/tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "hash": "sha256:376851d22bcf9d650a5c3090bb83e6cf9e895fbf0595369fa4cd43c1f69b5f87",
+        "size": 3396193,
+        "upload-time": "2026-10-09T10:01:05.48Z",
+        "head_status": 200,
+        "head_bytes": 3396193
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "huggingface-hub"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/tokenizers/0.23.3/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "huggingface-hub<3.0,>=0.16.4",
+          "tokenizers[testing]; extra == \"dev\"",
+          "sphinx; extra == \"docs\"",
+          "sphinx-rtd-theme; extra == \"docs\"",
+          "setuptools-rust; extra == \"docs\"",
+          "pytest; extra == \"testing\"",
+          "pytest-asyncio; extra == \"testing\"",
+          "requests; extra == \"testing\"",
+          "numpy; extra == \"testing\"",
+          "datasets; extra == \"testing\"",
+          "ruff; extra == \"testing\"",
+          "ty; extra == \"testing\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [
+          "License :: OSI Approved :: Apache Software License"
+        ],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "torch",
+      "version": "2.14.0+rocm10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/torch-2.14.0%2Brocm10.1.0a20260822-cp312-cp312-linux_x86_64.whl",
+        "hash": "sha256:7e6b84714b541cca6dfb33ed00dec23ff4ea587d9d26c0807a2d55875b13641f",
+        "head_status": 200,
+        "head_bytes": 213077792,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "filelock",
+        "fsspec",
+        "jinja2",
+        "networkx",
+        "rocm",
+        "rocm-bootstrap",
+        "setuptools",
+        "sympy",
+        "triton",
+        "typing-extensions"
+      ]
+    },
+    {
+      "name": "tqdm",
+      "version": "4.70.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl",
+        "hash": "sha256:c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+        "size": 80199,
+        "upload-time": "2026-09-11T07:25:14.599Z",
+        "head_status": 200,
+        "head_bytes": 80199
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/tqdm/4.70.1/json",
+        "requires_python": ">=3.8",
+        "requires_dist": [
+          "colorama; platform_system == \"Windows\"",
+          "requests; extra == \"discord\"",
+          "envwrap; extra == \"discord\"",
+          "slack-sdk; extra == \"slack\"",
+          "envwrap; extra == \"slack\"",
+          "requests; extra == \"telegram\"",
+          "envwrap; extra == \"telegram\"",
+          "ipywidgets>=6; extra == \"notebook\""
+        ],
+        "license_expression": null,
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "triton",
+      "version": "3.8.0+git675c5987.rocm10.1.0a20260822",
+      "artifact": {
+        "url": "https://rocm.nightlies.amd.com/whl-multi-arch/triton-3.8.0%2Bgit675c5987.rocm10.1.0a20260822-cp312-cp312-linux_x86_64.whl",
+        "hash": "sha256:421919d0d0fb609b27fc1a3be12e09b49a1d2219a4d36ea51cbce20c20da691b",
+        "head_status": 200,
+        "head_bytes": 427919583,
+        "pep658_status": 404
+      },
+      "kind": "wheel",
+      "dependency_names": []
+    },
+    {
+      "name": "truststore",
+      "version": "0.10.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/19/97/56608b2249fe206a67cd573bc93cd9896e1efb9e98bce9c163bcdc704b88/truststore-0.10.4-py3-none-any.whl",
+        "hash": "sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981",
+        "size": 18660,
+        "upload-time": "2025-08-12T18:49:01.46Z",
+        "head_status": 200,
+        "head_bytes": 18660
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/truststore/0.10.4/json",
+        "requires_python": ">=3.10",
+        "requires_dist": null,
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+        "hash": "sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+        "size": 45571,
+        "upload-time": "2026-07-02T08:40:04.659Z",
+        "head_status": 200,
+        "head_bytes": 45571
+      },
+      "kind": "wheel",
+      "dependency_names": [],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/typing-extensions/4.16.0/json",
+        "requires_python": ">=3.9",
+        "requires_dist": null,
+        "license_expression": "PSF-2.0",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+        "hash": "sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+        "size": 14750,
+        "upload-time": "2026-08-12T12:37:24.648Z",
+        "head_status": 200,
+        "head_bytes": 14750
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "typing-extensions"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/typing-inspection/0.4.4/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "typing-extensions>=4.15.0"
+        ],
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "wheel",
+      "version": "0.48.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/2e/29/69cfbb602cd91690c55d38ba9fe53e6a7e76a6fa647bf38f19c138d25449/wheel-0.48.0-py3-none-any.whl",
+        "hash": "sha256:3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab",
+        "size": 33320,
+        "head_status": 200,
+        "head_bytes": 33320
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "packaging"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/wheel/0.48.0/json",
+        "requires_python": ">=3.9",
+        "requires_dist": [
+          "packaging>=24.0"
+        ],
+        "license_expression": "MIT",
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    },
+    {
+      "name": "yarl",
+      "version": "1.25.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/bc/7b/ca212cbe170ac8b96e45317ecbcf9c3c3ecf0cdec98d5b088a9c4088929b/yarl-1.25.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "hash": "sha256:c6f117789d22dce188e5754e8bc65b7e6ebf8cb73963b9fa761f672a5883769d",
+        "size": 117050,
+        "upload-time": "2026-09-15T19:31:17.241Z",
+        "head_status": 200,
+        "head_bytes": 117050
+      },
+      "kind": "wheel",
+      "dependency_names": [
+        "idna",
+        "multidict",
+        "propcache"
+      ],
+      "pypi_metadata": {
+        "url": "https://pypi.org/pypi/yarl/1.25.1/json",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "idna>=2.0",
+          "multidict>=4.0",
+          "propcache>=0.2.1"
+        ],
+        "license_expression": null,
+        "license_classifiers": [],
+        "artifact_hash_size_matches": true
+      }
+    }
+  ],
+  "known_artifact_bytes": 2412447088,
+  "unknown_size_packages": [],
+  "pypi_default_dependency_check": {
+    "metadata_packages": 45,
+    "target": "Linux CPython 3.12, default extras only",
+    "missing_or_incompatible_selected_dependencies": [],
+    "note": "PyPI Requires-Dist version constraints checked against the selected set using pip vendored packaging; AMD wheel METADATA and rocm sdist build dependencies remain unverified. This is not resolver validation."
+  },
+  "rocm_sdist_review": {
+    "approved_scope": "Only the 27362-byte rocm sdist fetched to /tmp, hash checked, selected regular archive members read without extraction or execution",
+    "archive_bytes": 27362,
+    "archive_sha256_verified": true,
+    "source_or_backend_executed": false,
+    "build_system": {
+      "requires": ["setuptools>=70.2.0"],
+      "build-backend": "setuptools.build_meta"
+    },
+    "proposed_build_pins": {"setuptools": "84.0.0", "wheel": "0.48.0", "packaging": "26.3"},
+    "proposed_build_environment": {"ROCM_SDK_TARGET_FAMILY": "gfx1151"},
+    "static_runtime_requires_for_selected_extras": [
+      "rocm-sdk-core==10.1.0a20260822",
+      "rocm-sdk-devel==10.1.0a20260822",
+      "rocm-sdk-device-gfx1151==10.1.0a20260822",
+      "rocm-sdk-libraries==10.1.0a20260822"
+    ],
+    "reviewed_members_sha256": {
+      "pyproject.toml": "454694f4a24f1911a90b52e28f9ac289908652cd84c13b5c8be8d0391eb5e8bf",
+      "PKG-INFO": "40d7c32eb864ac4439c842e2ce53b261415c54a1a8120cbabb13f5650087fab1",
+      "setup.py": "3000c6c838bbfc54447b85aabed545cb4244d17571131a11fbf58c2af0da0a85",
+      "src/rocm_sdk/_dist_info.py": "02a9dd3cab91285761e9f78e9775b0ff92f62449344dd3d1519412d163df3e29"
+    },
+    "dynamic_metadata_warning": "setup.py imports _dist_info.py; without explicit ROCM_SDK_TARGET_FAMILY it invokes offload-arch and may fall back to gfx1010. PKG-INFO declares Dynamic requires-dist/provides-extra. Static inspection is not a backend execution test.",
+    "proposed_build_policy": "Future approval only: no network/GPU, pinned build wheels, no build isolation or dependency resolution, explicit target family; stop on any unlisted requirement. Generated rocm wheel hash and actual METADATA require review before install."
+  },
+  "blockers": [
+    "rocm meta package remains sdist-only; static build requirements pinned but backend hooks/generated wheel metadata and wheel hash unverified",
+    "AMD PEP658 metadata unavailable where status=404; transitive dependency closure is projected from source lock, not independently verified wheel METADATA",
+    "Host glibc/driver/HSA/compiler/header compatibility and expanded SDK/JIT sizes unverified",
+    "Wheel hashes are publisher lock claims, no wheel bodies downloaded or locally hashed; only the explicitly approved 27362-byte rocm sdist was downloaded and locally hash-verified",
+    "All license notices and approval for selected multi-arch stack required before installation"
+  ],
+  "wheel_metadata_source": "wheel 0.48.0 from https://pypi.org/pypi/wheel/0.48.0/json (absent from upstream uv.lock); other pins from upstream lock"
+}
