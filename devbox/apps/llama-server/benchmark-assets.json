@@ -1,8 +1,17 @@
 {
   "observed_date": "2026-10-22",
   "scope": "Public metadata only; no weights, images or runtime binaries downloaded. Byte counts are disk/network sizes, not RAM.",
+  "comparison_scope": {
+    "active_candidates": ["kyojin", "halo", "upstream", "halogen"],
+    "deferred_candidates": ["gufo", "halo-UD-Q4_K_XL-control"],
+    "deferred_reason": "User deferred Gufo on 2026-10-22 for the current uncensored-model requirement. Historical metadata only; not a claim of policy prohibition or permanent incompatibility.",
+    "active_disk_budget_gib": {"kyojin": 260, "halo": 30, "upstream": 30, "halogen": 40},
+    "active_disk_budget_total_gib": 360,
+    "safety_margin_gib": 50
+  },
   "models": {
     "kyojin": {
+      "status": "active",
       "repo": "yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz",
       "revision": "247ef39b06ff0b0fcba76026429e191b44e0e1f8",
       "selection": "all files except assets/**",
@@ -23,6 +32,7 @@
       }
     },
     "gufo": {
+      "status": "deferred",
       "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
       "revision": "38bb39ee97821de2c9009abb7e93950eec396e66",
       "bytes": 115028765984,
@@ -36,6 +46,7 @@
       ]
     },
     "halogen": {
+      "status": "active",
       "repo": "peonist-ai/halogen-qwen3.8-flash-next",
       "revision": "647e3814953e8435d58f5d5aa13b97aca85a7d93",
       "selection": ["qwen38-flash-next-mtp.hgn", "tokenizer/**"],
@@ -51,6 +62,7 @@
   },
   "images": {
     "halogen": {
+      "status": "active",
       "repository": "ghcr.io/peonist-ai/halogen-flash-server",
       "observed_tag": "0.18.14",
       "amd64_manifest_digest": "sha256:e0c1d1b48e07c8acdd204fbdbafbb421a395a73cf704271845a1846ad1fd767f",
@@ -59,6 +71,7 @@
       "revision_label": "9a80df1a2e68"
     },
     "gufo": {
+      "status": "deferred",
       "repository": "ghcr.io/gufo-org/toolboxes/gufo-runtime",
       "observed_tag": "latest",
       "amd64_manifest_digest": "sha256:2b481357c27c2634deef4901aeb7018814e6552a9b4ea49a43e7aa70db71d867",

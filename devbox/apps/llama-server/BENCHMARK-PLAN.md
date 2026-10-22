@@ -4,7 +4,9 @@
 
 ## 1. 比較するものと優先順位
 
-初回承認申請にはKyojin/Gufoを含める。大容量だからという理由だけで後段へ追いやらない。実行順は保守枠に合わせ **現行 → Kyojin → Gufo＋同pack対照 → 最新halo-box → upstream → Halogen** を提案する。各候補後に現行へ復帰し、GPUは常に一台分だけロードする。導入承認は候補単位で選べる。
+当面の導入・比較候補（active）はKyojinと既存IQ4_XS群に絞る。実行順は保守枠に合わせ **現行 → Kyojin → 最新halo-box → upstream → Halogen** を提案する。各候補後に現行へ復帰し、GPUは常に一台分だけロードする。導入承認は候補単位で選べる。
+
+**Gufoとhalo-boxのUD-Q4_K_XL同pack対照はdeferred。** 2026-10-22のユーザー判断「Gufoは無検閲モデルないので一旦候補から外して良い」により、当面の実験・導入・承認申請・容量合計から除外する。無検閲モデルの運用要件による保留であり、Gufoの全無検閲モデルへの政策的禁止・永続非対応を断定しない。metadataと出典は調査履歴として保持し、再検討は別判断とする。
 
 | 群 / 候補 | 固定点 | 証明できること / 証明できないこと |
 |---|---|---|
@@ -13,43 +15,41 @@
 | A: upstream | `0693dbfb915f33233818373b5f6969396658d02c` | 同GGUFで保守性と速度/互換性。shared MTPが未対応ならAR対ARのみ、無断のhead置換不可 |
 | A: Halogen 0.18.14 | docs `e601b84d88dd1ff0185a06daa9778254ceca4492`、imageはassets JSON | 同じIQ4_XS、別kernel/repack/専用MTP。AR対ARと各MTPを分け、MTP差をkernel単独効果としない |
 | B: Kyojin | engine `e09322da7209331c57e2a79cfc30d120f0299154`、EXL3 revisionはassets JSON | 別packを含むシステム全体の有用性。abliterated GGUFと同品質/同アラインメントの証明にはならない |
-| B: Gufo | image engine label `7110c7954ebc85d4a4d96aa0643b102615adca27`、UD-Q4_K_XL | 同じUD-Q4_K_XLを最新halo-boxにも渡しruntime差を分離。IQ4_XS現行との差はpack変更込み |
 
-Gufoの既存調査commit `3aa068b419e6272482298c1c6daccafb122764fa` と配布imageは異なる。image版のモデル資料も取得し、qualified revision/起動例の一致を確認したが、性能・品質は再検証が必要。Halogenもimage revision label `9a80df1a2e68` とdocs commitは同一ではない。digest固定は供給物の固定であり、ソース再現性の証明ではない。
+調査履歴（deferred）: Gufoの既存調査commit `3aa068b419e6272482298c1c6daccafb122764fa` とimage engine label `7110c7954ebc85d4a4d96aa0643b102615adca27` は異なる。image版のモデル資料でqualified revision/起動例の一致を確認したが、実測していない。activeのHalogenもimage revision label `9a80df1a2e68` とdocs commitは同一ではない。digest固定は供給物の固定であり、ソース再現性の証明ではない。
 
 Kyojinはpreset OFFを機能/agent比較の主群とし、uncensor preset ONとuncensor-thinkは別群（後者は初回対象外）。重み非変更でも出力分布を変える。tool-heavyではOFFを推奨するモデルカードを尊重し、ONでも同じtool試験を行う。GufoのIQ4_XS loader非対応はuncensoredの政策禁止ではない。対応する別uncensored packは未検証で今回変換しない。
 
 各候補で日本語prose、code、tool-heavy、vision、thinking OFF/ON、単独/2並列、cache cold/warmを検査する。非対応はN/Aで残し、黙って機能を外して合格にしない。vLLM/SGLangは公式FP8約172.78 GiB/BF16約335.28 GiBとgfx1151適合未確認のため今回の導入候補外。Halogen専用v2/tatianyi pack、cache2、composable context、spec-prefill、YaRN、OS tuningは品質条件変更の別群。
 
-ライセンス: llama.cpp/halo-box/Gufo/Kyojin engineはMIT系。Kyojin EXL3を含むQwen重みはQwen Community License 1.0、変換tool公開は確認できない。uncensored派生の出典・利用条件は既存ファイル名だけでは確定しない。HalogenはEULA（OSSではない）、benchmark公開可でも改変image再配布に制約。導入前に固定revisionのLICENSE/モデルカードを利用目的に照合し、同意を記録する。重みはPRへ含めない。
+ライセンス: activeのllama.cpp/halo-box/Kyojin engineはMIT系（調査履歴のGufoもMIT）。Kyojin EXL3を含むQwen重みはQwen Community License 1.0、変換tool公開は確認できない。uncensored派生の出典・利用条件は既存ファイル名だけでは確定しない。HalogenはEULA（OSSではない）、benchmark公開可でも改変image再配布に制約。導入前に固定revisionのLICENSE/モデルカードを利用目的に照合し、同意を記録する。重みはPRへ含めない。
 
 ## 2. 固定metadata・容量・分離配置
 
-[benchmark-assets.json](benchmark-assets.json) は公開HF API `?blobs=true`、OCI manifest/config（layer本体は未取得）、ローカル`stat`だけから取得。GB=10^9 bytes、GiB=2^30 bytes。API全repositoryサイズを必要DL量と取り違えない。
+[benchmark-assets.json](benchmark-assets.json) は`comparison_scope`と各model/imageの`status`でactive/deferredを明示する。deferred metadataはDL選択リストとして使わない。以下の容量表はactiveのみ。取得元は公開HF API `?blobs=true`、OCI manifest/config（layer本体は未取得）、ローカル`stat`だけから取得。GB=10^9 bytes、GiB=2^30 bytes。API全repositoryサイズを必要DL量と取り違えない。
 
 | 内容 | 必要ファイル容量 GB / GiB | 追加導入の保守的disk予算 GiB | RAM（disk容量と別） |
 |---|---:|---:|---|
 | 現行target / mmproj / MTP | 97.473 / 90.779、0.904 / 0.842、2.787 / 2.595 | コピー不要。現物・buildを保持 | 箱全体used約110 GiBは過去の時点値、peakではない |
 | halo-box / upstream | 重み追加0 | 各30（source/build/deps/cache、未確定） | 同GGUFでもKV/scratch増減は未確定、現行並みから検査 |
 | Kyojin EXL3一式（assets画像除外） | 95.370 / 88.820 | **260**（model89＋重複/途中DL90＋venv/wheels/JIT61＋logs20） | 配布元約113 GiB。128GB箱でOS共存余裕が小さい。低contextでも起動可能保証なし |
-| Gufo target4shard＋shared MTP＋BF16 mmproj | 115.029 / 107.129 | **280**（model108＋途中/重複108＋image展開/cache44＋logs20） | 公称HIP peak89〜91 GiBはallocator値。host totalではなく実測必須 |
 | Halogen head＋tokenizer（既存GGUF参照） | 1.546 / 1.440、vision追加0.898 / 0.836 | **40**（assets3＋image展開10＋scratch/cache17＋logs10） | 公称repacked68 GiBは総RAMでない。dense staging約1.8 GiB、pool/lookup page cache等を含め再測定 |
 
-OCI圧縮layer合計: Halogen 925,174,958 bytes =0.925 GB/0.862 GiB、Gufo 2,890,833,952 bytes =2.891 GB/2.692 GiB。**展開後サイズ・一時重複・Kyojin依存wheel総量はmetadataでは未確定**。上の予算は正確な必要量ではない。Kyojin requirementsは下限指定でlockではなくnightlyも可変。固定engineだけで再現可能とはしない。導入前に選択wheel版/URL/hash＋transitive lock＋合計量をレビューするgateを置く。Gufo imageはruntime依存をdigestで固定するがhost driver/権限は別gate。
+active OCI圧縮layer合計: Halogen 925,174,958 bytes =0.925 GB/0.862 GiB。調査履歴のみのGufoはmodel一式115.029 GB/107.129 GiB、圧縮layer2.891 GB/2.692 GiB、旧保守予算280 GiBで、いずれも現在の必要容量合計に含めない。**展開後サイズ・一時重複・Kyojin依存wheel総量はmetadataでは未確定**。上の予算は正確な必要量ではない。Kyojin requirementsは下限指定でlockではなくnightlyも可変。固定engineだけで再現可能とはしない。導入前に選択wheel版/URL/hash＋transitive lock＋合計量をレビューするgateを置く。Halogen imageはruntime依存をdigestで固定するがhost driver/権限は別gate。
 
-本準備時の`df -B1 .`: available 766,981,103,616 bytes（714.307 GiB）、`free -b`: total134,159,831,040、available15,258,488,832 bytes（14.21 GiB）、swap40,353,792 bytes。コンテナ/時点値でありDocker storage filesystemの空きではない。上記全候補予算640 GiB＋安全余白50 GiBは近いので、一括導入せず候補ごと確認し、可能ならDL重複を避ける。現行を消して空きを作らない。
+本準備時の`df -B1 .`: available 766,981,103,616 bytes（714.307 GiB）、`free -b`: total134,159,831,040、available15,258,488,832 bytes（14.21 GiB）、swap40,353,792 bytes。コンテナ/時点値でありDocker storage filesystemの空きではない。active全候補予算は260＋30＋30＋40＝**360 GiB**、安全余白50 GiB込み**410 GiB**（Gufo/UD-Q4_K_XL対照を除外）。導入時の空きは未確定なので、候補ごと確認し、可能ならDL重複を避ける。現行を消して空きを作らない。
 
-配置案: `$HOME/qwen38-comparison/{halo,upstream,kyojin,gufo,halogen}` 以下にsource/build/venv/models/cacheを分離。imageはdigest保持、現行imageをpruneしない。HFは候補の`--local-dir`へ、HF_HOME/PIP_CACHE_DIR/TORCH_EXTENSIONS_DIRも候補別。ホストapt/ROCm/driver/python既定/既存buildは変更しない。新しいtoolchainが必要なら候補image内で固定し、別承認。Gufo shared MTPは現行と同サイズだが同hash未確認なので、再利用を確定せず最大予算に含めた。巨大ファイルhashは本準備で読んでいない。
+配置案: `$HOME/qwen38-comparison/{halo,upstream,kyojin,halogen}` 以下にsource/build/venv/models/cacheを分離。imageはdigest保持、現行imageをpruneしない。HFは候補の`--local-dir`へ、HF_HOME/PIP_CACHE_DIR/TORCH_EXTENSIONS_DIRも候補別。ホストapt/ROCm/driver/python既定/既存buildは変更しない。新しいtoolchainが必要なら候補image内で固定し、別承認。deferredのGufo/UD-Q4_K_XL用dir・重み・imageは作成/導入しない。巨大ファイルhashは本準備で読んでいない。
 
 ## 3. 段階的承認と実行gate
 
 - [x] 公開metadata、既存設定/ファイル名/サイズ読み取り、文書のoffline検証のみ。
-- [ ] **導入のみ**: 候補名、最大追加disk、固定revision/digest、ライセンス、依存lockを承認。DL/build/JITは推論と別に明示承認。GPU初回JITを導入だけの承認で行わない。
+- [ ] **導入のみ**: activeのKyojin/最新halo-box/upstream/Halogenだけを対象に、候補名、最大追加disk、固定revision/digest、ライセンス、依存lockを承認。DL/build/JITは推論と別に明示承認。GPU初回JITを導入だけの承認で行わない。
 - [ ] **停止比較**: 実container/runtimeの限定同定に対する新しい具体的許可、保守枠、復帰先の実物保存、候補1台、2K/8Kと復帰smokeのリクエスト数を承認。
 - [ ] **長文**: 32Kを別枠で承認、結果確認後128Kを承認。単独と2並列は別gate。128K×2は総KVと生成分が262144を超えるため初回不可。
 - [ ] **OS/品質変更実験**: EC/fan/BIOS/IOMMU/governor、YaRN、approx cache、preset ON等を個別承認。今回の承認に含めない。
 
-実行前にユーザーが決めることは3つ: (1) Kyojin/Gufoを含め導入する候補と容量上限、(2) 60〜120分/候補の停止枠と安全中止閾値、(3) uncensoredを必須条件とするか、tool-heavy/vision/2並列のどれを採用必須にするか。
+実行前にユーザーが決めることは3つ: (1) Kyojinと既存IQ4_XS群から導入する候補と容量上限（Gufo/UD-Q4_K_XL対照は対象外）、(2) 60〜120分/候補の停止枠と安全中止閾値、(3) uncensored要件でpresetとabliterationのどこまでを許容し、tool-heavy/vision/2並列のどれを採用必須にするか。
 
 **G0（現在未通過）**: Docker同定依頼は既に拒否されており、本準備では再試行しない。実container ID/image/Compose project/service/実行binary/args/loaded HIP/HSA/稼働jobを承認された方法で同定できるまで停止コマンドを実行禁止。`llama-server`という宣言名だけでは不足。全部のenvや`docker inspect` JSON全体を保存しない。必要な識別子、restart policy、mount、許可したruntime変数だけをprivateに記録する。
 
@@ -65,14 +65,10 @@ OCI圧縮layer合計: Halogen 925,174,958 bytes =0.925 GB/0.862 GiB、Gufo 2,890
 
 ```bash
 ROOT="$HOME/qwen38-comparison"
-mkdir -p "$ROOT"/{kyojin,gufo,halogen}
+mkdir -p "$ROOT"/{kyojin,halogen}
 HF_HOME="$ROOT/kyojin/cache/hf" hf download yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz \
   --revision 247ef39b06ff0b0fcba76026429e191b44e0e1f8 --exclude 'assets/*' \
   --local-dir "$ROOT/kyojin/models"
-HF_HOME="$ROOT/gufo/cache/hf" hf download unsloth/Qwen3.8-Flash-Next-GGUF \
-  --revision 38bb39ee97821de2c9009abb7e93950eec396e66 \
-  --include 'UD-Q4_K_XL/*' 'MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf' 'mmproj-BF16.gguf' \
-  --local-dir "$ROOT/gufo/models"
 HF_HOME="$ROOT/halogen/cache/hf" hf download peonist-ai/halogen-qwen3.8-flash-next \
   --revision 647e3814953e8435d58f5d5aa13b97aca85a7d93 \
   --include qwen38-flash-next-mtp.hgn qwen38-flash-next-vision.hgn 'tokenizer/*' \
@@ -127,7 +123,7 @@ HIP_LAUNCH_BLOCKING=1 "$ROOT/halo/build/bin/llama-server" \
   --alias qwen3.8-flash-next --host 127.0.0.1 --port 18082
 ```
 
-upstreamはbinary pathを`$ROOT/upstream/build/bin/llama-server`へ変更し、最新のflag対応確認後に実施。ARはspec-typeとmdの両方を外す。Gufo同pack対照ではmをUD-Q4_K_XL第一shard、mmprojをBF16に変更し、同じshared MTPを照合する。容積差を混ぜないためGufoと同じcontext/単独で別測定する。
+upstreamはbinary pathを`$ROOT/upstream/build/bin/llama-server`へ変更し、最新のflag対応確認後に実施。ARはspec-typeとmdの両方を外す。UD-Q4_K_XL同pack対照はdeferredのため、この実行手順には含めない。
 
 Kyojin（隔離runtime内、preset OFF）:
 
@@ -146,24 +142,6 @@ python tools/qwen/serve.py --model "$ROOT/kyojin/models" \
 ```
 
 単独ARは`--draft-policy off`、2並列は`--sessions 2`の別起動。独自medium注入を避けmodelのtemplateを明示する。思考ON品質枠ではxhighを明示、短い互換性検査lowは全候補で揃える。起動環境出力はprivate、preset OFF実効確認に失敗したら測定しない。別承認のpreset ONは同じ起動に`EXL3_ABLIT_RUNTIME="$ROOT/kyojin/models/uncensor-preset/uncensor_spec.json"`を環境指定する（固定モデルカードのinterface）。specをmodel rootへコピーしない。自動適用条件と出力分布変更を記録する。
-
-Gufo（CLI順序は固定docs例に合わせglobal host/portをllmの前に置く）:
-
-```bash
-ROOT="$HOME/qwen38-comparison"
-GUFO_IMAGE=ghcr.io/gufo-org/toolboxes/gufo-runtime@sha256:2b481357c27c2634deef4901aeb7018814e6552a9b4ea49a43e7aa70db71d867
-# pullは導入承認、runは停止比較承認が必要
- docker pull "$GUFO_IMAGE"
- docker run --name qwen38-compare-gufo --restart=no --network bridge \
-  --device /dev/kfd --device /dev/dri --ipc=host \
-  -p 127.0.0.1:18082:18082 -v "$ROOT/gufo/models:/models:ro" \
-  "$GUFO_IMAGE" gufo serve --host 0.0.0.0 --port 18082 llm \
-  --model /models/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf \
-  --speculative mtp --mtp-model /models/MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf \
-  --sessions 1 --context 32768 --served-model-name qwen3.8-flash-next
-```
-
-ARはspeculative/mtp-modelの両方を省略。2並列はsessions2。served model name、vision projector発見、cache policyはimageの`--help`/実効metadata確認gateで照合する。DockerのGPU group IDは現行の実際の権限から確認し、podmanの`keep-groups`をDockerへコピーしない。`--privileged`で解決しない。
 
 Halogen（外向き自動DLは設定しない）:
 
@@ -219,7 +197,7 @@ docker compose -p "$BASELINE_PROJECT" -f "$BASELINE_COMPOSE" up -d \
 ### 基準・入力・条件固定
 
 - 現行**宣言**はnative262144 / 総KV262144 / 2slot / b2048 / ub2048 / q8 K/V / cache-ram0 / IQ4_XS / shared Q8_0 MTP。実効値・loaded ROCmは未確認。cache-ram0でもresident slot prefix再利用はあり得る。過去384K/ub4096の値を現在のbaselineとして使わない。
-- 主表は現行宣言行と、全候補を32768 capacity/単独に揃えた低context対照行を分ける。2並列でも総KVを揃える。Gufo/Kyojinのcontextのper-session/totalの意味は実効値で確認。131072試験はcapacity196608等、入力＋生成を確保し、別承認。slot/ubatchが非等価なら値と意味を併記し、同条件と断言しない。
+- 主表は現行宣言行と、全候補を32768 capacity/単独に揃えた低context対照行を分ける。2並列でも総KVを揃える。Kyojinのcontextのper-session/totalの意味は実効値で確認。131072試験はcapacity196608等、入力＋生成を確保し、別承認。slot/ubatchが非等価なら値と意味を併記し、同条件と断言しない。
 - [benchmark-cases.json](benchmark-cases.json)に合成入力・tool schema・32×32赤PNG・組立契約を凍結した。corpus SHA256は`81426b78ce8bf0bcb9b32e98e5ba10651119ab4d79453424e5268ee4663f65da`。runtime templateは導入後G2で凍結しhash追加。日本語自由説明とcode修正（期待unit tests付き）各1問を2K/8Kで用意。ASCII固定fillerに位置別の日本語key/valueを埋め、先頭/中間/末尾needleを事前正答と照合。長さを文字数でtokensと呼ばない。2K/8Kは目標、**template後実prompt tokens、cached/prefilled tokens、生成reasoning/content tokens**を各runtimeで記録。tokenizer差があれば両方の長さを載せる。
 - リクエスト本体とtemplate bytesのhashを保存。同じtextでもtemplateが違えば別条件。unsupported fieldはエラー/N/Aとし、黙って削除しない。最初のgreedy比較: temperature0/seed42/top_p1/top_k0/min_p0/presence0/repetition1、256生成上限。EOSで短く終わったものを256生成として割らない。
 - thinking OFF/ONを別行、ONの互換検査はlow、品質枠はxhigh＋最大1024（別承認）。Kyojin独自mediumは除外。公式sampling品質枠はOFF temp0.7/top_p0.8/top_k20/presence1.5、ON temp1/top_p0.95/top_k20/presence0、共通min_p0/repetition1。greedy速度順位とsampling品質順位を混ぜない。
@@ -266,18 +244,18 @@ hostで1秒間隔のMemAvailable/swap、対象cgroup memory.current/peak、proce
 
 既存smoke4件は日本語/thinking/toolの限定PASS、各1回でTTFT/peak未測定。候補の性能比較は未実施。旧外部記事の5〜7倍は別backend/重み/深度であり所要時間の根拠にしない。
 
-1候補の短文枠: stop/解放確認2〜5分、load/ready **1〜10分**（Kyojin配布元cold7〜8分/warm90秒、Gufo16秒、現行25秒は未追試の参考値にすぎない）、48計測＋最大16warmup/primeを各10〜30秒と仮置きして11〜32分、機能gate5〜15分、停止/現行cold復帰・smoke3〜10分。合計**22〜72分、予約60〜120分/候補**を提案。初回JITが10〜30分超なら枠を分けて復帰し延長承認を求める。DL/buildは停止前に済ませ、停止枠へ混ぜない。
+1候補の短文枠: stop/解放確認2〜5分、load/ready **1〜10分**（Kyojin配布元cold7〜8分/warm90秒、現行25秒は未追試の参考値にすぎない）、48計測＋最大16warmup/primeを各10〜30秒と仮置きして11〜32分、機能gate5〜15分、停止/現行cold復帰・smoke3〜10分。合計**22〜72分、予約60〜120分/候補**を提案。初回JITが10〜30分超なら枠を分けて復帰し延長承認を求める。DL/buildは停止前に済ませ、停止枠へ混ぜない。
 
 長文は別枠。32K/128Kそれぞれprose/code・cold/warm・3回=12requests/長さ。1requestの概算はinput_tokens/prefill_rate＋output_tokens/decode_rate。32Kを200〜1500 tok/s、decode20〜60 tok/sと仮置きすると256生成で約26〜177秒/回、12回で約5〜36分＋prime。128Kは150〜1500 tok/sなら約92〜887秒/回、約18〜178分＋prime/load/復帰。**32Kは60〜90分、128Kは60〜240分**を別予約する。これは予測であり速さの採用根拠ではない。32K実測から128Kの予算/timeoutを再承認し、2並列・AR追加は別枠とする。
 
-最初の実施単位は「導入する候補の選択 → G0/G1とlock確定 → KyojinとGufoの短文品質/速度、Gufo同pack対照」で、現行tiny smokeだけの再反復ではない。最新halo/upstream/Halogenは同GGUF対照として続ける。採用判断は同条件速度・必須機能・品質・メモリ余白・保守/ライセンスを合わせて行う。
+最初の実施単位は「導入する候補の選択 → G0/G1とlock確定 → Kyojinの短文品質/速度」で、現行tiny smokeだけの再反復ではない。最新halo/upstream/Halogenは同GGUF対照として続ける。採用判断は同条件速度・必須機能・品質・メモリ余白・保守/ライセンスを合わせて行う。
 
 ## 出典と検証境界
 
 公開取得日は2026-10-22。HF固定API: `https://huggingface.co/api/models/<repo>/revision/<revision>?blobs=true`（repo/revisionはassets JSON）。sha256は公開LFS metadataでありlocal検証済みhashではない。OCIは`https://ghcr.io/v2/<repository>/manifests/<digest>`とconfig metadataのみ取得、registry bearer tokenは保存しない。
 
 - [Kyojin install](https://github.com/Yamz-Labs/kyojin/blob/e09322da7209331c57e2a79cfc30d120f0299154/doc/install.md)、[SERVE](https://github.com/Yamz-Labs/kyojin/blob/e09322da7209331c57e2a79cfc30d120f0299154/tools/qwen/SERVE.md)、[モデルカード](https://huggingface.co/yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz/blob/247ef39b06ff0b0fcba76026429e191b44e0e1f8/README.md)
-- [Gufo image版モデル資料](https://github.com/gufo-org/gufo/blob/7110c7954ebc85d4a4d96aa0643b102615adca27/docs/models/qwen3.8-flash-next/README.md)、[旧調査点README](https://github.com/gufo-org/gufo/blob/3aa068b419e6272482298c1c6daccafb122764fa/README.md)
+- 調査履歴のみ（deferred）: [Gufo image版モデル資料](https://github.com/gufo-org/gufo/blob/7110c7954ebc85d4a4d96aa0643b102615adca27/docs/models/qwen3.8-flash-next/README.md)、[旧調査点README](https://github.com/gufo-org/gufo/blob/3aa068b419e6272482298c1c6daccafb122764fa/README.md)
 - [Halogen GGUF](https://github.com/peonist-ai/halogen-flash-server/blob/e601b84d88dd1ff0185a06daa9778254ceca4492/docs/gguf.md)、[configuration](https://github.com/peonist-ai/halogen-flash-server/blob/e601b84d88dd1ff0185a06daa9778254ceca4492/docs/configuration.md)、[LICENSE](https://github.com/peonist-ai/halogen-flash-server/blob/e601b84d88dd1ff0185a06daa9778254ceca4492/LICENSE.md)
 - [Qwen公式カード](https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/de4b8e4d43b917e7706784d8bb445c9af86a3540/README.md)（sampling/license、取得時revision）、[halo-box固定README](https://github.com/halo-box/strix-llama.cpp/blob/da731374077f2ad9bdffd4848f782b5694b9bb68/README.md)
 - [Wiki比較 PR117](https://github.com/yuanying/llm-wiki/pull/117)、[既存smoke PR156](https://github.com/yuanying/dotfiles/pull/156) は未マージの読み取り参照。本PRはREADME/運用設定/既存smoke実装を変更しない。
