@@ -27,6 +27,12 @@ and `render` GIDs. Where it is published is not in this repository: the
 `qwen38` entry in `~/.config/devbox-proxy/services.local.yaml`
 (`docs/adr/0009`) forwards to `llama-server:8082`.
 
+The memory-safe Qwen baseline, offline smoke fixtures, approved inference checks
+and service-scoped rollback procedure are in
+[`llama-server/VALIDATION.md`](llama-server/VALIDATION.md). The validation tool
+never sends requests itself; running inference or changing the service requires
+an approved maintenance/measurement window.
+
 The images hold only runtimes and toolchains. The source, the venvs and the
 languages they were built with are the ones under `$HOME`, mounted at the same
 path as in the devbox, and the containers run as the devbox user (UID 501,
