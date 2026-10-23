@@ -20,9 +20,11 @@ On anietta:
 |---|---|---|---|
 | `llama-server` | 8082 | `~/opt/kyojin/src` (Kyojin, with `~/opt/kyojin/venv`) | `docker restart llama-server` after a rebuild |
 
-It serves Qwen3.8-Flash-Next as `qwen3.8-flash-next`, from the EXL3 pack in
-`~/models/qwen3.8-flash-next-exl3-yamz-247ef39b`
-(`yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz`, revision `247ef39b`), with Kyojin
+It serves Qwen3.8-Flash-Next as `qwen3.8-flash-next`, from the abliterated
+EXL3 pack in `~/models/qwen3.8-flash-next-exl3-uncensored-lygo-4bpw-9c715c0b`
+(`Lygodactylus/Qwen3.8-Flash-Next-Uncensored-exl3-4bpw`, revision `9c715c0b`,
+4.05 bpw, quantized from `orcarouter/Qwen3.8-Flash-Next-Uncensored`, the
+source of the IQ4_XS llama.cpp served), with Kyojin
 (`github.com/Yamz-Labs/kyojin`), Yamz Labs' engine built on ExLlamaV3 for
 Strix Halo. The checkout is at `e09322da`;
 its extension (`exllamav3_ext.*.so`) is built in the devbox, and the venv
@@ -36,8 +38,8 @@ change.
 
 The settings are the ones it was measured with: 256K of context in one pool
 of KV pages that two sessions share, an fp16 cache, MTP and n-gram drafting,
-the pack's uncensor preset (a projection applied as the model runs, not the
-abliterated IQ4_XS llama.cpp served), and the n-gram embedding table read
+no runtime uncensor preset (`EXL3_ABLIT_RUNTIME=off`: the weights are
+abliterated already), and the n-gram embedding table read
 from its file rather than held in RAM. Thinking is on unless a request turns
 it off with `chat_template_kwargs.enable_thinking: false` (or
 `reasoning_effort: "none"`), at the template's default effort, `xhigh`. A
@@ -59,9 +61,26 @@ What it does have: `/health` (503 with the load progress until it is ready),
 `/tokenize`, `/apply-template` and `/slots`.
 
 A start takes about a minute when the weights are in the page cache, most
-of it reading them, and longer from a cold disk. When it is up, `docker logs llama-server` shows the preset as
-`ablit runtime: spec …/uncensor_spec.json active` and the table as
-`[ngram] table mode trellis_disk`.
+of it reading them, and longer from a cold disk. When it is up, `docker logs llama-server` shows the table as
+`[ngram] table mode trellis_disk`, and no `ablit runtime: spec` line. The pack
+has no `draft2s.st` or `hc_gs_sidecar.safetensors`, so the log also says
+`draft head: full head` and `group scales, plain rounding`; that is expected.
+
+### Going back to the Yamz pack
+
+The Yamz pack with its runtime uncensor preset is kept in
+`~/models/qwen3.8-flash-next-exl3-yamz-247ef39b`, served by the same image.
+Its compose definition is the one in `7fa0b00`, the commit before this pack.
+To run it again without touching the checkout:
+
+```bash
+git -C ~/dotfiles show 7fa0b00:devbox/apps/compose.anietta.yaml |
+    docker compose -f - --project-directory ~/dotfiles/devbox/apps up -d --no-build llama-server
+```
+
+The log then shows `ablit runtime: spec …/uncensor_spec.json active`. To keep
+it that way, revert the change that brought this pack in, through a pull
+request.
 
 ### Going back to llama.cpp
 
@@ -114,7 +133,7 @@ which runs in the devbox, forwards to them, and `SDCTL_URL` in
   the devbox's `--gpus all`.
 - On anietta, Kyojin is in `~/opt/kyojin` (the checkout with its extension
   built, and the venv) and the pack in
-  `~/models/qwen3.8-flash-next-exl3-yamz-247ef39b`, and
+  `~/models/qwen3.8-flash-next-exl3-uncensored-lygo-4bpw-9c715c0b`, and
   `~/.cache/kyojin/slots` exists for `--slot-save-path`, which does not make
   it.
 
