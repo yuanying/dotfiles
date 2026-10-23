@@ -1,0 +1,51 @@
+{
+  "scope": "bounded read-only diagnosis; no CPU/service/build operations",
+  "archived_diagnostic_script_sha256": "6dc9f4bde0a3478a46ca9ee2383345849d76a388986f4bf453d1ce981e60163e",
+  "completed_reads": 9,
+  "cycles": 3,
+  "variants": ["default", "C_locale_color_never_force_prefix", "raw"],
+  "sample_span_seconds_approximate": 2.1,
+  "default_and_C_locale": {
+    "all_stdout_bytes": 262132,
+    "all_stdout_sha256": "196b81a99d4c0d0513afab09f883d14ae2493ad0e35f139d35d5fd644dc47b05",
+    "line_count": 1241
+  },
+  "raw": {
+    "all_stdout_bytes": 265855,
+    "all_stdout_sha256": "a82138b739ab05c2e43e4272675a1b9509898882766e125fc803928731869ae7",
+    "line_count": 1241
+  },
+  "all_reads": {
+    "first_timestamp": 3420528.451499,
+    "last_timestamp": 3429918.156942,
+    "last_line_trailing_spaces": 1,
+    "unparsed_line_count": 0,
+    "ANSI_escape_count": 0,
+    "tail_continuation": false,
+    "same_variant_previous_exact_overlap": 1241,
+    "same_variant_previous_canonical_overlap": 1241,
+    "previous_timestamp_range_records": 1241,
+    "previous_whole_output_stripped_tail_in_current_raw_lines": false,
+    "previous_tail_present_after_consistent_rstrip": true,
+    "same_timestamp_alternative_text_count": 1,
+    "new_fault_count": 0
+  },
+  "mechanism": "whole-output strip removes trailing space only from the final line; after an append the previous final line becomes interior and keeps its trailing space, producing a false exact-tail mismatch",
+  "synthetic_complete_history_append": {"old_implementation_coverage_lost": true, "old_implementation_new_lines": 2, "old_implementation_faults": []},
+  "synthetic_appended_GPU_reset": {"old_implementation_fault_count": 1},
+  "actual_bg5_cause_proven": false,
+  "global_fault_absence_proven": false,
+  "initial_diagnostic_option_failure": {
+    "reason": "--color and --raw are mutually exclusive",
+    "exit_code": 1,
+    "preceding_two_reads_saved": false,
+    "effect_on_CPU_service_build": "none",
+    "corrected_diagnostic_persists_each_read": true
+  },
+  "private_evidence_sha256": {
+    "metadata.json": "843a2315adc8c3eb21c7d16fc3245f3156d40dc2ec054ae2f17c663be8582eec",
+    "bounded-private-tail-details.json": "cfff75a6e48c61f7f6cd9bf7865ebd9efd4d177a285786d167d224af90169712",
+    "summary.json": "1a99660a53878297dd8b38b676775afa2d0168f4c85dc56fc9bdc18e413ac937",
+    "synthetic-proof.json": "fe2f33c7375280da264cdd69e9a3af733d13053bcf29e6e8bf60ec5ec29c65fd"
+  }
+}
