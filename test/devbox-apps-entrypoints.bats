@@ -277,3 +277,15 @@ EOF2
         grep -qE "^ *${d} +${BATS_TEST_TMPDIR}/" "${STUB_DIR}/nginx.conf" || { echo "${d}"; return 1; }
     done
 }
+
+# --- lora-datasets ---------------------------------------------------------
+
+@test "lora-datasets runs the UI from the checkout on every interface on 8765" {
+    stub uv <<'EOF2'
+#!/bin/bash
+echo "${PWD} $*" > "${STUB_DIR}/uv.args"
+EOF2
+    run "${APPS}/lora-datasets/entrypoint.sh"
+    [ "${status}" -eq 0 ]
+    [ "$(cat "${STUB_DIR}/uv.args")" = "${WORK} run --frozen lora-datasets ui --host 0.0.0.0 --port 8765" ]
+}

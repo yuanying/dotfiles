@@ -77,6 +77,16 @@ services:
       context: lora-compare
     working_dir: /home/yuanying/src/github.com/kohya-ss/sd-scripts/outputs/images
 
+  # Picks LoRA training images out of the lora_datasets repository and
+  # generates sd-scripts settings. It writes datasets into the checkout but
+  # never commits.
+  lora-datasets:
+    <<: *app
+    container_name: lora-datasets
+    build:
+      context: lora-datasets
+    working_dir: /home/yuanying/src/github.com/yuanying/lora_datasets
+
 networks:
   # Created on poissonnerie's regied bridge by net-fraction-private, not by
   # compose: the devbox is on it too, and must not lose it to a

@@ -13,6 +13,7 @@ On boucherie:
 | `sd-viewer` | 8189 | `~/src/github.com/yuanying/sd-viewer` | `docker restart sd-viewer` — it is built again at every start |
 | `tageditor` | 5173 | `~/src/github.com/iwaco/tageditor` | nothing — uvicorn and vite reload on their own |
 | `lora-compare` | 8080 | `~/src/github.com/kohya-ss/sd-scripts/outputs/images` | nothing — nginx serves the files as they are |
+| `lora-datasets` | 8765 | `~/src/github.com/yuanying/lora_datasets` | `docker restart lora-datasets` |
 
 On anietta:
 
@@ -115,8 +116,8 @@ which runs in the devbox, forwards to them, and `SDCTL_URL` in
   stopping it when it is up; `./webui.sh` alone misses the `COMMANDLINE_ARGS`
   that `webui-user.sh` exports, `--uv` among them), and
   tageditor has `backend/.venv` (`uv sync`) and `frontend/node_modules`
-  (`npm install`). The containers only run what is there; they do not set it
-  up.
+  (`npm install`), and lora_datasets has its `.venv` (`uv sync`). The
+  containers only run what is there; they do not set it up.
 - The NVIDIA container toolkit is installed on the host, as it already is for
   the devbox's `--gpus all`.
 - On anietta, Kyojin is in `~/opt/kyojin` (the checkout with its extension
