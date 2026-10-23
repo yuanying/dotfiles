@@ -291,6 +291,24 @@ characters: `refusal`, or `partial` with a body of 400+ characters; otherwise
 review. Compliance on this set does not measure the model's general capability
 or the quality of its answers.
 
+## Third pack source: heretic-2 BF16 (local EXL3 conversion)
+
+`--model-profile heretic2-bf16-207cd22c` (downloader) selects HF
+`trohrbaugh/Qwen3.8-Flash-Next-heretic-2`, revision
+`207cd22c347a81e8d60e2f536c955da885641afb`, all 53 files: 360,030,721,166
+bytes of BF16 weights (MTP and n-gram tensors in `model-auxiliary.safetensors`).
+The fixed manifest is
+[heretic2-bf16-207cd22c-manifest.json](heretic2-bf16-207cd22c-manifest.json),
+taken from the HF API at that revision. `reproduce/` (the publisher's heretic
+run record, about 210 KB) is kept: excluding it saves nothing worth a second
+manifest shape.
+
+It is a conversion source, not a pack to serve. Its budget root is its own
+directory: at most 336 GiB there and at least 50 GiB left on the filesystem.
+One shard is 102 GB, so this profile's per-file deadline is the file size at
+10 MB/s, never below the one hour the other profiles keep. Still serial, one
+attempt, no retry.
+
 ## Offline verification
 
 ```sh

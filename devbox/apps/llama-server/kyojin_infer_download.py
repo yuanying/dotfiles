@@ -19,9 +19,9 @@ import urllib.request
 GIB = 1024**3
 
 
-def profile(repo, revision, total, files, exclude, used_limit, free_after):
+def profile(repo, revision, total, files, exclude, used_limit, free_after, min_rate=None):
     return dict(repo=repo,revision=revision,total=total,files=files,exclude=exclude,used_limit=used_limit,free_after=free_after,
-                base='https://huggingface.co/'+repo+'/resolve/'+revision+'/')
+                min_rate=min_rate,base='https://huggingface.co/'+repo+'/resolve/'+revision+'/')
 
 
 # Fixed revisions only; a profile is never resolved from a branch name.
@@ -32,6 +32,10 @@ MODELS = {
     # Its own directory as the budget root, and >=400 GB left on the filesystem after acquisition.
     'lygo-4bpw-9c715c0b': profile('Lygodactylus/Qwen3.8-Flash-Next-Uncensored-exl3-4bpw','9c715c0b1a745b7db1c335347e8d45595b3cad3a',
                                   109123025060,24,(),103*GIB,400*10**9),
+    # BF16 conversion source (one 102 GB shard). Its own directory as the budget
+    # root, >=50 GiB left on the filesystem; per-file deadline at >=10 MB/s.
+    'heretic2-bf16-207cd22c': profile('trohrbaugh/Qwen3.8-Flash-Next-heretic-2','207cd22c347a81e8d60e2f536c955da885641afb',
+                                      360030721166,53,(),336*GIB,50*GIB,10*10**6),
 }
 DEFAULT = MODELS['yamz-247ef39b']
 REV = DEFAULT['revision']
@@ -81,7 +85,11 @@ def disk_gate(remaining, used, free, model=DEFAULT):
     require(used+remaining<=model['used_limit'] and free-remaining>=model['free_after'])
 
 
-def acquire(row, root, open_url, base=BASE):
+def file_deadline(size, model=DEFAULT):
+    return 3600 if not model['min_rate'] else max(3600,size/model['min_rate'])
+
+
+def acquire(row, root, open_url, base=BASE, deadline=3600):
     rel=relative(row['rfilename']); root=root.resolve(); dest=root.joinpath(*rel.parts)
     require(dest.parent.resolve().is_relative_to(root))
     dest.parent.mkdir(parents=True,exist_ok=True)
@@ -96,7 +104,7 @@ def acquire(row, root, open_url, base=BASE):
             require(response.headers.get('Content-Encoding','identity')=='identity')
             safe_url(response.geturl()); require(response.status==200)
         while True:
-            require(time.monotonic()-start<3600)
+            require(time.monotonic()-start<deadline)
             data=response.read(min(1024**2,row['size']-count+1))
             if not data: break
             count+=len(data); require(count<=row['size'])
@@ -176,7 +184,7 @@ def main():
             def fetch(url):
                 safe_url(url)
                 return opener.open(urllib.request.Request(url,headers={'Accept-Encoding':'identity'}),timeout=180)
-            item=acquire(row,a.destination,fetch,model['base'])
+            item=acquire(row,a.destination,fetch,model['base'],file_deadline(row['size'],model))
             item['redirect_hosts']=redirect.hosts
             result['files'].append(item)
             report.write_text(json.dumps(result,indent=2)+'\n')
