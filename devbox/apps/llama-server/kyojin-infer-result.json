@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "observed": "2026-10-23",
+  "scope": "Single isolated candidate on Evo-X2 (gfx1151). Not a production switch. Retained llama-server stayed STOPPED; no same-condition baseline was measured.",
+  "engine": "e09322da7209331c57e2a79cfc30d120f0299154",
+  "extension": {"bytes": 136685256, "sha256": "52369c1e5b2d3dbb2f144b230c7a32e448cb8dccf6c998f60767f6690b19d984", "unchanged_after_runs": true},
+  "model": {
+    "repo": "yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz",
+    "revision": "247ef39b06ff0b0fcba76026429e191b44e0e1f8",
+    "files": 32,
+    "bytes": 95370160976,
+    "verification": "every file: publisher LFS SHA256 or Git blob SHA1; uncensor-preset/uncensor-think SHA256SUMS match",
+    "redirect_hosts": ["huggingface.co", "us.aws.cdn.hf.co"],
+    "acquisition_attempts": [
+      {"result": "stopped", "reason": "redirect host us.aws.cdn.hf.co not yet allowed", "verified_files": 5, "verified_bytes": 102844, "large_body_bytes": 0},
+      {"result": "stopped", "reason": "socket read timeout (180 s without data) during model-00004", "verified_files": 12, "verified_bytes": 24898520040, "unverified_partial_bytes_set_aside": 1267728384},
+      {"result": "verified", "fetched_files": 20, "seconds": 3336}
+    ]
+  },
+  "preset": {
+    "env": "EXL3_ABLIT_RUNTIME=<model>/uncensor-preset/uncensor_spec.json",
+    "spec_sha256": "06e40a4130a6c253eb8964208e221c53d1d9a9627d7e05c2d51f7d1815e02ab0",
+    "proof": "engine log ' -- ablit runtime: spec <path> active (from EXL3_ABLIT_RUNTIME)' required before any request",
+    "note": "Runtime projection; weights unchanged. Different method and output distribution from the abliterated IQ4_XS GGUF. Preset OFF control not measured."
+  },
+  "runs": [
+    {
+      "id": "bg5",
+      "config": {"ctx": 32768, "sessions": 1, "cache_bits": 0, "draft_policy": "mix", "ngram": "trellis_ram (engine auto)"},
+      "outcome": "stopped by original guard: swap growth 688 MiB > 512 MiB at 723 s while available was 25 GB",
+      "requests_sent": 54, "load_seconds": 522.8,
+      "memory": {"available_min_bytes": 25114165248, "gtt_peak_gib": 68.1, "server_rss_peak_gib": 30.9},
+      "temperature_max_c": 98.375, "temperature_95c_max_consecutive_samples": 6
+    },
+    {
+      "id": "bg7",
+      "config": {"ctx": 131072, "sessions": 1, "cache_bits": 0, "ngram": "trellis_ram (engine auto)"},
+      "outcome": "deliberately stopped (STOP file) after a scope change; 2 short requests",
+      "load_seconds": 70.1,
+      "memory": {"available_min_gib": 21.8, "load_swap_peak_gib": 4.15, "server_read_back_before_ready": true}
+    },
+    {
+      "id": "bg8",
+      "config": {"ctx": 262144, "sessions": 2, "cache_bits": 0, "ngram": "trellis_ram (engine auto)"},
+      "outcome": "stopped by long-profile guard: swap used > 6 GiB 46 s into the cold-page-cache weight load (before KV allocation)",
+      "requests_sent": 0,
+      "memory": {"swap_gib": [0.58, 6.68], "pswpout_pages": 1621807, "pswpin_pages": 25894, "available_at_stop_gib": 32.3, "server_rss_gib": [28.5, 22.7]}
+    },
+    {
+      "id": "bg10",
+      "config": {"ctx": 262144, "sessions": 2, "cache_bits": 0, "draft_policy": "mix", "ngram": "trellis_disk (EXL3_NGRAM_STREAM=1, engine log verified)", "default_effort": "xhigh", "request_effort": "low/none", "sampling": "greedy temperature0 seed42"},
+      "outcome": "completed; guard exit 0; 147 requests / 37,632 reserved completion tokens; candidate lifetime 3,017 s including a 2,400 s-budget soak (15 cycles)",
+      "load_seconds": 41.8,
+      "memory": {
+        "load": {"available_min_gib": 41.42, "swap_gib": 0.56, "pswpin_pages": 18, "pswpout_pages": 7, "server_rss_max_gib": 5.1, "gtt_max_gib": 75.6},
+        "steady": {"available_min_gib": 38.81, "available_median_gib": 40.2, "swap_gib": 0.56, "server_rss_max_gib": 7.6, "gtt_max_gib": 76.2},
+        "whole_run": {"pswpin_pages": 3976, "pswpout_pages": 7, "pswpin_rate_max_pages_per_s": 2657, "pswpin_over_1000_samples": 1},
+        "note": "UMA indicators are separate, not additive. The page cache holding the n-gram table is reclaimable and counted as available."
+      },
+      "io": {
+        "server_read_bytes_total": 69802819584,
+        "server_read_bytes_after_ready": 42949673,
+        "server_read_syscalls_after_ready": 1089224,
+        "server_write_bytes_after_ready": 1531904,
+        "dm0_read_gib": 65.3, "dm0_reads": 458513, "dm0_avg_read_iops": 152,
+        "note": "After READY n-gram row preads were served almost entirely from the page cache. dm-0 counters cover the whole device."
+      },
+      "temperature": {"load_max_c": 87.25, "steady_max_c": 84.0, "steady_median_c": 73.375, "samples_at_or_above_90c": 0},
+      "monitoring": {"samples": 2724, "max_gap_seconds": 1.14, "kernel_new_faults": 0, "kernel_coverage_lost": false, "cgroup_oom": 0},
+      "cleanup": {"children_gone": true, "cpu_unchanged": true, "baseline": "exited, restart 0", "release_available_bytes": 131554832384, "release_gtt_bytes": 18628608}
+    }
+  ],
+  "speed_bg10": {
+    "unit": "server timings median [min-max]; TTFT is client first content delta; tokens are actual post-template counts",
+    "8K_prose_cold": {"tokens": 5984, "prefill_tps": 1396.6, "decode_tps": 50.5, "accept": 0.64, "ttft_s": 4.46, "ram_mode_bg5": {"prefill_tps": 1348.6, "decode_tps": 46.2, "ttft_s": 4.66}},
+    "8K_code_cold": {"tokens": 6010, "prefill_tps": 1390.9, "decode_tps": 71.0, "accept": 0.86, "ttft_s": 4.45, "ram_mode_bg5": {"prefill_tps": 1361.6, "decode_tps": 67.4, "ttft_s": 4.58}},
+    "32K_prose_cold": {"tokens": 31974, "prefill_tps": 1435.9, "decode_tps": 51.6, "ttft_s": 22.44},
+    "32K_prose_warm": {"cache_n": [31973, 31744], "decode_tps": 53.5, "ttft_s": [0.11, 0.85]},
+    "32K_code_cold": {"tokens": 32000, "prefill_tps": 1432.0, "decode_tps": 63.1, "ttft_s": 22.53},
+    "128K_prose_cold": {"tokens": 127976, "prefill_tps": 1405.5, "decode_tps": 45.2, "accept": 0.62, "ttft_s": 91.33},
+    "128K_prose_warm": {"cache_n": [127975, 127744], "decode_tps": 45.5, "ttft_s": [0.11, 0.54]},
+    "128K_code_cold": {"tokens": 127956, "prefill_tps": 1404.6, "decode_tps": 64.0, "ttft_s": 91.52},
+    "comparison_note": "bg5 used ctx32768/sessions1/RAM n-gram; bg10 ctx262144/sessions2/disk n-gram. Same frozen prompts and request bodies. Disk mode was not slower here because the table pages were cached."
+  },
+  "quality_bg10": {
+    "gates": {"japanese": "correct (manual review)", "math_thinking_off": "pass", "math_thinking_on": "strict-grammar fail; content '17 × 19 = 17 × (20 − 1) = 340 − 17 = **323**' is correct", "auto_tool": "pass", "tool_heavy_3turn": "pass (lookup_stock, lookup_price, 2,100 yen)", "vision_red_solid": "pass"},
+    "needle": "records A (first line, deepest), B, C quoted in order in every 8K/32K/128K prose reply",
+    "code": "AST-matched expected fix in every code reply; never executed",
+    "explanations": "sea-breeze explanations correct on manual review",
+    "soak": {"cycles": 15, "requests": 120, "pass": 82, "needs_semantic_review_all_correct": 38, "fail": 0, "measurement_errors": 0},
+    "cache_note": "One of five 128K prose replies differed: the warm request restored 127,744 cached tokens (page boundary) and its greedy text changed; cold runs and the full-hit warm run matched. Consistent with the engine's documented cache-restore divergence.",
+    "not_measured": ["preset OFF control", "two concurrent sessions", "256K-token input", "same-condition current baseline", "general capability / uncensored efficacy beyond normal synthetic tasks"]
+  },
+  "ctx131072_estimate": "KV about 27.4 KB/token fp16: ctx131072 saves about 3.3 GiB versus ctx262144, so steady available would be about 42 GiB under the same disk n-gram setup (estimate, not measured)."
+}
