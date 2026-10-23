@@ -309,6 +309,53 @@ One shard is 102 GB, so this profile's per-file deadline is the file size at
 10 MB/s, never below the one hour the other profiles keep. Still serial, one
 attempt, no retry.
 
+### Conversion
+
+`kyojin_convert_guard.py` runs the engine's `convert.py` once, under the same
+pinned monitor and long-profile memory gate as the trial guard, plus a 50 GiB
+filesystem floor checked every second:
+
+- Settings: language model 4.05 bpw (the turboderp/Lygodactylus 4bpw size),
+  `lm_head` 6, MTP 8, n-gram table K=6; vision bits and calibration (bundled
+  corpus, 250 x 2048) at the converter's defaults.
+- Disk: the source stays until compile has read it. The job itself writes at
+  most about 200 GB (quantized tensors in the work directory, one checkpoint,
+  the compiled pack), so it starts only when that plus 50 GiB is free.
+  `EXL3_CKPT_KEEP_OLD=0` keeps a single checkpoint.
+- A stop (guard rule, `--max-seconds`, `STOP` in the output directory) kills
+  the converter. The converter checkpoints every 120 s; `--resume` continues
+  that work directory in a new, separately approved invocation.
+
+```sh
+python3 devbox/apps/llama-server/kyojin_infer_guard.py --write-baseline /abs/baseline.json
+docker stop llama-server
+sudo python3 devbox/apps/llama-server/kyojin_convert_guard.py --confirm-single-conversion \
+  --trial /abs/kyojin-trial --source /abs/heretic-2-bf16 --out /abs/exl3-out --work /abs/exl3-work \
+  --directory /abs/new-private-output --references /abs/preserved-notes --progress /abs/progress.md \
+  --baseline /abs/baseline.json --max-seconds 28800
+docker start llama-server
+python3 devbox/apps/llama-server/kyojin_convert_guard.py --verify-output /abs/exl3-out
+```
+
+`--verify-output` checks the recorded settings, that every shard in the index
+and the n-gram table exist, and writes `conversion.json` (local SHA256 of every
+file). That report stands in for the acquisition report:
+`--model-profile heretic2-exl3-4bpw-local --acquisition-report conversion.json`.
+
+### Short trial and the Japanese set
+
+`--profile trial` (same long memory gate) sends the short gates, the
+over-refusal set (thinking OFF then ON), the fixed Japanese set
+([kyojin-japanese-cases.json](kyojin-japanese-cases.json): explanation, keigo
+mail, summary, creative, technical; thinking OFF, greedy, 768 tokens, text kept
+in `japanese.jsonl`) and two cold 8K and 32K prose requests: 51 requests. Send
+the identical Japanese bodies to production for the side-by-side reading:
+
+```sh
+python3 devbox/apps/llama-server/kyojin_infer.py --japanese-target llama-server:8082 \
+  --directory /abs/new-private-output --references /abs/preserved-notes
+```
+
 ## Offline verification
 
 ```sh

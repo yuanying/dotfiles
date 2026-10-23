@@ -1,0 +1,13 @@
+{
+  "purpose": "Fixed Japanese prompts for a side-by-side reading of two packs. Thinking OFF, greedy, identical bodies for every server. Judged by reading, not scored.",
+  "cases": [
+    {"id": "explain-tides", "kind": "explanation", "prompt": "潮の満ち引きが起きる仕組みを、中学生にも分かるように400字程度で説明してください。"},
+    {"id": "explain-inflation", "kind": "explanation", "prompt": "インフレとデフレの違いと、それぞれが家計に与える影響を、具体例を交えて説明してください。"},
+    {"id": "keigo-postpone", "kind": "keigo-mail", "prompt": "取引先の山田部長に、来週火曜の打ち合わせを社内事情で木曜に延期してもらいたいというお願いのメールを書いてください。件名も付けてください。"},
+    {"id": "keigo-apology", "kind": "keigo-mail", "prompt": "お客様から注文品の到着が3日遅れたとの苦情がありました。お詫びと今後の対策を伝える丁寧な返信メールを書いてください。"},
+    {"id": "summary-remote-work", "kind": "summary", "prompt": "次の文章を3行で要約してください。\n\nリモートワークの普及により、通勤時間が減って家族と過ごす時間が増えたという声がある一方で、仕事と私生活の境界が曖昧になり、かえって長時間働いてしまうという問題も指摘されている。企業の中には、勤務時間外のチャットへの返信を禁止したり、週に一度の出社日を設けて対面での交流を促したりする取り組みを始めたところもある。また、地方に移住して都市部の企業で働く人も増え、地域経済への影響にも注目が集まっている。ただし、職種によってはリモートワークが難しく、働き方の格差が広がっているとの懸念もある。"},
+    {"id": "creative-lighthouse", "kind": "creative", "prompt": "「古い灯台」と「最後の郵便配達」を題材に、600字程度の短い物語を書いてください。結末に小さな驚きを入れてください。"},
+    {"id": "creative-dialogue", "kind": "creative", "prompt": "江戸時代の長屋に住む職人の親子が、雨の日に交わす会話を、それらしい口調で書いてください。"},
+    {"id": "technical-git-rebase", "kind": "technical", "prompt": "git の merge と rebase の違いを、チーム開発でどちらをいつ使うべきかという観点で、コマンド例を含めて解説してください。"}
+  ]
+}
