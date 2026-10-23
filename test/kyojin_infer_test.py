@@ -247,5 +247,16 @@ class ModelProfile(unittest.TestCase):
         self.assertEqual(self.g.baseline_state(['c1','sha256:i',state,0,'/usr/local/bin/entrypoint.sh',['--x']],saved),dict(status='exited',pid=0,restarts=0,oom=False))
         for drift in (['c2','sha256:i',state,0,'/usr/local/bin/entrypoint.sh',['--x']],['c1','sha256:j',state,0,'/usr/local/bin/entrypoint.sh',['--x']],['c1','sha256:i',state,0,'/usr/local/bin/entrypoint.sh',['--y']],['c1','sha256:i',dict(state,OOMKilled=True),0,'/usr/local/bin/entrypoint.sh',['--x']]):
             with self.assertRaises(ValueError):self.g.baseline_state(drift,saved)
+    def test_baseline_reader_binds_as_method(self):
+        saved=dict(id='c1',image='sha256:i',path='/e',args=['--x'])
+        with tempfile.TemporaryDirectory() as t:
+            f=Path(t)/'b.json';f.write_text(json.dumps(saved))
+            calls=[]
+            def output(cmd):
+                calls.append(cmd);return ' '.join(json.dumps(v) for v in ('c1','sha256:i',dict(Status='exited',Pid=0,OOMKilled=False),0,'/e',['--x']))
+            class Run:
+                state=self.g.baseline_reader(f,output)
+            self.assertEqual(Run().state()['status'],'exited')
+        self.assertEqual(calls[0][-1],'c1')
 
 if __name__=='__main__':unittest.main()

@@ -128,6 +128,14 @@ def baseline_state(parts,saved):
     return dict(status=state['Status'],pid=state['Pid'],restarts=restarts,oom=state['OOMKilled'])
 
 
+def baseline_reader(path,output):
+    # A closure: names in a class body are not visible inside its methods.
+    saved=json.loads(path.read_text())
+    def state(self):
+        return baseline_state(inspect_parts(output(['docker','inspect','--format',INSPECT,saved['id']])),saved)
+    return state
+
+
 def write_baseline(name,out):
     ident,image,state,restarts,path,args=inspect_parts(subprocess.check_output(['docker','inspect','--format',INSPECT,name],text=True,timeout=10).strip())
     infer.require(state['Status']=='running','baseline_not_running')
@@ -268,10 +276,7 @@ def monitor(a):
                 self.log('sample_read_error',check_stage=stage,source='pinned_guard.sample',error_type=type(e).__name__,errno=getattr(e,'errno',None));raise
             self.log('sample_observed',check_stage=stage,sample=cap.bounded_sample(row),rss_pid=pid)
             return row
-        if a.baseline:
-            saved=json.loads(a.baseline.read_text())
-            def state(self):
-                return baseline_state(inspect_parts(cap.output(['docker','inspect','--format',INSPECT,saved['id']])),saved)
+        if a.baseline:state=baseline_reader(a.baseline,cap.output)
         def preflight(self):
             infer.require(self.state()['status']=='exited' and self.state()['restarts']==0,'baseline_not_stopped')
             infer.require(self.initial['available']>=100*1024**3,'load_memory_gate')
