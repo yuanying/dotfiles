@@ -116,6 +116,74 @@ model.gguf
     [[ ${output} == *LLAMA_SERVER* ]]
 }
 
+# --- kyojin ----------------------------------------------------------------
+
+# A Kyojin checkout as the entrypoint expects to find it: the strix_halo env.sh,
+# which records what it was sourced with, the built extension, and a venv whose
+# python records how it was started.
+kyojin_checkout() {
+    mkdir -p tools/strix_halo venv/bin sdk
+    cat > tools/strix_halo/env.sh <<'SH'
+printf '%s\n' "$@" > "${STUB_DIR}/env.args"
+export LD_PRELOAD=from-env-sh
+SH
+    touch exllamav3_ext.cpython-312-x86_64-linux-gnu.so
+    cat > venv/bin/python <<'SH'
+#!/bin/bash
+printf '%s\n' "$@" > "${STUB_DIR}/python.args"
+echo "${PWD} ${LD_PRELOAD} ${EXL3_ROCM_SDK}" > "${STUB_DIR}/python.env"
+SH
+    chmod +x venv/bin/python
+    export EXL3_VENV="${WORK}/venv" EXL3_ROCM_SDK="${WORK}/sdk"
+}
+
+@test "kyojin runs serve.py with the venv's python, the strix_halo environment and the given arguments" {
+    kyojin_checkout
+    run "${APPS}/kyojin/entrypoint.sh" --model /models/pack --port 8082
+    [ "${status}" -eq 0 ]
+    [ "$(cat "${STUB_DIR}/python.args")" = "tools/qwen/serve.py
+--model
+/models/pack
+--port
+8082" ]
+    [ "$(cat "${STUB_DIR}/python.env")" = "${WORK} from-env-sh ${WORK}/sdk" ]
+}
+
+@test "kyojin sources env.sh for inference, never with the server's arguments" {
+    kyojin_checkout
+    run "${APPS}/kyojin/entrypoint.sh" build --check
+    [ "${status}" -eq 0 ]
+    [ "$(cat "${STUB_DIR}/env.args")" = "" ]
+}
+
+@test "kyojin without EXL3_VENV or EXL3_ROCM_SDK fails" {
+    kyojin_checkout
+    run env -u EXL3_VENV "${APPS}/kyojin/entrypoint.sh" --port 8082
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *EXL3_VENV* ]]
+    run env -u EXL3_ROCM_SDK "${APPS}/kyojin/entrypoint.sh" --port 8082
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *EXL3_ROCM_SDK* ]]
+    [ ! -e "${STUB_DIR}/python.args" ]
+}
+
+@test "kyojin without the venv's python fails and says where it looked" {
+    kyojin_checkout
+    rm venv/bin/python
+    run "${APPS}/kyojin/entrypoint.sh" --port 8082
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *"${WORK}/venv/bin/python"* ]]
+}
+
+@test "kyojin without the built extension fails instead of letting torch build it" {
+    kyojin_checkout
+    rm exllamav3_ext.cpython-312-x86_64-linux-gnu.so
+    run "${APPS}/kyojin/entrypoint.sh" --port 8082
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *exllamav3_ext* ]]
+    [ ! -e "${STUB_DIR}/python.args" ]
+}
+
 # --- tageditor -------------------------------------------------------------
 
 # A process that stays up: records where and how it was started, then sleeps

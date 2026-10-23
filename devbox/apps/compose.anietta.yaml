@@ -26,13 +26,33 @@ services:
   llama-server:
     <<: *app
     container_name: llama-server
+    # Kyojin, Yamz Labs' engine built on ExLlamaV3 for Strix Halo, with its
+    # built extension and venv under ~/opt/kyojin. The llama.cpp setup this
+    # replaced is still in llama-server/, and README.md says how to go back.
     build:
-      context: llama-server
-    # halo-box's llama.cpp with the Strix Halo prefill work, built with HIP in
-    # the devbox. A rebuild there is picked up by `docker restart llama-server`.
-    working_dir: /home/yuanying/src/github.com/halo-box/strix-prefill-opt
+      context: kyojin
+    # Not the devbox-apps-llama-server compose would name it after the
+    # service: that one is llama.cpp's, kept so that going back to it needs
+    # no build.
+    image: devbox-apps-kyojin
+    working_dir: /home/yuanying/opt/kyojin/src
     environment:
-      LLAMA_SERVER: build-hip-rocm10/bin/llama-server
+      EXL3_VENV: /home/yuanying/opt/kyojin/venv
+      EXL3_ROCM_SDK: /home/yuanying/opt/kyojin/venv/lib/python3.12/site-packages/_rocm_sdk_devel
+      # The pack's own uncensor preset, a projection the engine applies as it
+      # runs. The weights on disk are unchanged, and this is not the
+      # abliterated IQ4_XS llama.cpp served.
+      EXL3_ABLIT_RUNTIME: /home/yuanying/models/qwen3.8-flash-next-exl3-yamz-247ef39b/uncensor-preset/uncensor_spec.json
+      # Read the n-gram embedding table from the file instead of holding it in
+      # RAM. In RAM, the server's pages went to swap while the weights loaded.
+      EXL3_NGRAM_STREAM: "1"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      PYTHONUNBUFFERED: "1"
+      # As measured.
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
     devices:
       - /dev/kfd
       - /dev/dri
@@ -43,50 +63,30 @@ services:
       - "993"
     ipc: host
     command:
-      - -m
-      - /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf
-      - --mmproj
-      - /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.mmproj-f16.gguf
-      - --spec-type
-      - draft-mtp
-      - -md
-      - /home/yuanying/models/qwen3.8-flash-next-mtp/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf
-      - -ngl
-      - "999"
-      - -ot
-      - per_layer_token_embd\.weight=CPU
-      - -lm
-      - none
-      # The model's native length. Stretching it with YaRN to 393216 left the
-      # host too little RAM, and the OOM killer kept taking the server down.
-      - -c
-      - "262144"
-      - -np
-      - "2"
-      - -kvu
-      - --kv-unified-per-slot
-      - "262144"
-      - -fa
-      - "on"
-      - -ctk
-      - q8_0
-      - -ctv
-      - q8_0
-      - -b
-      - "2048"
-      - -ub
-      - "2048"
-      - --min-p
-      - "0"
-      - --jinja
-      # The prompt cache copies a slot's KV out to host RAM, which on this
-      # unified-memory APU is the same pool the KV already lives in. With one
-      # conversation per slot it only adds copies, of several GiB each, until
-      # the host OOM killer takes the server down.
-      - --cache-ram
-      - "0"
-      - --alias
+      - --model
+      - /home/yuanying/models/qwen3.8-flash-next-exl3-yamz-247ef39b
+      - --model-id
       - qwen3.8-flash-next
+      # The model's native length, in one pool of KV pages that both sessions
+      # draw from: a second session costs little more than its GDN state.
+      - --ctx
+      - "262144"
+      - --sessions
+      - "2"
+      # fp16 pages. The 8-bit ones save 2.6 GiB at 256K (serve.py's figure) but
+      # do not give the same output for a request run alongside another.
+      - --cache-bits
+      - "0"
+      - --draft-policy
+      - mix
+      - --chat-template
+      - /home/yuanying/models/qwen3.8-flash-next-exl3-yamz-247ef39b/chat_template.jinja
+      # The template's own default, which is also what llama.cpp got from the
+      # GGUF's template. serve.py would otherwise ask for medium.
+      - --default-reasoning-effort
+      - xhigh
+      - --slot-save-path
+      - /home/yuanying/.cache/kyojin/slots
       - --host
       - 0.0.0.0
       - --port
