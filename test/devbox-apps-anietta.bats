@@ -13,7 +13,7 @@ load helpers
 setup() {
     require yq
     COMPOSE="${REPO}/devbox/apps/compose.anietta.yaml"
-    KYOJIN_MODEL=/home/yuanying/models/qwen3.8-flash-next-exl3-uncensored-lygo-4bpw-9c715c0b
+    KYOJIN_MODEL=/home/yuanying/models/qwen3.8-flash-next-exl3-yamz-247ef39b
     [ -f "${COMPOSE}" ]
 }
 
@@ -101,10 +101,14 @@ q() {
     [[ ${args} != *" --no-thinking "* ]]
 }
 
-@test "llama-server serves abliterated weights with no runtime preset and streams the n-gram table from disk" {
-    [ "$(q '.services.llama-server.environment.EXL3_ABLIT_RUNTIME')" = "off" ]
+@test "llama-server applies the pack's uncensor preset and streams the n-gram table from disk" {
+    [ "$(q '.services.llama-server.environment.EXL3_ABLIT_RUNTIME')" = "${KYOJIN_MODEL}/uncensor-preset/uncensor_spec.json" ]
     [ "$(q '.services.llama-server.environment.EXL3_NGRAM_STREAM')" = "1" ]
     [[ " $(q '.services.llama-server.command | join(" ")') " != *" --no-uncensor "* ]]
+}
+
+@test "llama-server no longer points at the abliterated Lygodactylus pack, which is deleted" {
+    ! grep -q 'lygo' "${COMPOSE}"
 }
 
 @test "llama-server never reaches for the Hugging Face hub" {
