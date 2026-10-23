@@ -39,10 +39,10 @@ services:
     environment:
       EXL3_VENV: /home/yuanying/opt/kyojin/venv
       EXL3_ROCM_SDK: /home/yuanying/opt/kyojin/venv/lib/python3.12/site-packages/_rocm_sdk_devel
-      # The weights are already abliterated (the same source as the IQ4_XS
-      # llama.cpp served), so no runtime uncensor projection on top. "off"
-      # rather than unset, so nothing inherited can turn one on.
-      EXL3_ABLIT_RUNTIME: "off"
+      # The pack's own uncensor preset, a projection the engine applies as it
+      # runs. The weights on disk are unchanged, and this is not the
+      # abliterated IQ4_XS llama.cpp served.
+      EXL3_ABLIT_RUNTIME: /home/yuanying/models/qwen3.8-flash-next-exl3-yamz-247ef39b/uncensor-preset/uncensor_spec.json
       # Read the n-gram embedding table from the file instead of holding it in
       # RAM. In RAM, the server's pages went to swap while the weights loaded.
       EXL3_NGRAM_STREAM: "1"
@@ -64,7 +64,7 @@ services:
     ipc: host
     command:
       - --model
-      - /home/yuanying/models/qwen3.8-flash-next-exl3-uncensored-lygo-4bpw-9c715c0b
+      - /home/yuanying/models/qwen3.8-flash-next-exl3-yamz-247ef39b
       - --model-id
       - qwen3.8-flash-next
       # The model's native length, in one pool of KV pages that both sessions
@@ -80,7 +80,7 @@ services:
       - --draft-policy
       - mix
       - --chat-template
-      - /home/yuanying/models/qwen3.8-flash-next-exl3-uncensored-lygo-4bpw-9c715c0b/chat_template.jinja
+      - /home/yuanying/models/qwen3.8-flash-next-exl3-yamz-247ef39b/chat_template.jinja
       # The template's own default, which is also what llama.cpp got from the
       # GGUF's template. serve.py would otherwise ask for medium.
       - --default-reasoning-effort
