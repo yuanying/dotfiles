@@ -80,6 +80,16 @@ def output_index(out):
     return len(shards)
 
 
+def capped_lifecycle(preflight,apply,execute,stop,restore,verify):
+    """With the CPU ceiling: never restore it over live converter processes (as capbuild)."""
+    try:
+        preflight();apply();return execute()
+    finally:
+        stop()
+        try:restore()
+        finally:verify()
+
+
 def child_env(trial,environ):
     env={k:environ[k] for k in ('HOME','PATH','LANG','LC_ALL') if k in environ}
     env.update(EXL3_ROOT=str(trial/'src'),EXL3_HSA_LIB=str(trial/'venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/libhsa-runtime64.so.1'),
@@ -124,7 +134,7 @@ def monitor(a):
             class NoOldPersistence:
                 def low(self,available,now):return False
             self.gate=Adapter();self.persistence=NoOldPersistence()
-            self.result.update(gate_profile='long',settings=list(SETTINGS),resume=a.resume)
+            self.result.update(gate_profile='long',settings=list(SETTINGS),resume=a.resume,cpu_cap=a.cpu_cap)
         def read_sample(self,stage):
             row=super().read_sample(stage)
             self.vm=guard.vmstat();self.log('vmstat',**guard.vmstat_fields(stage,row,self.vm))
@@ -178,7 +188,11 @@ def monitor(a):
             infer.require(row['available']>=100*GIB and not guard.kfd_users(),'conversion_not_released')
             self.result['released']=True
         def run(self):
-            try:return guard.lifecycle(self.preflight,self.execute,self.stop_children,self.verify_final)
+            try:
+                # User-approved temporary ceiling: all 32 max to min(original, 3 GHz),
+                # snapshot first, restored on every exit (capbuild's apply/restore).
+                if a.cpu_cap:return capped_lifecycle(self.preflight,self.apply,self.execute,self.stop_children,self.restore_cpu,self.verify_final)
+                return guard.lifecycle(self.preflight,self.execute,self.stop_children,self.verify_final)
             except BaseException as e:
                 self.result.update(error_type=type(e).__name__,error=str(e)[:128]);raise
             finally:
@@ -214,6 +228,7 @@ def main():
     for name in ('trial','source','out','work','directory','references','progress','baseline'):p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--max-seconds',type=int,default=8*3600)
     p.add_argument('--resume',action='store_true',help='continue the work directory from its last checkpoint')
+    p.add_argument('--cpu-cap',action='store_true',help='temporary all-CPU max min(original,3GHz) during the run, restored after')
     p.add_argument('--confirm-single-conversion',action='store_true');a=p.parse_args()
     infer.require(all(x.is_absolute() for x in (a.source,a.out,a.work,a.directory)),'absolute_paths')
     infer.require(a.directory.stat().st_mode&0o077==0)

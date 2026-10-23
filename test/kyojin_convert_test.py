@@ -73,6 +73,26 @@ class ConvertTests(unittest.TestCase):
             with self.assertRaises(ValueError):c.output_index(p)
             (p/'ngram_embedding.safetensors').write_bytes(b'x');(p/'model-00002-of-00002.safetensors').unlink()
             with self.assertRaises(ValueError):c.output_index(p)
+    def test_capped_lifecycle_order(self):
+        for stage in ('pre','apply','live',None):
+            events=[]
+            def op(name):
+                def f():
+                    events.append(name)
+                    if name==stage:raise ValueError('synthetic')
+                return f
+            ops=[op(n) for n in ('pre','apply','live','stop','restore','verify')]
+            if stage:
+                with self.assertRaises(ValueError):c.capped_lifecycle(*ops)
+            else:c.capped_lifecycle(*ops)
+            self.assertEqual(events[-3:],['stop','restore','verify'])
+            if stage=='pre':self.assertNotIn('apply',events)
+    def test_capped_lifecycle_verifies_after_restore_failure(self):
+        events=[]
+        def ok(name):return lambda:events.append(name)
+        def bad():events.append('restore');raise RuntimeError('restore_failed')
+        with self.assertRaises(RuntimeError):c.capped_lifecycle(ok('pre'),ok('apply'),ok('live'),ok('stop'),bad,ok('verify'))
+        self.assertEqual(events,['pre','apply','live','stop','restore','verify'])
     def test_child_env_is_fixed(self):
         env=c.child_env(Path('/t'),{'HOME':'/h','PATH':'/p','EXL3_ABLIT_RUNTIME':'x','SECRET':'s'})
         self.assertEqual(env['EXL3_CKPT_KEEP_OLD'],'0')
