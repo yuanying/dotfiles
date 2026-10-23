@@ -16,10 +16,27 @@ import time
 import urllib.parse
 import urllib.request
 
-REV = '247ef39b06ff0b0fcba76026429e191b44e0e1f8'
-TOTAL = 95370160976
-BASE = 'https://huggingface.co/yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz/resolve/'+REV+'/'
 GIB = 1024**3
+
+
+def profile(repo, revision, total, files, exclude, used_limit, free_after):
+    return dict(repo=repo,revision=revision,total=total,files=files,exclude=exclude,used_limit=used_limit,free_after=free_after,
+                base='https://huggingface.co/'+repo+'/resolve/'+revision+'/')
+
+
+# Fixed revisions only; a profile is never resolved from a branch name.
+MODELS = {
+    # All old/new experiment artifacts <=260 GiB, filesystem free >=50 GiB.
+    'yamz-247ef39b': profile('yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz','247ef39b06ff0b0fcba76026429e191b44e0e1f8',
+                             95370160976,32,('assets/',),260*GIB,50*GIB),
+    # Its own directory as the budget root, and >=400 GB left on the filesystem after acquisition.
+    'lygo-4bpw-9c715c0b': profile('Lygodactylus/Qwen3.8-Flash-Next-Uncensored-exl3-4bpw','9c715c0b1a745b7db1c335347e8d45595b3cad3a',
+                                  109123025060,24,(),103*GIB,400*10**9),
+}
+DEFAULT = MODELS['yamz-247ef39b']
+REV = DEFAULT['revision']
+TOTAL = DEFAULT['total']
+BASE = DEFAULT['base']
 
 
 def require(ok):
@@ -48,10 +65,10 @@ class Redirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req,fp,code,msg,headers,newurl)
 
 
-def selected(manifest):
-    require(manifest['sha']==REV)
-    rows=[r for r in manifest['siblings'] if not r['rfilename'].startswith('assets/')]
-    require(sum(r['size'] for r in rows)==TOTAL)
+def selected(manifest, model=DEFAULT):
+    require(manifest['sha']==model['revision'])
+    rows=[r for r in manifest['siblings'] if not r['rfilename'].startswith(model['exclude'])]
+    require(len(rows)==model['files'] and sum(r['size'] for r in rows)==model['total'])
     require(len({r['rfilename'] for r in rows})==len(rows))
     for r in rows:
         relative(r['rfilename']); require(type(r['size']) is int and r['size']>=0)
@@ -60,11 +77,11 @@ def selected(manifest):
     return rows
 
 
-def disk_gate(remaining, used, free):
-    require(used+remaining<=260*GIB and free-remaining>=50*GIB)
+def disk_gate(remaining, used, free, model=DEFAULT):
+    require(used+remaining<=model['used_limit'] and free-remaining>=model['free_after'])
 
 
-def acquire(row, root, open_url):
+def acquire(row, root, open_url, base=BASE):
     rel=relative(row['rfilename']); root=root.resolve(); dest=root.joinpath(*rel.parts)
     require(dest.parent.resolve().is_relative_to(root))
     dest.parent.mkdir(parents=True,exist_ok=True)
@@ -72,7 +89,7 @@ def acquire(row, root, open_url):
     require(not dest.exists() and not dest.is_symlink() and not partial.exists() and not partial.is_symlink())
     sha=hashlib.sha256(); git=hashlib.sha1(b'blob '+str(row['size']).encode()+b'\0') if not row.get('lfs') else None
     count=0; start=time.monotonic()
-    with open_url(BASE+urllib.parse.quote(str(rel))) as response, partial.open('xb') as out:
+    with open_url(base+urllib.parse.quote(str(rel))) as response, partial.open('xb') as out:
         if hasattr(response,'headers'):
             length=response.headers.get('Content-Length')
             require(length is None or int(length)==row['size'])
@@ -127,15 +144,17 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--destination',type=Path,required=True)
     p.add_argument('--budget-root',type=Path,required=True);p.add_argument('--confirm-fixed-download',action='store_true')
+    p.add_argument('--model-profile',choices=sorted(MODELS),default='yamz-247ef39b')
     # One explicitly approved continuation per invocation; no partial resume.
     p.add_argument('--continue-from');p.add_argument('--preserve-failure-as');p.add_argument('--report')
     p.add_argument('--expected-verified-files',type=int);p.add_argument('--expected-verified-bytes',type=int)
     a=p.parse_args();require(a.confirm_fixed_download)
     os.umask(0o077)
-    rows=selected(json.loads(a.manifest.read_text()))
+    model=MODELS[a.model_profile];total=model['total']
+    rows=selected(json.loads(a.manifest.read_text()),model)
     require(a.destination.is_absolute() and a.destination.resolve()==a.destination)
     require(a.destination.is_relative_to(a.budget_root.resolve()))
-    result=dict(revision=REV,expected_bytes=TOTAL,files=[],status='started',source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+    result=dict(repo=model['repo'],revision=model['revision'],expected_bytes=total,files=[],status='started',source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     if a.continue_from:
         names=(a.continue_from,a.preserve_failure_as,a.report)
         require(all(n and relative(n).parts==(n,) and n.endswith('.json') for n in names) and len(set(names))==3)
@@ -147,17 +166,17 @@ def main():
     else:
         require(not a.destination.exists());a.destination.mkdir(mode=0o700)
         report=a.destination/'acquisition.json'
-    disk_gate(TOTAL-sum(r['bytes'] for r in result['files']),usage(a.budget_root),shutil.disk_usage(a.budget_root).free)
+    disk_gate(total-sum(r['bytes'] for r in result['files']),usage(a.budget_root),shutil.disk_usage(a.budget_root).free,model)
     try:
         for row in rows:
-            remaining=TOTAL-sum(r['bytes'] for r in result['files'])
-            disk_gate(remaining,usage(a.budget_root),shutil.disk_usage(a.budget_root).free)
+            remaining=total-sum(r['bytes'] for r in result['files'])
+            disk_gate(remaining,usage(a.budget_root),shutil.disk_usage(a.budget_root).free,model)
             redirect=Redirect()
             opener=urllib.request.build_opener(redirect)
             def fetch(url):
                 safe_url(url)
                 return opener.open(urllib.request.Request(url,headers={'Accept-Encoding':'identity'}),timeout=180)
-            item=acquire(row,a.destination,fetch)
+            item=acquire(row,a.destination,fetch,model['base'])
             item['redirect_hosts']=redirect.hosts
             result['files'].append(item)
             report.write_text(json.dumps(result,indent=2)+'\n')

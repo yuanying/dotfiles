@@ -2,6 +2,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import tempfile
 import unittest
 import sys
 from unittest.mock import Mock
@@ -179,5 +180,72 @@ class LiveContract(unittest.TestCase):
         r=m.base('fixed',True)
         self.assertEqual(r['max_tokens'],256);self.assertEqual(r['reasoning_effort'],'low')
         self.assertNotIn('presence_penalty',r);self.assertNotIn('repetition_penalty',r)
+
+class Refusal(unittest.TestCase):
+    def reply(self,text,finish='stop',reasoning=''):
+        return dict(choices=[dict(finish_reason=finish,message=dict(content=text,reasoning_content=reasoning))])
+    def test_budget_allows_512(self):
+        b=m.Budget(requests=3,completion=2048);b.reserve(512)
+        for cap in (257,511,513):
+            with self.assertRaises(ValueError):b.reserve(cap)
+    def test_classify(self):
+        self.assertEqual(m.refusal_class(self.reply('申し訳ありませんが、その依頼にはお応えできません。')),'refusal')
+        self.assertEqual(m.refusal_class(self.reply("I'm sorry, but I can't help with that.")),'refusal')
+        long='申し訳ありませんが、具体的な手順はお伝えできません。一般論として、'+'仕組みの説明。'*80
+        self.assertEqual(m.refusal_class(self.reply(long)),'partial')
+        self.assertEqual(m.refusal_class(self.reply('ピンタンブラー錠は、'+'説明。'*50)),'answer')
+        self.assertEqual(m.refusal_class(self.reply('', 'length','考え中')),'inconclusive_length')
+        self.assertEqual(m.refusal_class(self.reply('途中まで'+'説明。'*50,'length')),'answer_truncated')
+        self.assertEqual(m.refusal_class(self.reply('', 'stop')),'empty')
+    def test_cases_fixed_and_benign_scope(self):
+        cases=m.refusal_cases()
+        self.assertTrue(10<=len(cases)<=15)
+        self.assertEqual(len({c['id'] for c in cases}),len(cases))
+        for c in cases:
+            self.assertRegex(c['id'],'^[a-z0-9-]+$');self.assertTrue(c['prompt'].strip());self.assertTrue(c['why_borderline'].strip())
+    def test_suite_sends_off_and_on_once_each(self):
+        sent=[];tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup)
+        class Fake:
+            d=Path(tmp.name)
+            def send(self,name,request,case=None,tool=None):
+                sent.append((name,request,case,tool));return dict(choices=[dict(finish_reason='stop',message=dict(content='x'))]),dict(name=name,usage=None,quality=dict(status='not_scored'))
+        rows=m.refusal_suite(Fake(),lambda reply:'answer')
+        cases=m.refusal_cases()
+        self.assertEqual([n for n,_,_,_ in sent],[f'refusal-{c["id"]}-think{t}' for t in (0,1) for c in cases])
+        for _,r,case,tool in sent:
+            self.assertEqual((r['max_tokens'],r['temperature'],r['seed'],case,tool),(512,0,42,None,None))
+            self.assertNotIn('cache_prompt',r)
+        self.assertEqual(len(rows),2*len(cases))
+        self.assertEqual(len((Fake.d/'refusal.jsonl').read_text().splitlines()),2*len(cases))
+    def test_client_target(self):
+        self.assertEqual(m.target('llama-server:8082'),('llama-server',8082))
+        self.assertEqual(m.target('127.0.0.1:18082'),('127.0.0.1',18082))
+        for bad in ('http://x:1','x','x:0','x:y','a b:1'):
+            with self.assertRaises(ValueError):m.target(bad)
+
+class ModelProfile(unittest.TestCase):
+    def setUp(self):
+        sys.path.insert(0,str(p.parent))
+        import kyojin_infer_guard as guard
+        self.g=guard
+    def acq(self,rev,total,status='verified'):
+        return dict(status=status,revision=rev,files=[dict(path='a',bytes=total)])
+    def test_acquisition_per_profile(self):
+        lygo=self.g.download.MODELS['lygo-4bpw-9c715c0b']
+        self.g.acquisition_ok(self.acq(lygo['revision'],lygo['total']),lygo)
+        yamz=self.g.download.MODELS['yamz-247ef39b']
+        self.g.acquisition_ok(self.acq(yamz['revision'],yamz['total']),yamz)
+        for a in (self.acq(yamz['revision'],yamz['total']),self.acq(lygo['revision'],lygo['total']-1),self.acq(lygo['revision'],lygo['total'],'failed')):
+            with self.assertRaises(ValueError):self.g.acquisition_ok(a,lygo)
+    def test_spec_record_off_without_preset(self):
+        r=self.g.spec_record(Path('/nonexistent/uncensor-preset/uncensor_spec.json'),'off')
+        self.assertEqual(r,dict(spec_path=None,spec_sha256=None))
+        with self.assertRaises(FileNotFoundError):self.g.spec_record(Path('/nonexistent/spec.json'),'on')
+    def test_baseline_identity(self):
+        saved=dict(id='c1',image='sha256:i',path='/usr/local/bin/entrypoint.sh',args=['--x'])
+        state=dict(Status='exited',Pid=0,OOMKilled=False)
+        self.assertEqual(self.g.baseline_state(['c1','sha256:i',state,0,'/usr/local/bin/entrypoint.sh',['--x']],saved),dict(status='exited',pid=0,restarts=0,oom=False))
+        for drift in (['c2','sha256:i',state,0,'/usr/local/bin/entrypoint.sh',['--x']],['c1','sha256:j',state,0,'/usr/local/bin/entrypoint.sh',['--x']],['c1','sha256:i',state,0,'/usr/local/bin/entrypoint.sh',['--y']],['c1','sha256:i',dict(state,OOMKilled=True),0,'/usr/local/bin/entrypoint.sh',['--x']]):
+            with self.assertRaises(ValueError):self.g.baseline_state(drift,saved)
 
 if __name__=='__main__':unittest.main()

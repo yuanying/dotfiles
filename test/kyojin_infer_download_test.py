@@ -95,6 +95,36 @@ class DownloadTests(unittest.TestCase):
         with self.assertRaises(ValueError): d.disk_gate(20*1024**3,0,69*1024**3)
     def test_fixed_manifest(self):
         with self.assertRaises(ValueError): d.selected(dict(sha='main',siblings=[]))
+    def manifest(self,profile,n=2):
+        rows=[dict(rfilename=f'f{i}',size=0,blobId='0'*40) for i in range(n)]
+        rows[0]['size']=profile['total']
+        return dict(sha=profile['revision'],siblings=rows)
+    def test_profiles_are_fixed_revisions(self):
+        self.assertEqual(set(d.MODELS),{'yamz-247ef39b','lygo-4bpw-9c715c0b'})
+        for p in d.MODELS.values():
+            self.assertRegex(p['revision'],'^[0-9a-f]{40}$')
+            self.assertEqual(p['base'],'https://huggingface.co/'+p['repo']+'/resolve/'+p['revision']+'/')
+        self.assertEqual(d.MODELS['yamz-247ef39b']['base'],d.BASE)
+        lygo=d.MODELS['lygo-4bpw-9c715c0b']
+        self.assertEqual((lygo['repo'],lygo['total'],lygo['files']),('Lygodactylus/Qwen3.8-Flash-Next-Uncensored-exl3-4bpw',109123025060,24))
+    def test_lygo_manifest_selects_all_files(self):
+        lygo=d.MODELS['lygo-4bpw-9c715c0b'];m=self.manifest(lygo,24)
+        self.assertEqual(len(d.selected(m,lygo)),24)
+        m['siblings'].append(dict(rfilename='assets/x',size=0,blobId='0'*40))
+        with self.assertRaises(ValueError):d.selected(m,lygo)  # 25 files: not the fixed manifest
+        with self.assertRaises(ValueError):d.selected(self.manifest(lygo,24),d.MODELS['yamz-247ef39b'])
+        with self.assertRaises(ValueError):d.selected(dict(self.manifest(lygo,24),sha='main'),lygo)
+    def test_lygo_disk_gate_keeps_400GB(self):
+        lygo=d.MODELS['lygo-4bpw-9c715c0b'];t=lygo['total']
+        d.disk_gate(t,0,t+400*10**9,lygo)
+        with self.assertRaises(ValueError):d.disk_gate(t,0,t+400*10**9-1,lygo)
+        with self.assertRaises(ValueError):d.disk_gate(t,lygo['used_limit']-t+1,10**15,lygo)
+    def test_acquire_uses_profile_base(self):
+        seen=[]
+        def opener(u):seen.append(u);return io.BytesIO(b'abc')
+        with tempfile.TemporaryDirectory() as t:
+            d.acquire(self.row(),Path(t),opener,d.MODELS['lygo-4bpw-9c715c0b']['base'])
+        self.assertEqual(seen,[d.MODELS['lygo-4bpw-9c715c0b']['base']+'config.json'])
     def test_symlink_parent(self):
         with tempfile.TemporaryDirectory() as t:
             p=Path(t); (p/'link').symlink_to('/tmp')

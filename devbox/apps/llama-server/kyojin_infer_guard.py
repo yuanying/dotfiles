@@ -19,6 +19,7 @@ import types
 import urllib.request
 
 import kyojin_infer as infer
+import kyojin_infer_download as download
 
 CAP_SHA='fd3e551f963535d12d41e8e4b50a429942d183884ddab7ee1d881b6e8ef494e9'
 SO_SHA='52369c1e5b2d3dbb2f144b230c7a32e448cb8dccf6c998f60767f6690b19d984'
@@ -97,6 +98,40 @@ def verify_effective(text,mode,ngram,spec,ablit_env):
 def vmstat_fields(stage,row,vm):
     # Run.log owns 'stage' and 'monotonic'; never pass them again.
     return dict(check_stage=stage,sample_monotonic=row['monotonic'],**vm)
+
+
+def acquisition_ok(acquisition,model):
+    infer.require(acquisition['status']=='verified' and acquisition['revision']==model['revision'] and sum(r['bytes'] for r in acquisition['files'])==model['total'],'model_not_verified')
+
+
+def spec_record(spec,mode):
+    # A pack without a runtime preset (abliterated weights) runs OFF only.
+    if mode=='off' and not spec.exists():return dict(spec_path=None,spec_sha256=None)
+    return dict(spec_path=str(spec),spec_sha256=hashlib.sha256(spec.read_bytes()).hexdigest())
+
+
+INSPECT='{{json .Id}} {{json .Image}} {{json .State}} {{json .RestartCount}} {{json .Path}} {{json .Args}}'
+
+
+def inspect_parts(raw):
+    decoder=json.JSONDecoder();parts=[]
+    while raw:
+        item,end=decoder.raw_decode(raw);parts.append(item);raw=raw[end:].lstrip()
+    return parts
+
+
+def baseline_state(parts,saved):
+    """Selected Docker fields of the production container recorded before its stop; no environment."""
+    ident,image,state,restarts,path,args=parts
+    infer.require(ident==saved['id'] and image==saved['image'] and path==saved['path'] and args==saved['args'],'baseline_identity_drift')
+    infer.require(not state['OOMKilled'],'baseline_oom')
+    return dict(status=state['Status'],pid=state['Pid'],restarts=restarts,oom=state['OOMKilled'])
+
+
+def write_baseline(name,out):
+    ident,image,state,restarts,path,args=inspect_parts(subprocess.check_output(['docker','inspect','--format',INSPECT,name],text=True,timeout=10).strip())
+    infer.require(state['Status']=='running','baseline_not_running')
+    out.open('x').write(json.dumps(dict(name=name,id=ident,image=image,path=path,args=args,restarts=restarts),indent=2)+'\n')
 
 
 def lifecycle(preflight,execute,stop,verify):
@@ -182,13 +217,14 @@ def child(a):
                 time.sleep(1)
             text=(d/'server.log').read_text(errors='replace')
             observed_ngram=verify_effective(text,a.mode,a.ngram,spec,env['EXL3_ABLIT_RUNTIME'])
-            proof=dict(mode=a.mode,active_marker=infer.preset_active(text,spec),spec_sha256=hashlib.sha256(spec.read_bytes()).hexdigest(),
-                       spec_path=str(spec),ngram_requested=a.ngram,ngram_mode=observed_ngram,extension=extension_gate(trial),load_seconds=time.monotonic()-start,health=health,
+            proof=dict(mode=a.mode,model_profile=a.model_profile,active_marker=infer.preset_active(text,spec),**spec_record(spec,a.mode),ngram_requested=a.ngram,ngram_mode=observed_ngram,extension=extension_gate(trial),load_seconds=time.monotonic()-start,health=health,
                        template_sha256=hashlib.sha256((model/'chat_template.jinja').read_bytes()).hexdigest(),
                        settings=dict(context=a.ctx,sessions=a.sessions,cache_bits=a.cache_bits,profile=a.profile,draft_policy='mix',default_effort='xhigh',request_effort='low_or_none',cpu_cap='unchanged',OMP_NUM_THREADS=1))
             (d/'effective.json').write_text(json.dumps(proof,indent=2)+'\n')
             print(json.dumps(dict(stage='READY',mode=a.mode,load_seconds=proof['load_seconds'],active_marker=proof['active_marker'])),flush=True)
-            if a.profile=='long':infer.suite_long(infer.Client(d,a.references,infer.Budget(300,76800),a.ctx,a.sessions),a.soak_seconds)
+            if a.profile=='long':
+                infer.suite_long(infer.Client(d,a.references,infer.Budget(a.max_requests,a.max_completion_tokens),a.ctx,a.sessions),a.soak_seconds,
+                                 after_gates=infer.refusal_suite if a.refusal else None)
             else:infer.suite(infer.Client(d,a.references,infer.Budget(),a.ctx),a.mode)
     finally:
         signal.signal(signal.SIGTERM,signal.SIG_IGN);signal.signal(signal.SIGINT,signal.SIG_IGN)
@@ -232,6 +268,10 @@ def monitor(a):
                 self.log('sample_read_error',check_stage=stage,source='pinned_guard.sample',error_type=type(e).__name__,errno=getattr(e,'errno',None));raise
             self.log('sample_observed',check_stage=stage,sample=cap.bounded_sample(row),rss_pid=pid)
             return row
+        if a.baseline:
+            saved=json.loads(a.baseline.read_text())
+            def state(self):
+                return baseline_state(inspect_parts(cap.output(['docker','inspect','--format',INSPECT,saved['id']])),saved)
         def preflight(self):
             infer.require(self.state()['status']=='exited' and self.state()['restarts']==0,'baseline_not_stopped')
             infer.require(self.initial['available']>=100*1024**3,'load_memory_gate')
@@ -243,14 +283,15 @@ def monitor(a):
             # Model bytes already publisher-hashed by downloader, not rehashed
             # here a second time. Fixed small manifest and preset hashes retained.
             acquisition=json.loads((a.model/a.acquisition_report).read_text())
-            infer.require(acquisition['status']=='verified' and acquisition['revision']=='247ef39b06ff0b0fcba76026429e191b44e0e1f8' and sum(r['bytes'] for r in acquisition['files'])==95370160976,'model_not_verified')
+            acquisition_ok(acquisition,download.MODELS[a.model_profile])
             for r in acquisition['files']:
                 p=a.model/r['path'];infer.require(p.is_file() and p.stat().st_size==r['bytes'],'model_size_drift')
             self.log('infer_preflight',baseline=self.state(),sample=self.initial,cpu_state=self.before,extension=self.result['extension_before'])
             self.cooldown('before_model_load')
         def execute(self):
             u=pwd.getpwnam('yuanying');start=time.monotonic();previous=start
-            command=[sys.executable,str(Path(__file__).resolve()),'--child','--trial',str(a.trial),'--model',str(a.model),'--directory',str(a.directory),'--references',str(a.references),'--mode',a.mode,'--ctx',str(a.ctx),'--cache-bits',str(a.cache_bits),'--sessions',str(a.sessions),'--ngram',a.ngram,'--profile',a.profile,'--soak-seconds',str(a.soak_seconds)]
+            command=[sys.executable,str(Path(__file__).resolve()),'--child','--trial',str(a.trial),'--model',str(a.model),'--directory',str(a.directory),'--references',str(a.references),'--mode',a.mode,'--ctx',str(a.ctx),'--cache-bits',str(a.cache_bits),'--sessions',str(a.sessions),'--ngram',a.ngram,'--profile',a.profile,'--soak-seconds',str(a.soak_seconds),
+                     '--model-profile',a.model_profile,'--max-requests',str(a.max_requests),'--max-completion-tokens',str(a.max_completion_tokens)]+(['--refusal'] if a.refusal else [])
             with (a.directory/'child.log').open('xb') as log:
                 self.child=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,user=u.pw_uid,group=u.pw_gid,extra_groups=os.getgrouplist(u.pw_name,u.pw_gid),env=dict(os.environ,HOME=u.pw_dir))
                 self.log('candidate_started',pid=self.child.pid,mode=a.mode,max_seconds=a.max_seconds,ctx=a.ctx,cache_bits=a.cache_bits,profile=a.profile)
@@ -293,11 +334,17 @@ def monitor(a):
 
 def main():
     if len(sys.argv)>1 and sys.argv[1]=='--bootstrap':bootstrap();return
+    # Before the production stop: record the running llama-server identity for --baseline.
+    if len(sys.argv)==3 and sys.argv[1]=='--write-baseline':write_baseline('llama-server',Path(sys.argv[2]));return
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('trial','model','directory','references','progress'):p.add_argument('--'+name,type=Path,required=name!='progress')
     p.add_argument('--acquisition-report',default='acquisition-continuation-2.json',help='final verified report name in --model')
     p.add_argument('--ctx',type=int,choices=[32768,131072,262144],default=32768);p.add_argument('--cache-bits',type=int,choices=[0,8],default=0);p.add_argument('--sessions',type=int,choices=[1,2],default=1);p.add_argument('--ngram',choices=['auto','disk','ram'],default='auto')
     p.add_argument('--profile',choices=['short','long'],default='short');p.add_argument('--soak-seconds',type=int,default=2400);p.add_argument('--max-seconds',type=int,default=7200)
+    p.add_argument('--model-profile',choices=sorted(download.MODELS),default='yamz-247ef39b')
+    p.add_argument('--baseline',type=Path,help='production container identity written by `--write-baseline PATH` before its stop')
+    p.add_argument('--refusal',action='store_true',help='long profile: fixed over-refusal set after the short gates')
+    p.add_argument('--max-requests',type=int,default=300);p.add_argument('--max-completion-tokens',type=int,default=76800)
     p.add_argument('--mode',choices=['on','off'],required=True);p.add_argument('--child',action='store_true');p.add_argument('--confirm-single-candidate',action='store_true');a=p.parse_args()
     if a.child:child(a)
     else:
