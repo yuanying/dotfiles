@@ -54,3 +54,9 @@ services:
     viewers:
       logins:
         - yuanying
+  - name: lora-datasets
+    port: 8765
+    auth: required
+    viewers:
+      logins:
+        - yuanying
