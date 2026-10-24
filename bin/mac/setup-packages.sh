@@ -34,6 +34,8 @@ brew install python
 # frecency でディレクトリを覚える z コマンド。herdr-navigator の
 # zoxide ソースがこの履歴を候補に使う。
 brew install zoxide
+# nvim (snacks.nvim) で画像を表示するときに identify を使う。
+brew install imagemagick
 
 # ルーター設定の秘密を sops + age で暗号化して git に置いている。復号は Mac の
 # 手元でも走る。age の formula は age-keygen も持つ。バージョンは brew 任せ
