@@ -36,7 +36,7 @@ class Budget:
     def __init__(self,requests=152,completion=41984):
         self.requests=0; self.completion=0; self.long=0; self.max_requests=requests; self.max_completion=completion
     def reserve(self,cap):
-        require(type(cap) is int and (1<=cap<=256 or cap in (512,1024)))
+        require(type(cap) is int and (1<=cap<=256 or cap in (512,768,1024)))
         require(self.requests<self.max_requests and self.completion+cap<=self.max_completion and (cap!=1024 or self.long<4),'budget_exceeded')
         self.requests+=1; self.completion+=cap; self.long+=int(cap==1024)
 
@@ -375,6 +375,41 @@ def refusal_suite(client,classify=refusal_class):
     return rows
 
 
+JA_MAX_TOKENS=768
+
+
+def japanese_cases():
+    return json.loads((Path(__file__).resolve().parent/'kyojin-japanese-cases.json').read_text())['cases']
+
+
+def japanese_suite(client):
+    """Fixed Japanese set, thinking OFF, greedy; the text is kept for a side-by-side reading."""
+    for c in japanese_cases():
+        req=base(c['prompt']);req['max_tokens']=JA_MAX_TOKENS
+        reply,row=client.send(f"ja-{c['id']}",req)
+        choice=reply['choices'][0]
+        with (client.d/'japanese.jsonl').open('a') as out:
+            out.write(json.dumps(dict(name=row['name'],kind=c['kind'],finish=choice['finish_reason'],usage=row['usage'],content=choice['message'].get('content')),ensure_ascii=False)+'\n')
+
+
+# Short trial of a new pack: gates, over-refusal OFF/ON, Japanese set, a few 8K/32K colds.
+TRIAL_REQUESTS=100
+TRIAL_COMPLETION=32768
+
+
+def suite_trial(client,gates=short_gates):
+    gates(client)
+    refusal_suite(client)
+    japanese_suite(client)
+    c=client.corpus['long_input_contract']
+    text=long_text(c,client.corpus['tasks']['prose']['prompt'],c['nominal_tiers']['8K'])
+    for r in range(2):
+        req=base(text);req['cache_prompt']=False;client.send(f'8K-prose-cold-{r}',req,case='prose')
+    text=calibrate(client,'prose',32000)
+    for r in range(2):
+        req=base(text);req['cache_prompt']=False;client.send(f'32K-prose-cold-{r}',req,case='prose')
+
+
 def target(text):
     m=re.fullmatch(r'([a-zA-Z0-9.-]+):([0-9]{1,5})',text)
     require(m is not None and 0<int(m[2])<65536,'bad_target')
@@ -386,8 +421,12 @@ def main():
     g=p.add_mutually_exclusive_group(required=True);g.add_argument('--mode',choices=['on','off'])
     # The same fixed over-refusal set against an already running server (e.g. production llama-server:8082).
     g.add_argument('--refusal-target',type=target,metavar='HOST:PORT')
+    # The fixed Japanese set against an already running server, for the side-by-side reading.
+    g.add_argument('--japanese-target',type=target,metavar='HOST:PORT')
     a=p.parse_args();os.umask(0o077);require(a.directory.stat().st_mode&0o077==0)
-    if a.refusal_target:
+    if a.japanese_target:
+        n=len(japanese_cases());japanese_suite(Client(a.directory,a.references,Budget(n,n*JA_MAX_TOKENS),host=a.japanese_target[0],port=a.japanese_target[1]))
+    elif a.refusal_target:
         n=len(refusal_cases())*2;refusal_suite(Client(a.directory,a.references,Budget(n,n*512),host=a.refusal_target[0],port=a.refusal_target[1]))
     else:suite(Client(a.directory,a.references,Budget()),a.mode)
 

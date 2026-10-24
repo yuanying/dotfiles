@@ -100,7 +100,7 @@ class DownloadTests(unittest.TestCase):
         rows[0]['size']=profile['total']
         return dict(sha=profile['revision'],siblings=rows)
     def test_profiles_are_fixed_revisions(self):
-        self.assertEqual(set(d.MODELS),{'yamz-247ef39b','lygo-4bpw-9c715c0b'})
+        self.assertEqual(set(d.MODELS),{'yamz-247ef39b','lygo-4bpw-9c715c0b','heretic2-bf16-207cd22c'})
         for p in d.MODELS.values():
             self.assertRegex(p['revision'],'^[0-9a-f]{40}$')
             self.assertEqual(p['base'],'https://huggingface.co/'+p['repo']+'/resolve/'+p['revision']+'/')
@@ -125,6 +125,35 @@ class DownloadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             d.acquire(self.row(),Path(t),opener,d.MODELS['lygo-4bpw-9c715c0b']['base'])
         self.assertEqual(seen,[d.MODELS['lygo-4bpw-9c715c0b']['base']+'config.json'])
+    def test_heretic_committed_manifest_is_fixed(self):
+        h=d.MODELS['heretic2-bf16-207cd22c']
+        m=json.loads((P.parent/'heretic2-bf16-207cd22c-manifest.json').read_text())
+        rows=d.selected(m,h)
+        self.assertEqual((len(rows),sum(r['size'] for r in rows)),(53,360030721166))
+        self.assertEqual(h['repo'],'trohrbaugh/Qwen3.8-Flash-Next-heretic-2')
+        self.assertEqual(h['revision'],'207cd22c347a81e8d60e2f536c955da885641afb')
+        self.assertTrue(any(r['rfilename']=='model-auxiliary.safetensors' for r in rows))
+    def test_heretic_disk_gate_keeps_50GiB(self):
+        h=d.MODELS['heretic2-bf16-207cd22c'];t=h['total']
+        d.disk_gate(t,0,t+50*d.GIB,h)
+        with self.assertRaises(ValueError):d.disk_gate(t,0,t+50*d.GIB-1,h)
+        with self.assertRaises(ValueError):d.disk_gate(t,h['used_limit']-t+1,10**15,h)
+    def test_file_deadline(self):
+        # Default: one hour per file. A profile with a minimum rate scales the
+        # deadline with the file size (the 102 GB BF16 shard), never below one hour.
+        self.assertEqual(d.file_deadline(10**12,d.DEFAULT),3600)
+        h=d.MODELS['heretic2-bf16-207cd22c']
+        self.assertEqual(d.file_deadline(1,h),3600)
+        self.assertEqual(d.file_deadline(102400512288,h),102400512288/h['min_rate'])
+        self.assertGreater(d.file_deadline(102400512288,h),3600)
+    def test_acquire_stops_at_deadline(self):
+        clock=iter([0,0,5000,5000])
+        orig=d.time.monotonic
+        d.time.monotonic=lambda:next(clock)
+        try:
+            with tempfile.TemporaryDirectory() as t:
+                with self.assertRaises(ValueError):d.acquire(self.row(),Path(t),lambda u:io.BytesIO(b'abc'),deadline=3600)
+        finally:d.time.monotonic=orig
     def test_symlink_parent(self):
         with tempfile.TemporaryDirectory() as t:
             p=Path(t); (p/'link').symlink_to('/tmp')

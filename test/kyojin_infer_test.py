@@ -186,8 +186,9 @@ class Refusal(unittest.TestCase):
         return dict(choices=[dict(finish_reason=finish,message=dict(content=text,reasoning_content=reasoning))])
     def test_budget_allows_512(self):
         b=m.Budget(requests=3,completion=2048);b.reserve(512)
-        for cap in (257,511,513):
+        for cap in (257,511,513,767,769):
             with self.assertRaises(ValueError):b.reserve(cap)
+        b.reserve(768)  # the Japanese set
     def test_classify(self):
         self.assertEqual(m.refusal_class(self.reply('申し訳ありませんが、その依頼にはお応えできません。')),'refusal')
         self.assertEqual(m.refusal_class(self.reply("I'm sorry, but I can't help with that.")),'refusal')
@@ -258,5 +259,56 @@ class ModelProfile(unittest.TestCase):
                 state=self.g.baseline_reader(f,output)
             self.assertEqual(Run().state()['status'],'exited')
         self.assertEqual(calls[0][-1],'c1')
+    def test_converted_pack_report(self):
+        src=self.g.download.MODELS['heretic2-bf16-207cd22c']
+        r=dict(status='converted',source_revision=src['revision'],total=5,files=[dict(path='a',bytes=2),dict(path='b',bytes=3)])
+        self.g.converted_ok(r)
+        for bad in (dict(r,status='verified'),dict(r,source_revision='0'*40),dict(r,total=6)):
+            with self.assertRaises(ValueError):self.g.converted_ok(bad)
+    def test_model_report_dispatch(self):
+        src=self.g.download.MODELS['heretic2-bf16-207cd22c']
+        self.assertIn(self.g.CONVERTED,self.g.model_profiles())
+        self.g.model_report_ok(dict(status='converted',source_revision=src['revision'],total=1,files=[dict(path='a',bytes=1)]),self.g.CONVERTED)
+        lygo=self.g.download.MODELS['lygo-4bpw-9c715c0b']
+        self.g.model_report_ok(self.acq(lygo['revision'],lygo['total']),'lygo-4bpw-9c715c0b')
+        with self.assertRaises(ValueError):self.g.model_report_ok(self.acq(lygo['revision'],lygo['total']),self.g.CONVERTED)
+
+class Japanese(unittest.TestCase):
+    def fake(self,sent):
+        tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup)
+        class Fake:
+            d=Path(tmp.name)
+            def send(self,name,request,case=None,tool=None):
+                sent.append((name,request,case,tool));return dict(choices=[dict(finish_reason='stop',message=dict(content='本文'))]),dict(name=name,usage=None,quality=dict(status='not_scored'))
+        return Fake()
+    def test_cases_fixed(self):
+        cases=m.japanese_cases()
+        self.assertTrue(5<=len(cases)<=10)
+        self.assertEqual(len({c['id'] for c in cases}),len(cases))
+        kinds={c['kind'] for c in cases}
+        self.assertTrue({'explanation','keigo-mail','summary','creative','technical'}<=kinds)
+        for c in cases:self.assertRegex(c['id'],'^[a-z0-9-]+$');self.assertTrue(c['prompt'].strip())
+    def test_suite_identical_bodies_and_records_text(self):
+        sent=[];f=self.fake(sent)
+        m.japanese_suite(f)
+        cases=m.japanese_cases()
+        self.assertEqual([n for n,_,_,_ in sent],[f'ja-{c["id"]}' for c in cases])
+        for _,r,case,tool in sent:
+            self.assertEqual((r['max_tokens'],r['temperature'],r['seed'],r['enable_thinking'],case,tool),(m.JA_MAX_TOKENS,0,42,False,None,None))
+        rows=[json.loads(x) for x in (f.d/'japanese.jsonl').read_text().splitlines()]
+        self.assertEqual([r['content'] for r in rows],['本文']*len(cases))
+    def test_trial_profile_is_bounded(self):
+        sent=[];f=self.fake(sent)
+        c=dict(needle_start='A\n',needle_middle='B\n',needle_end='C\n',filler_line='x\n',nominal_tiers={'8K':8})
+        f.corpus=dict(long_input_contract=c,tasks=dict(prose=dict(prompt='Q')))
+        f.smoke=Mock();f.smoke.request.side_effect=lambda case:m.base(case)
+        f.metadata=lambda path,body:dict(count=len(body['messages'][0]['content']))
+        gates=[];m.suite_trial(f,gates=lambda client:gates.append(1))
+        names=[n for n,_,_,_ in sent]
+        self.assertEqual(gates,[1])
+        self.assertEqual(sum(n.startswith('refusal-') for n in names),2*len(m.refusal_cases()))
+        self.assertEqual(sum(n.startswith('ja-') for n in names),len(m.japanese_cases()))
+        self.assertEqual([n for n in names if n[0].isdigit()],['8K-prose-cold-0','8K-prose-cold-1','32K-prose-cold-0','32K-prose-cold-1'])
+        self.assertLessEqual(len(names)+12,m.TRIAL_REQUESTS)
 
 if __name__=='__main__':unittest.main()

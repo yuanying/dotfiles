@@ -22,10 +22,13 @@ On anietta:
 | `llama-server` | 8082 | `~/opt/kyojin/src` (Kyojin, with `~/opt/kyojin/venv`) | `docker restart llama-server` after a rebuild |
 
 It serves Qwen3.8-Flash-Next as `qwen3.8-flash-next`, from the EXL3 pack in
-`~/models/qwen3.8-flash-next-exl3-yamz-247ef39b`
-(`yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz`, revision `247ef39b`), with Kyojin
+`~/models/qwen3.8-flash-next-exl3-heretic2-4bpw-207cd22c`, with Kyojin
 (`github.com/Yamz-Labs/kyojin`), Yamz Labs' engine built on ExLlamaV3 for
-Strix Halo. The checkout is at `e09322da`;
+Strix Halo. The pack was converted on this machine from the decensored BF16
+weights `trohrbaugh/Qwen3.8-Flash-Next-heretic-2` (revision `207cd22c`):
+4.05 bpw, `lm_head` 6, MTP 8, n-gram table 6, vision 6, 108.8 GB; how, and
+`conversion.json` in the pack, are in
+[llama-server/KYOJIN-INFER.md](llama-server/KYOJIN-INFER.md). The checkout is at `e09322da`;
 its extension (`exllamav3_ext.*.so`) is built in the devbox, and the venv
 holds the ROCm torch and SDK wheels it was built against. The image is the
 ROCm base the devbox is built on; the devices are `/dev/kfd` and `/dev/dri`,
@@ -37,9 +40,9 @@ change.
 
 The settings are the ones it was measured with: 256K of context in one pool
 of KV pages that two sessions share, an fp16 cache, MTP and n-gram drafting,
-the pack's uncensor preset (a projection applied as the model runs, not the
-abliterated IQ4_XS llama.cpp served), and the n-gram embedding table read
-from its file rather than held in RAM. Thinking is on unless a request turns
+no runtime uncensor preset (`EXL3_ABLIT_RUNTIME=off`: the weights themselves
+are decensored), and the n-gram embedding table read from its file rather
+than held in RAM. Thinking is on unless a request turns
 it off with `chat_template_kwargs.enable_thinking: false` (or
 `reasoning_effort: "none"`), at the template's default effort, `xhigh`. A
 request without `max_tokens` or `max_completion_tokens` may answer until the
@@ -60,9 +63,10 @@ What it does have: `/health` (503 with the load progress until it is ready),
 `/tokenize`, `/apply-template` and `/slots`.
 
 A start takes about a minute when the weights are in the page cache, most
-of it reading them, and longer from a cold disk. When it is up, `docker logs llama-server` shows the preset as
-`ablit runtime: spec …/uncensor_spec.json active` and the table as
-`[ngram] table mode trellis_disk`.
+of it reading them, and longer from a cold disk. When it is up, `docker logs llama-server` shows the table as
+`[ngram] table mode trellis_disk` and no `ablit runtime: spec` line. The pack
+has no `draft2s.st` or `hc_gs_sidecar.safetensors`, so the log also says
+"full head" and "plain rounding"; that is expected.
 
 For a while it served an abliterated EXL3 pack instead
 (`Lygodactylus/Qwen3.8-Flash-Next-Uncensored-exl3-4bpw`, revision
@@ -70,6 +74,22 @@ For a while it served an abliterated EXL3 pack instead
 deleted from `~/models`, so its compose definition no longer runs. The
 scripts that fetched and tried it, and its manifest, are in
 [llama-server/KYOJIN-INFER.md](llama-server/KYOJIN-INFER.md).
+
+### Going back to the Yamz pack
+
+Before this pack it served `yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz`
+(revision `247ef39b`) with that pack's runtime uncensor preset, and the pack
+is still in `~/models/qwen3.8-flash-next-exl3-yamz-247ef39b`. Its compose
+definition is the one in `ef00aa7`; to run it again without touching the
+checkout:
+
+```bash
+git -C ~/dotfiles show ef00aa7:devbox/apps/compose.anietta.yaml |
+    docker compose -f - --project-directory ~/dotfiles/devbox/apps up -d --no-build llama-server
+```
+
+The image is the same, so nothing is built. To keep it, revert this change
+through a pull request.
 
 ### Going back to llama.cpp
 
@@ -122,7 +142,7 @@ which runs in the devbox, forwards to them, and `SDCTL_URL` in
   the devbox's `--gpus all`.
 - On anietta, Kyojin is in `~/opt/kyojin` (the checkout with its extension
   built, and the venv) and the pack in
-  `~/models/qwen3.8-flash-next-exl3-yamz-247ef39b`, and
+  `~/models/qwen3.8-flash-next-exl3-heretic2-4bpw-207cd22c`, and
   `~/.cache/kyojin/slots` exists for `--slot-save-path`, which does not make
   it.
 

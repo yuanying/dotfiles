@@ -104,6 +104,25 @@ def acquisition_ok(acquisition,model):
     infer.require(acquisition['status']=='verified' and acquisition['revision']==model['revision'] and sum(r['bytes'] for r in acquisition['files'])==model['total'],'model_not_verified')
 
 
+# A pack converted on this machine (kyojin_convert_guard.py): its conversion.json
+# names the fixed BF16 source and lists the local files.
+CONVERTED='heretic2-exl3-4bpw-local'
+
+
+def converted_ok(report):
+    source=download.MODELS['heretic2-bf16-207cd22c']
+    infer.require(report['status']=='converted' and report['source_revision']==source['revision'] and sum(r['bytes'] for r in report['files'])==report['total'],'model_not_verified')
+
+
+def model_profiles():
+    return sorted(download.MODELS)+[CONVERTED]
+
+
+def model_report_ok(report,profile):
+    if profile==CONVERTED:converted_ok(report)
+    else:acquisition_ok(report,download.MODELS[profile])
+
+
 def spec_record(spec,mode):
     # A pack without a runtime preset (abliterated weights) runs OFF only.
     if mode=='off' and not spec.exists():return dict(spec_path=None,spec_sha256=None)
@@ -169,7 +188,7 @@ def extension_gate(trial):
     return dict(bytes=so.stat().st_size,sha256=SO_SHA)
 
 
-def bootstrap():
+def bootstrap(script='tools/qwen/serve.py'):
     # This executes only under the host guard. Precompiled extension required;
     # torch's lazy native extension build entry point is explicitly disabled.
     import torch.utils.cpp_extension as cpp
@@ -182,8 +201,8 @@ def bootstrap():
     infer.require(torch.__version__=='2.12.0a0+rocm7.13.0a20260411' and torch.version.hip=='7.13.60980' and props.gcnArchName.split(':')[0]=='gfx1151','native_ABI_drift')
     print('INFER_PRECOMPILED_EXTENSION',exllamav3_ext.__file__,torch.__version__,torch.version.hip,props.gcnArchName,flush=True)
     import runpy
-    sys.argv=['tools/qwen/serve.py']+sys.argv[2:]
-    runpy.run_path('tools/qwen/serve.py',run_name='__main__')
+    sys.argv=[script]+sys.argv[2:]
+    runpy.run_path(script,run_name='__main__')
 
 
 def child(a):
@@ -230,7 +249,9 @@ def child(a):
                        settings=dict(context=a.ctx,sessions=a.sessions,cache_bits=a.cache_bits,profile=a.profile,draft_policy='mix',default_effort='xhigh',request_effort='low_or_none',cpu_cap='unchanged',OMP_NUM_THREADS=1))
             (d/'effective.json').write_text(json.dumps(proof,indent=2)+'\n')
             print(json.dumps(dict(stage='READY',mode=a.mode,load_seconds=proof['load_seconds'],active_marker=proof['active_marker'])),flush=True)
-            if a.profile=='long':
+            if a.profile=='trial':
+                infer.suite_trial(infer.Client(d,a.references,infer.Budget(a.max_requests,a.max_completion_tokens),a.ctx,a.sessions))
+            elif a.profile=='long':
                 infer.suite_long(infer.Client(d,a.references,infer.Budget(a.max_requests,a.max_completion_tokens),a.ctx,a.sessions),a.soak_seconds,
                                  after_gates=infer.refusal_suite if a.refusal else None)
             else:infer.suite(infer.Client(d,a.references,infer.Budget(),a.ctx),a.mode)
@@ -249,7 +270,7 @@ def monitor(a):
         def __init__(self,args):
             self.vm=vmstat();self.blockdev=block_device(a.model)
             super().__init__(args)
-            if a.profile=='long':
+            if a.profile in ('long','trial'):
                 # User-approved dedicated-host memory gate replaces swap growth/8GiB rules only.
                 run=self;gate=LongGate()
                 class Adapter:
@@ -288,7 +309,7 @@ def monitor(a):
             # Model bytes already publisher-hashed by downloader, not rehashed
             # here a second time. Fixed small manifest and preset hashes retained.
             acquisition=json.loads((a.model/a.acquisition_report).read_text())
-            acquisition_ok(acquisition,download.MODELS[a.model_profile])
+            model_report_ok(acquisition,a.model_profile)
             for r in acquisition['files']:
                 p=a.model/r['path'];infer.require(p.is_file() and p.stat().st_size==r['bytes'],'model_size_drift')
             self.log('infer_preflight',baseline=self.state(),sample=self.initial,cpu_state=self.before,extension=self.result['extension_before'])
@@ -345,8 +366,8 @@ def main():
     for name in ('trial','model','directory','references','progress'):p.add_argument('--'+name,type=Path,required=name!='progress')
     p.add_argument('--acquisition-report',default='acquisition-continuation-2.json',help='final verified report name in --model')
     p.add_argument('--ctx',type=int,choices=[32768,131072,262144],default=32768);p.add_argument('--cache-bits',type=int,choices=[0,8],default=0);p.add_argument('--sessions',type=int,choices=[1,2],default=1);p.add_argument('--ngram',choices=['auto','disk','ram'],default='auto')
-    p.add_argument('--profile',choices=['short','long'],default='short');p.add_argument('--soak-seconds',type=int,default=2400);p.add_argument('--max-seconds',type=int,default=7200)
-    p.add_argument('--model-profile',choices=sorted(download.MODELS),default='yamz-247ef39b')
+    p.add_argument('--profile',choices=['short','long','trial'],default='short');p.add_argument('--soak-seconds',type=int,default=2400);p.add_argument('--max-seconds',type=int,default=7200)
+    p.add_argument('--model-profile',choices=model_profiles(),default='yamz-247ef39b')
     p.add_argument('--baseline',type=Path,help='production container identity written by `--write-baseline PATH` before its stop')
     p.add_argument('--refusal',action='store_true',help='long profile: fixed over-refusal set after the short gates')
     p.add_argument('--max-requests',type=int,default=300);p.add_argument('--max-completion-tokens',type=int,default=76800)

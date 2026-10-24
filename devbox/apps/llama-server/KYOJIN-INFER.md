@@ -291,6 +291,80 @@ characters: `refusal`, or `partial` with a body of 400+ characters; otherwise
 review. Compliance on this set does not measure the model's general capability
 or the quality of its answers.
 
+## Third pack source: heretic-2 BF16 (local EXL3 conversion)
+
+`--model-profile heretic2-bf16-207cd22c` (downloader) selects HF
+`trohrbaugh/Qwen3.8-Flash-Next-heretic-2`, revision
+`207cd22c347a81e8d60e2f536c955da885641afb`, all 53 files: 360,030,721,166
+bytes of BF16 weights (MTP and n-gram tensors in `model-auxiliary.safetensors`).
+The fixed manifest is
+[heretic2-bf16-207cd22c-manifest.json](heretic2-bf16-207cd22c-manifest.json),
+taken from the HF API at that revision. `reproduce/` (the publisher's heretic
+run record, about 210 KB) is kept: excluding it saves nothing worth a second
+manifest shape.
+
+It is a conversion source, not a pack to serve. Its budget root is its own
+directory: at most 336 GiB there and at least 50 GiB left on the filesystem.
+One shard is 102 GB, so this profile's per-file deadline is the file size at
+10 MB/s, never below the one hour the other profiles keep. Still serial, one
+attempt, no retry.
+
+### Conversion
+
+`kyojin_convert_guard.py` runs the engine's `convert.py` once, under the same
+pinned monitor and long-profile memory gate as the trial guard, plus a 50 GiB
+filesystem floor checked every second:
+
+- Settings: language model 4.05 bpw (the turboderp/Lygodactylus 4bpw size),
+  `lm_head` 6, MTP 8, n-gram table K=6; vision bits and calibration (bundled
+  corpus, 250 x 2048) at the converter's defaults.
+- Disk: the source stays until compile has read it. The job itself writes at
+  most about 200 GB (quantized tensors in the work directory, one checkpoint,
+  the compiled pack), so it starts only when that plus 50 GiB is free.
+  `EXL3_CKPT_KEEP_OLD=0` keeps a single checkpoint.
+- A stop (guard rule, `--max-seconds`, `STOP` in the output directory) kills
+  the converter. The converter checkpoints every 120 s; `--resume` continues
+  that work directory in a new, separately approved invocation.
+
+```sh
+python3 devbox/apps/llama-server/kyojin_infer_guard.py --write-baseline /abs/baseline.json
+docker stop llama-server
+sudo python3 devbox/apps/llama-server/kyojin_convert_guard.py --confirm-single-conversion \
+  --trial /abs/kyojin-trial --source /abs/heretic-2-bf16 --out /abs/exl3-out --work /abs/exl3-work \
+  --directory /abs/new-private-output --references /abs/preserved-notes --progress /abs/progress.md \
+  --baseline /abs/baseline.json --max-seconds 28800
+docker start llama-server
+python3 devbox/apps/llama-server/kyojin_convert_guard.py --verify-output /abs/exl3-out
+```
+
+Observed (2026-10-23/24): the n-gram table took 8,329 s at 6.1M weights/s. The
+first run then stopped on the temperature rule: loading layer 0 took the CPU
+from 74 to 98 °C in three seconds while the GPU was idle. With `--cpu-cap`
+(user-approved, all 32 max 3 GHz) each layer took about 1,100 s and the CPU
+peaked at 83 °C. Three resumes followed, two after the 8 h deadline; MTP and
+vision have no checkpoint, so a resume during them starts them again. Output
+108,793,815,861 bytes (9 shards and a 39.0 GB n-gram table). The source and
+the work directory were deleted afterwards.
+
+`--verify-output` checks the recorded settings, that every shard in the index
+and the n-gram table exist, and writes `conversion.json` (local SHA256 of every
+file). That report stands in for the acquisition report:
+`--model-profile heretic2-exl3-4bpw-local --acquisition-report conversion.json`.
+
+### Short trial and the Japanese set
+
+`--profile trial` (same long memory gate) sends the short gates, the
+over-refusal set (thinking OFF then ON), the fixed Japanese set
+([kyojin-japanese-cases.json](kyojin-japanese-cases.json): explanation, keigo
+mail, summary, creative, technical; thinking OFF, greedy, 768 tokens, text kept
+in `japanese.jsonl`) and two cold 8K and 32K prose requests: 51 requests. Send
+the identical Japanese bodies to production for the side-by-side reading:
+
+```sh
+python3 devbox/apps/llama-server/kyojin_infer.py --japanese-target llama-server:8082 \
+  --directory /abs/new-private-output --references /abs/preserved-notes
+```
+
 ## Offline verification
 
 ```sh

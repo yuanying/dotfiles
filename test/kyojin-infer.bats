@@ -9,3 +9,8 @@
   run python3 "$BATS_TEST_DIRNAME/kyojin_infer_test.py"
   [ "$status" -eq 0 ]
 }
+
+@test "Kyojin EXL3 conversion guard contracts (offline)" {
+  run python3 "$BATS_TEST_DIRNAME/kyojin_convert_test.py"
+  [ "$status" -eq 0 ]
+}
