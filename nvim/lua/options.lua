@@ -9,26 +9,57 @@ local M = {}
 -- ならない (provider#clipboard#Executable() が空になる)。明示的に張る。
 --
 -- paste 側は端末への読み出し問い合わせになり、Ghostty は既定でこれを
--- 拒否する。応答待ちで固まるのを避けるため、直前に自分が copy した内容を
--- 返すだけにする。ホスト側でコピーした文字列は端末のペースト操作で入れる。
+-- 拒否する。応答待ちで固まるのを避けるため、直前に copy した内容を返す
+-- だけにする。ホスト側でコピーした文字列は端末のペースト操作で入れる。
+-- 直前の copy はファイルに置き、別の nvim インスタンスとも共有する。
+-- 中身は秘密を含みうるので所有者だけが読めるようにする。
 function M.setup_osc52_clipboard()
   if not vim.env.SSH_TTY then
     return
   end
 
   local osc52 = require('vim.ui.clipboard.osc52')
-  local cache = { lines = {}, regtype = '' }
+  local state_dir = vim.fn.stdpath('state')
+  local cache_file = state_dir .. '/osc52-clipboard.json'
+
+  local function save(lines, regtype)
+    vim.fn.mkdir(state_dir, 'p')
+    local tmp = cache_file .. '.' .. vim.fn.getpid()
+    local fd = vim.uv.fs_open(tmp, 'w', tonumber('600', 8))
+    if not fd then
+      return
+    end
+    vim.uv.fs_write(fd, vim.json.encode({ lines = lines, regtype = regtype }))
+    vim.uv.fs_close(fd)
+    vim.uv.fs_rename(tmp, cache_file)
+  end
+
+  local function load()
+    local fd = vim.uv.fs_open(cache_file, 'r', 0)
+    if not fd then
+      return { lines = {}, regtype = '' }
+    end
+    local stat = vim.uv.fs_fstat(fd)
+    local data = stat and vim.uv.fs_read(fd, stat.size, 0)
+    vim.uv.fs_close(fd)
+    local ok, cache = pcall(vim.json.decode, data or '')
+    if not ok or type(cache) ~= 'table' or type(cache.lines) ~= 'table' then
+      return { lines = {}, regtype = '' }
+    end
+    return cache
+  end
 
   local function copy(reg)
     local send = osc52.copy(reg)
     return function(lines, regtype)
-      cache = { lines = lines, regtype = regtype }
+      save(lines, regtype)
       send(lines, regtype)
     end
   end
 
   local function paste()
-    return { cache.lines, cache.regtype }
+    local cache = load()
+    return { cache.lines, cache.regtype or '' }
   end
 
   vim.g.clipboard = {
