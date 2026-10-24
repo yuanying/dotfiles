@@ -337,6 +337,15 @@ docker start llama-server
 python3 devbox/apps/llama-server/kyojin_convert_guard.py --verify-output /abs/exl3-out
 ```
 
+Observed (2026-10-23/24): the n-gram table took 8,329 s at 6.1M weights/s. The
+first run then stopped on the temperature rule: loading layer 0 took the CPU
+from 74 to 98 °C in three seconds while the GPU was idle. With `--cpu-cap`
+(user-approved, all 32 max 3 GHz) each layer took about 1,100 s and the CPU
+peaked at 83 °C. Three resumes followed, two after the 8 h deadline; MTP and
+vision have no checkpoint, so a resume during them starts them again. Output
+108,793,815,861 bytes (9 shards and a 39.0 GB n-gram table). The source and
+the work directory were deleted afterwards.
+
 `--verify-output` checks the recorded settings, that every shard in the index
 and the n-gram table exist, and writes `conversion.json` (local SHA256 of every
 file). That report stands in for the acquisition report:
