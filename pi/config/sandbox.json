@@ -1,23 +1,16 @@
 {
   "enabled": true,
   "allowWrite": [
-    "~/.cache/go-build",
-    "~/.cache/golangci-lint",
+    "~/.cache",
     "~/pkg/mod",
     "~/go/pkg/mod",
     "~/.npm",
-    "~/.cache/node-gyp",
-    "~/.cache/pip",
-    "~/.cache/uv",
     "~/.cargo/registry",
     "~/.cargo/git",
-    "~/.asdf/installs/ruby",
+    "~/.asdf/installs",
     "~/.local/share/gem",
     "~/.bundle",
-    "~/.cache/gem",
-    "~/Library/Caches/go-build",
-    "~/Library/Caches/pip",
-    "~/Library/Caches/uv",
+    "~/Library/Caches",
     "~/.local/state/herdr-tasks"
   ],
   "excludedCommands": [
