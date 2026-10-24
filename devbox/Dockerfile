@@ -151,6 +151,8 @@ RUN set -x -e && \
         # frecency ベースのディレクトリジャンプ。herdr-navigator の
         # zoxide ソースもこの履歴を読む
         zoxide \
+        # nvim (snacks.nvim) で画像を表示するときに identify を使う
+        imagemagick \
         # virt
         virtinst \
         libvirt-clients \
