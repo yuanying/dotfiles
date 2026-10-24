@@ -232,7 +232,7 @@ export default function sandbox(pi: ExtensionAPI): void {
 			if (process.platform === "darwin") cleanupAfterMacosCommand();
 			if (looksDenied(output)) {
 				notes.push(
-					`[sandbox] サンドボックスが有効。書き込めるのは /sandbox で示す場所だけで、Unix ソケット (herdr、docker など) は塞いでいる。${COMMAND_DENIAL_NOTE}`,
+					`[sandbox] サンドボックスが有効。書き込めるのは /sandbox で示す場所だけで、Unix ソケットは塞いでいる。${COMMAND_DENIAL_NOTE}`,
 				);
 			}
 			notes.push(...watch());
