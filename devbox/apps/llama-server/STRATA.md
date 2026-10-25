@@ -24,6 +24,26 @@ with `--pool-workers 8`. The rest of the trial (thinking-on refusals, the
 Japanese set, long outputs, 8K/32K/128K prompts) did not run. A run with the
 CPU capped is a separate decision.
 
+With the CPU capped at 3 GHz and every expert in the GPU's cache
+(`--write-config --profile strix`: `--expert-cache 24576 --mmap-experts`,
+`--prefill 16384`, `--lookup-chain 3 --mtp-q4 all --mtp-window 8192` and the
+switches of `docs/STRIX_HALO.md` sections 4-5, several of which round
+differently) the CPU pool has no work and the trial ran through (37 requests,
+max 77 °C, available at least 41 GiB, swap at most 2 GiB):
+
+| Prompt | Prefill | TTFT | Decode |
+|---|---|---|---|
+| 8K cold (5,990 tokens) | 1,244-1,304 tok/s | 4.6-4.8 s | 52 tok/s |
+| 32K cold (31,704) | 1,365-1,380 tok/s | 23 s | 48-51 tok/s |
+| 128K cold (125,728), 3 runs | 1,302-1,317 tok/s | 96 s | 49-53 tok/s |
+| 128K warm (125,721 reused) | | 2.7 s | 46 tok/s |
+
+The same capped run with the exact defaults (RAM arena, 12,000 cache slots,
+`--prefill 512`) read prompts at 332-348 tok/s (128K TTFT 378 s). The needles
+were answered at every length, the thinking-on over-refusal half had no
+refusal, and the long outputs had no loop. Uncapped, the strix profile is not
+measured yet.
+
 API: `/v1/models` names the config's `model_name`; `/health` says `ok` before
 the engine is up (`loaded: true` is the ready signal);
 `chat_template_kwargs.enable_thinking` and `reasoning_effort: none` work;

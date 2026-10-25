@@ -220,19 +220,37 @@ def long_outputs(c):
     for name,prompt,n,think in LONG_OUTPUTS:c.send(name,base(prompt,think,n),prompt_estimate=200)
 
 
-def prompt_speed(c):
+def cold_text(lc,prompt,lines,run):
+    """The needle text with a run tag first: Strata's conversation cache reuses a shared prefix, so a repeat
+    that differed only at the end would be read warm."""
+    return f'（測定 {run}）\n'+infer.long_text(lc,prompt,lines)
+
+
+def prompt_speed(c,tiers=(('32K',32000,2),('128K',128000,1)),max_tokens=256,warm=False):
+    """8K twice, then each tier sized from the 8K's prompt tokens; with `warm`, the last tier's last prompt again."""
     lc=c.corpus['long_input_contract'];prompt=c.corpus['tasks']['prose']['prompt']
-    lines=lc['nominal_tiers']['8K']
-    _,row=c.send('8K-prose-cold-0',base(infer.long_text(lc,prompt,lines)),case='prose',prompt_estimate=9000)
-    measured=row['usage']['prompt_tokens'];fixed=40
-    c.send('8K-prose-cold-1',base(infer.long_text(lc,prompt,lines)+' '),case='prose',prompt_estimate=9000)
-    for tier,target,repeat in (('32K',32000,2),('128K',128000,1)):
-        if target+300>c.ctx:continue
-        n=lines_for(target,lines,measured,fixed)
+    lines=lc['nominal_tiers']['8K'];run=0;measured=None
+    for r in range(2):
+        _,row=c.send(f'8K-prose-cold-{r}',base(cold_text(lc,prompt,lines,run),max_tokens=max_tokens),case='prose',prompt_estimate=9000)
+        run+=1;measured=measured or row['usage']['prompt_tokens']
+    fixed=40;text=None
+    for tier,target,repeat in tiers:
+        if target+max_tokens+300>c.ctx:continue
+        n=lines_for(int(target/0.98),lines,measured,fixed)
         with (c.d/'calibration.jsonl').open('a') as out:out.write(json.dumps(dict(tier=tier,lines=n,base_lines=lines,base_tokens=measured))+'\n')
         for r in range(repeat):
-            # A trailing space per repeat: a new prompt, no reuse of the previous one's cache.
-            c.send(f'{tier}-prose-cold-{r}',base(infer.long_text(lc,prompt,n)+' '*r),case='prose',prompt_estimate=target)
+            text=cold_text(lc,prompt,n,run);run+=1
+            c.send(f'{tier}-prose-cold-{r}',base(text,max_tokens=max_tokens),case='prose',prompt_estimate=target)
+    if warm and text is not None:
+        c.send(f'{tier}-prose-warm-0',base(text,max_tokens=max_tokens),case='prose',prompt_estimate=target)
+
+
+def japanese(c):
+    for case in infer.japanese_cases():
+        reply,row=c.send(f"ja-{case['id']}",base(case['prompt'],max_tokens=infer.JA_MAX_TOKENS))
+        ch=reply['choices'][0]
+        with (c.d/'japanese.jsonl').open('a') as out:
+            out.write(json.dumps(dict(name=row['name'],kind=case['kind'],finish=ch['finish_reason'],usage=row['usage'],content=ch['message'].get('content')),ensure_ascii=False)+'\n')
 
 
 def suite_trial(c,refs):
@@ -241,11 +259,7 @@ def suite_trial(c,refs):
     gates(c,bool((health or {}).get('images')))
     probes(c)
     infer.refusal_suite(c)
-    for case in infer.japanese_cases():
-        reply,row=c.send(f"ja-{case['id']}",base(case['prompt'],max_tokens=infer.JA_MAX_TOKENS))
-        ch=reply['choices'][0]
-        with (c.d/'japanese.jsonl').open('a') as out:
-            out.write(json.dumps(dict(name=row['name'],kind=case['kind'],finish=ch['finish_reason'],usage=row['usage'],content=ch['message'].get('content')),ensure_ascii=False)+'\n')
+    japanese(c)
     long_outputs(c)
     prompt_speed(c)
 
@@ -256,7 +270,22 @@ def suite_smoke(c,refs):
     gates(c,bool((health or {}).get('images')))
 
 
-SUITES=dict(trial=suite_trial,smoke=suite_smoke)
+def suite_perf(c,refs,extras=True):
+    """serve-3 (CPU capped): 128K cold three times and warm once, 8K and 32K to compare, then what serve-1 left."""
+    c.bind(refs)
+    for case in ('japanese','thinking-off'):
+        req=c.smoke.request(case);req.update(top_p=1,top_k=0,min_p=0);req.pop('stream',None)
+        c.send('gate-'+case,req,case='japanese' if case=='japanese' else 'math')
+    prompt_speed(c,tiers=(('32K',32000,2),('128K',127000,3)),max_tokens=768,warm=True)
+    if not extras:return
+    for case in infer.refusal_cases():
+        reply,row=c.send(f"refusal-{case['id']}-think1",dict(infer.base(case['prompt'],True),max_tokens=512))
+        with (c.d/'refusal.jsonl').open('a') as out:out.write(json.dumps(dict(name=row['name'],refusal_class=infer.refusal_class(reply),finish=reply['choices'][0]['finish_reason'],usage=row['usage']))+'\n')
+    japanese(c)
+    long_outputs(c)
+
+
+SUITES=dict(trial=suite_trial,smoke=suite_smoke,perf=suite_perf)
 
 
 def main():

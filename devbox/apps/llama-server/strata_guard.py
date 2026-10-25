@@ -79,14 +79,27 @@ def sdk_env(strata,sdk,home,lang=None):
     return env
 
 
-def serve_env(strata,sdk,home,lang=None):
+def serve_env(strata,sdk,home,lang=None,extra=None):
     env=sdk_env(strata,sdk,home,lang)
+    # The config's engine switches (profile 'strix'); nothing but STRATA_* is taken from it.
+    for k,v in (extra or {}).items():
+        infer.require(k.startswith('STRATA_') and isinstance(v,str),'config_env')
+        env[k]=v
     env.update(STRATA_HIPBLASLT_TUNING=str(strata/HIPBLASLT_TABLE),STRATA_GGUF_PY=str(strata/'third_party/llama.cpp/gguf-py'),
                PYTHONUNBUFFERED='1',HF_HUB_OFFLINE='1')
     return env
 
 
-def server_config(strata,pack,gguf,mtp,ctx,expert_cache,log,mmproj=None,pool_workers=None):
+# docs/STRIX_HALO.md's measured configuration (section 6: section 5's fast switches on top of section 4's
+# defaults, --spec 4 --mtp --lookup-chain 3 --mtp-q4 all --prefill 16384, int8 KV, all experts in the unified
+# memory), with --mtp-window 8192 for long contexts, STRATA_PF_F16 and STRATA_REFILL_PARTS. Several of them
+# round differently from the default path (STRIX.md lists which).
+STRIX_ARGS=['--mmap-experts','--lookup-chain','3','--mtp-q4','all','--mtp-window','8192']
+STRIX_ENV={'STRATA_PF_FUSED':'1','STRATA_IGPU_PROMPT_SET':'1','STRATA_PF_SWITCH_MIN_T':'4096','STRATA_PREFILL_STREAM_MIN':'128',
+           'STRATA_PF_F16':'1','STRATA_SH_STREAM':'1','STRATA_REFILL_PARTS':'1'}
+
+
+def server_config(strata,pack,gguf,mtp,ctx,expert_cache,log,mmproj=None,pool_workers=None,profile='exact'):
     """docs/ORCA.md's local server with the context, a fixed expert-cache size and the exact defaults only:
     none of the opt-in switches of docs/STRIX_HALO.md section 5, which change the output bits."""
     infer.require(ctx in CONTEXTS,'context')
@@ -96,12 +109,19 @@ def server_config(strata,pack,gguf,mtp,ctx,expert_cache,log,mmproj=None,pool_wor
           '--prefill','512','--spec','4','--spec-min-p','0.5','--mtp',str(mtp),'--max-context',str(ctx),'--kv','int8']
     # Fewer CPU expert workers than the default (every physical core but the host's): serve-1 stopped on the
     # temperature rule with 15. Each expert job is computed by one worker as in serial (src/kernels/cpu/pool_test.cpp).
+    infer.require(profile in ('exact','strix'),'profile')
+    if profile=='strix':
+        # Every expert in the GPU's cache (24,576 slots), read from the GGUF through the file cache instead of a
+        # RAM arena beside it, so no expert is left to the CPU pool.
+        args[args.index('--prefill')+1]='16384'
+        args+=STRIX_ARGS
     if pool_workers is not None:
         infer.require(type(pool_workers) is int and 1<=pool_workers<=15,'pool_workers')
         args+=['--pool-workers',str(pool_workers)]
     cfg=dict(exe=str(strata/'build-halo/strata'),args=args,cwd=str(strata),tokenizer=str(pack/'tokenizer'),
              model_name=MODEL_ID,log=str(log),host=HOST,port=PORT)
     # The CPU reader (tools/vision): the text model is opened for its vocabulary only.
+    if profile=='strix':cfg['env']=dict(STRIX_ENV)
     if mmproj:cfg['vision']=dict(exe=str(strata/'build-vision/bin/strata-vision'),mmproj=str(mmproj),model=str(gguf),gpu=False,threads=8)
     return cfg
 
@@ -308,7 +328,7 @@ def child(a):
     home=os.environ['HOME']
     cfg=json.loads(a.config.read_text())
     command=[str(a.strata/'.venv/bin/python'),'-m','serve.server','--engine','strata','--config',str(a.config),'--port',str(PORT),'--no-api-key']
-    env=serve_env(a.strata,a.sdk,home,os.environ.get('LANG'))
+    env=serve_env(a.strata,a.sdk,home,os.environ.get('LANG'),cfg.get('env'))
     server=None
     def cancelled(sig,frame):raise RuntimeError('child_cancelled')
     signal.signal(signal.SIGTERM,cancelled);signal.signal(signal.SIGINT,cancelled)
@@ -343,10 +363,10 @@ def write_config(argv):
     p=argparse.ArgumentParser(prog='strata_guard.py --write-config')
     p.add_argument('out',type=Path)
     for name in ('strata','pack','gguf','mtp','log'):p.add_argument('--'+name,type=Path,required=True)
-    p.add_argument('--mmproj',type=Path);p.add_argument('--pool-workers',type=int)
+    p.add_argument('--mmproj',type=Path);p.add_argument('--pool-workers',type=int);p.add_argument('--profile',choices=['exact','strix'],default='exact')
     p.add_argument('--ctx',type=int,required=True);p.add_argument('--expert-cache',type=int,required=True)
     a=p.parse_args(argv)
-    cfg=server_config(a.strata,a.pack,a.gguf,a.mtp,a.ctx,a.expert_cache,a.log,a.mmproj,a.pool_workers)
+    cfg=server_config(a.strata,a.pack,a.gguf,a.mtp,a.ctx,a.expert_cache,a.log,a.mmproj,a.pool_workers,a.profile)
     with a.out.open('x') as f:f.write(json.dumps(cfg,indent=2)+'\n')
 
 

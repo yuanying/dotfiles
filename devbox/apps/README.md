@@ -131,8 +131,9 @@ which runs in the devbox, forwards to them, and `SDCTL_URL` in
 
 Strata (`github.com/Niko1221/Strata`) was built here and tried with the
 llama.cpp IQ4_XS GGUF in `~/models/qwen3.8-flash-next`. It answered, but the
-CPU reached 98 °C within minutes of decoding and the guard stopped both runs,
-so it does not serve. The tooling and the results are in
+CPU reached 98 °C within minutes of decoding with its default placement; with
+every expert in the GPU's cache and the CPU capped it ran through. It does not
+serve yet. The tooling and the results are in
 [llama-server/STRATA.md](llama-server/STRATA.md).
 
 ## Before the first start

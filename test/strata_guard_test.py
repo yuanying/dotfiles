@@ -84,6 +84,23 @@ class ServeTests(unittest.TestCase):
         a=self.config(pool_workers=8)['args'];self.assertEqual(a[a.index('--pool-workers')+1],'8')
         for bad in (0,16,'8'):
             with self.assertRaises(ValueError):self.config(pool_workers=bad)
+    def test_server_config_strix_profile(self):
+        cfg=self.config(profile='strix',expert_cache=24576)
+        a=cfg['args']
+        # Every expert in the GPU's cache, read from the GGUF through the file cache: no RAM arena, no CPU experts.
+        self.assertIn('--mmap-experts',a);self.assertEqual(a[a.index('--expert-cache')+1],'24576')
+        for flag,value in (('--prefill','16384'),('--lookup-chain','3'),('--mtp-q4','all'),('--mtp-window','8192'),('--spec','4'),('--kv','int8')):
+            self.assertEqual(a[a.index(flag)+1],value)
+        self.assertEqual(a.count('--prefill'),1)
+        env=cfg['env']
+        for k in ('STRATA_PF_FUSED','STRATA_IGPU_PROMPT_SET','STRATA_PF_F16','STRATA_SH_STREAM','STRATA_REFILL_PARTS'):self.assertEqual(env[k],'1')
+        self.assertEqual((env['STRATA_PF_SWITCH_MIN_T'],env['STRATA_PREFILL_STREAM_MIN']),('4096','128'))
+        self.assertNotIn('env',self.config())
+        with self.assertRaises(ValueError):self.config(profile='other')
+    def test_serve_env_takes_the_config_switches(self):
+        env=g.serve_env(S,SDK,'/home/u',extra={'STRATA_PF_FUSED':'1'})
+        self.assertEqual(env['STRATA_PF_FUSED'],'1')
+        with self.assertRaises(ValueError):g.serve_env(S,SDK,'/home/u',extra={'LD_PRELOAD':'x'})
     def test_server_config_limits(self):
         for kw in (dict(ctx=65536),dict(expert_cache=255),dict(expert_cache=24577),dict(expert_cache='auto')):
             with self.assertRaises(ValueError):self.config(**kw)
@@ -156,6 +173,34 @@ class TrialTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             Fake.tmp=d;f=Fake();t.suite_trial(f,None)
         self.assertLessEqual(f.n,100);self.assertGreaterEqual(f.n,60)
+    def test_cold_prompts_differ_at_the_start(self):
+        # Strata's conversation cache reuses a shared prefix: a cold repeat must differ from the first token.
+        lc=dict(needle_start='A',needle_middle='B',needle_end='C',filler_line='f')
+        a,b=t.cold_text(lc,'p',4,0),t.cold_text(lc,'p',4,1)
+        self.assertNotEqual(a[:8],b[:8]);self.assertTrue(a.endswith('Ap'[1:]) and 'A' in a and a.index('A')<a.index('B')<a.index('C'))
+    def test_perf_suite(self):
+        sent=[]
+        class Fake:
+            ctx=262144
+            def __init__(self):self.d=Path(self.tmp)
+            def bind(self,refs):
+                self.smoke=type('S',(),{'request':staticmethod(lambda case:t.base('q'))})
+                self.corpus=dict(tasks=dict(prose=dict(prompt='p')),long_input_contract=dict(nominal_tiers={'8K':256},needle_start='A',needle_middle='B',needle_end='C',filler_line='f'))
+                return self
+            def get(self,path):return 200,{}
+            def send(self,name,req,case=None,tool=None,prompt_estimate=0):
+                sent.append((name,req['messages'][0]['content'],req['max_tokens'],prompt_estimate))
+                return {},dict(name=name,usage=dict(prompt_tokens=8040),quality=dict(status='pass'))
+        with tempfile.TemporaryDirectory() as d:
+            Fake.tmp=d;t.suite_perf(Fake(),None,extras=False)
+        names=[s[0] for s in sent]
+        self.assertEqual([n for n in names if n.startswith('128K')],['128K-prose-cold-0','128K-prose-cold-1','128K-prose-cold-2','128K-prose-warm-0'])
+        cold=[s for s in sent if s[0].startswith('128K-prose-cold')];warm=[s for s in sent if s[0]=='128K-prose-warm-0'][0]
+        self.assertEqual(warm[1],cold[-1][1])                     # the warm one repeats the last cold prompt
+        self.assertEqual(len({s[1][:8] for s in cold}),3)
+        self.assertTrue(all(s[2]==768 and s[3]==127000 for s in cold))
+        self.assertEqual(sum(n.startswith('8K') for n in names),2);self.assertEqual(sum(n.startswith('32K') for n in names),2)
+        self.assertLessEqual(len(sent),60)
     def test_long_outputs(self):
         self.assertTrue(all(1024<=n<=2048 for _,_,n,_ in t.LONG_OUTPUTS))
 
