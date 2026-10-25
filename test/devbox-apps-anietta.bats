@@ -13,7 +13,9 @@ load helpers
 setup() {
     require yq
     COMPOSE="${REPO}/devbox/apps/compose.anietta.yaml"
-    KYOJIN_MODEL=/home/yuanying/models/qwen3.8-flash-next-exl3-heretic2-4bpw-207cd22c
+    STRATA=/home/yuanying/src/github.com/Niko1221/Strata
+    GGUF=/home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf
+    PACK=/home/yuanying/models/strata-packs/orca-mradermacher-i1-iq4_xs
     [ -f "${COMPOSE}" ]
 }
 
@@ -62,49 +64,44 @@ q() {
     [ "$(q '.services.llama-server.group_add | length')" -gt 0 ]
 }
 
-@test "llama-server runs Kyojin from its checkout under ~/opt, with the venv next to it" {
-    [ "$(q '.services.llama-server.build.context')" = "kyojin" ]
-    [ "$(q '.services.llama-server.working_dir')" = "/home/yuanying/opt/kyojin/src" ]
-    [ "$(q '.services.llama-server.environment.EXL3_VENV')" = "/home/yuanying/opt/kyojin/venv" ]
-    [ "$(q '.services.llama-server.environment.EXL3_ROCM_SDK')" = "/home/yuanying/opt/kyojin/venv/lib/python3.12/site-packages/_rocm_sdk_devel" ]
+@test "llama-server runs Strata from its checkout, with the ROCm it was built with" {
+    [ "$(q '.services.llama-server.build.context')" = "strata" ]
+    [ "$(q '.services.llama-server.environment.STRATA_ROOT')" = "${STRATA}" ]
+    [ "$(q '.services.llama-server.environment.STRATA_SDK')" = "/home/yuanying/opt/strata-rocm/install" ]
+    [ "$(q '.services.llama-server.environment.STRATA_HIPBLASLT_TUNING')" = "${STRATA}/tools/hip/gfx1151-hipblaslt-100401.txt" ]
 }
 
-@test "llama-server's Kyojin image has a name of its own, so the llama.cpp one stays to go back to" {
-    [ "$(q '.services.llama-server.image')" = "devbox-apps-kyojin" ]
+@test "llama-server's Strata image has a name of its own, so the Kyojin and llama.cpp ones stay to go back to" {
+    [ "$(q '.services.llama-server.image')" = "devbox-apps-strata" ]
 }
 
-@test "llama-server serves qwen3.8 on every IPv4 interface at 8082" {
+@test "llama-server serves qwen3.8 under its usual name from the IQ4_XS GGUF and its pack" {
     local args
     args=" $(q '.services.llama-server.command | join(" ")') "
-    [[ ${args} == *" --model ${KYOJIN_MODEL} "* ]]
-    [[ ${args} == *" --model-id qwen3.8-flash-next "* ]]
-    [[ ${args} == *" --host 0.0.0.0 "* ]]
-    [[ ${args} == *" --port 8082 "* ]]
+    [ "$(q '.services.llama-server.environment.STRATA_MODEL_NAME')" = "qwen3.8-flash-next" ]
+    [ "$(q '.services.llama-server.environment.STRATA_TOKENIZER')" = "${PACK}/tokenizer" ]
+    [[ ${args} == *" --pack ${PACK} "* ]]
+    [[ ${args} == *" --native ${GGUF} "* ]]
+    [[ ${args} == *" --ple-gguf ${GGUF} "* ]]
+    [ "$(q '.services.llama-server.environment.STRATA_VISION_MODEL')" = "${GGUF}" ]
 }
 
-@test "llama-server starts Kyojin as it was measured: 256K shared by two sessions, fp16 cache, mixed drafting" {
+@test "llama-server answers to the name proxyd passes and the one the devbox uses" {
+    [ "$(q '.services.llama-server.environment.STRATA_ALLOWED_HOSTS')" = "qwen38.oeilvert.dev,llama-server" ]
+}
+
+@test "llama-server keeps every expert in the GPU's cache, as measured, at the model's full context" {
     local args
     args=" $(q '.services.llama-server.command | join(" ")') "
-    [[ ${args} == *" --ctx 262144 "* ]]
-    [[ ${args} == *" --sessions 2 "* ]]
-    [[ ${args} == *" --cache-bits 0 "* ]]
-    [[ ${args} == *" --draft-policy mix "* ]]
-    [[ ${args} == *" --chat-template ${KYOJIN_MODEL}/chat_template.jinja "* ]]
-    [[ ${args} == *" --slot-save-path /home/yuanying/.cache/kyojin/slots "* ]]
-}
-
-@test "llama-server thinks at the template's own default effort and leaves the reply budget to the free context" {
-    local args
-    args=" $(q '.services.llama-server.command | join(" ")') "
-    [[ ${args} == *" --default-reasoning-effort xhigh "* ]]
-    [[ ${args} != *" --default-max-tokens "* ]]
-    [[ ${args} != *" --no-thinking "* ]]
-}
-
-@test "llama-server serves decensored weights with no runtime preset and streams the n-gram table from disk" {
-    [ "$(q '.services.llama-server.environment.EXL3_ABLIT_RUNTIME')" = "off" ]
-    [ "$(q '.services.llama-server.environment.EXL3_NGRAM_STREAM')" = "1" ]
-    [[ " $(q '.services.llama-server.command | join(" ")') " != *" --no-uncensor "* ]]
+    [[ ${args} == *" --expert-cache 24576 --mmap-experts "* ]]
+    [[ ${args} == *" --max-context 262144 "* ]]
+    [[ ${args} == *" --kv int8 "* ]]
+    [[ ${args} == *" --prefill 16384 "* ]]
+    [[ ${args} == *" --spec 4 "* && ${args} == *" --lookup-chain 3 "* && ${args} == *" --mtp-q4 all "* ]]
+    [[ ${args} == *" --mtp-window 8192 "* ]]
+    for k in STRATA_PF_FUSED STRATA_IGPU_PROMPT_SET STRATA_PF_F16 STRATA_SH_STREAM STRATA_REFILL_PARTS; do
+        [ "$(q ".services.llama-server.environment.${k}")" = "1" ]
+    done
 }
 
 @test "llama-server no longer points at the abliterated Lygodactylus pack, which is deleted" {
