@@ -127,6 +127,14 @@ too, so from the devbox the apps are `http://sd-webui:7860`,
 which runs in the devbox, forwards to them, and `SDCTL_URL` in
 `~/.zshrc.boucherie` points `sdctl` at the first one.
 
+### Strata (trial only)
+
+Strata (`github.com/Niko1221/Strata`) was built here and tried with the
+llama.cpp IQ4_XS GGUF in `~/models/qwen3.8-flash-next`. It answered, but the
+CPU reached 98 °C within minutes of decoding and the guard stopped both runs,
+so it does not serve. The tooling and the results are in
+[llama-server/STRATA.md](llama-server/STRATA.md).
+
 ## Before the first start
 
 - `v6net` exists and the devbox is on it — `net-fraction-private` makes the
