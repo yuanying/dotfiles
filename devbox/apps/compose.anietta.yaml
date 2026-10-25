@@ -26,33 +26,42 @@ services:
   llama-server:
     <<: *app
     container_name: llama-server
-    # Kyojin, Yamz Labs' engine built on ExLlamaV3 for Strix Halo, with its
-    # built extension and venv under ~/opt/kyojin. The llama.cpp setup this
-    # replaced is still in llama-server/, and README.md says how to go back.
+    # Strata (github.com/Niko1221/Strata), built for gfx1151 in the devbox
+    # with its own ROCm (AMD TheRock 7.14.1 under ~/opt/strata-rocm), serving
+    # the abliterated IQ4_XS GGUF llama.cpp served, through a pack made from
+    # it. Kyojin's setup is still in kyojin/, llama.cpp's in llama-server/,
+    # and README.md says how to go back. llama-server/STRATA.md has the build,
+    # the pack and the measurements.
     build:
-      context: kyojin
-    # Not the devbox-apps-llama-server compose would name it after the
-    # service: that one is llama.cpp's, kept so that going back to it needs
-    # no build.
-    image: devbox-apps-kyojin
-    working_dir: /home/yuanying/opt/kyojin/src
+      context: strata
+    image: devbox-apps-strata
     environment:
-      EXL3_VENV: /home/yuanying/opt/kyojin/venv
-      EXL3_ROCM_SDK: /home/yuanying/opt/kyojin/venv/lib/python3.12/site-packages/_rocm_sdk_devel
-      # The weights are already decensored (heretic-2, converted to EXL3 on
-      # this machine), so no runtime uncensor projection on top. "off" rather
-      # than unset, so nothing inherited can turn one on.
-      EXL3_ABLIT_RUNTIME: "off"
-      # Read the n-gram embedding table from the file instead of holding it in
-      # RAM. In RAM, the server's pages went to swap while the weights loaded.
-      EXL3_NGRAM_STREAM: "1"
+      STRATA_ROOT: /home/yuanying/src/github.com/Niko1221/Strata
+      STRATA_SDK: /home/yuanying/opt/strata-rocm/install
+      STRATA_TOKENIZER: /home/yuanying/models/strata-packs/orca-mradermacher-i1-iq4_xs/tokenizer
+      STRATA_MODEL_NAME: qwen3.8-flash-next
+      STRATA_LOG: /home/yuanying/.cache/strata/engine.log
+      # The Host names besides its own address the server answers (it refuses
+      # others, against DNS rebinding): proxyd passes the public name through,
+      # and the devbox reaches it as llama-server.
+      STRATA_ALLOWED_HOSTS: qwen38.oeilvert.dev,llama-server
+      # The CPU picture reader; the GGUF is opened for its vocabulary only.
+      STRATA_VISION_MMPROJ: /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.mmproj-f16.gguf
+      STRATA_VISION_MODEL: /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf
+      # The prompt GEMM table for this ROCm's hipBLASLt.
+      STRATA_HIPBLASLT_TUNING: /home/yuanying/src/github.com/Niko1221/Strata/tools/hip/gfx1151-hipblaslt-100401.txt
+      # docs/STRIX_HALO.md's fast configuration. All but the last two round
+      # differently from the engine's default path.
+      STRATA_PF_FUSED: "1"
+      STRATA_IGPU_PROMPT_SET: "1"
+      STRATA_PF_SWITCH_MIN_T: "4096"
+      STRATA_PREFILL_STREAM_MIN: "128"
+      STRATA_PF_F16: "1"
+      STRATA_SH_STREAM: "1"
+      STRATA_REFILL_PARTS: "1"
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
       PYTHONUNBUFFERED: "1"
-      # As measured.
-      OMP_NUM_THREADS: "1"
-      MKL_NUM_THREADS: "1"
-      OPENBLAS_NUM_THREADS: "1"
     devices:
       - /dev/kfd
       - /dev/dri
@@ -62,35 +71,40 @@ services:
       - "44"
       - "993"
     ipc: host
+    # The engine's arguments, as measured with the CPU capped at 3 GHz.
     command:
-      - --model
-      - /home/yuanying/models/qwen3.8-flash-next-exl3-heretic2-4bpw-207cd22c
-      - --model-id
-      - qwen3.8-flash-next
-      # The model's native length, in one pool of KV pages that both sessions
-      # draw from: a second session costs little more than its GDN state.
-      - --ctx
+      - --pack
+      - /home/yuanying/models/strata-packs/orca-mradermacher-i1-iq4_xs
+      - --native
+      - /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf
+      - --ple-gguf
+      - /home/yuanying/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf
+      - --expert-profile
+      - /home/yuanying/src/github.com/Niko1221/Strata/data/expert-profile.bin
+      # Every expert (61 GiB) in the GPU's cache, read from the GGUF through
+      # the file cache: no RAM arena beside it and no expert left to the CPU,
+      # whose pool drove it to 98 °C with a partial cache.
+      - --expert-cache
+      - "24576"
+      - --mmap-experts
+      - --prefill
+      - "16384"
+      - --spec
+      - "4"
+      - --spec-min-p
+      - "0.5"
+      - --mtp
+      - /home/yuanying/models/strata-mtp/rt
+      - --mtp-q4
+      - all
+      - --lookup-chain
+      - "3"
+      - --mtp-window
+      - "8192"
+      - --max-context
       - "262144"
-      - --sessions
-      - "2"
-      # fp16 pages. The 8-bit ones save 2.6 GiB at 256K (serve.py's figure) but
-      # do not give the same output for a request run alongside another.
-      - --cache-bits
-      - "0"
-      - --draft-policy
-      - mix
-      - --chat-template
-      - /home/yuanying/models/qwen3.8-flash-next-exl3-heretic2-4bpw-207cd22c/chat_template.jinja
-      # The template's own default, which is also what llama.cpp got from the
-      # GGUF's template. serve.py would otherwise ask for medium.
-      - --default-reasoning-effort
-      - xhigh
-      - --slot-save-path
-      - /home/yuanying/.cache/kyojin/slots
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8082"
+      - --kv
+      - int8
 
 networks:
   # Created on simone's regied bridge by net-fraction-private, not by compose:

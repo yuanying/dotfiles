@@ -6,7 +6,10 @@ Experimental tooling, not a production switch. It builds
 `~/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf`
 (mradermacher's i1 IQ4_XS of `orcarouter/Qwen3.8-Flash-Next-Uncensored`)
 through Strata's OrcaRouter path (`docs/ORCA.md`, `tools/iq_pack.py
---compat-bf16`). The GGUF is only read. The compose file still serves Kyojin.
+--compat-bf16`). The GGUF is only read. Since 2026-10-25 the compose file
+serves it this way (`--profile strix` below, `STRATA_ALLOWED_HOSTS` for the
+names proxyd and the devbox use) with the CPU capped at 3 GHz; README.md says
+how to go back.
 
 ## Result (2026-10-25)
 
@@ -44,12 +47,18 @@ were answered at every length, the thinking-on over-refusal half had no
 refusal, and the long outputs had no loop. Uncapped, the strix profile is not
 measured yet.
 
+Serving it, run by hand: the cap is `evox2-cpu-limit.py snapshot` then `apply`
+(all 32 CPU max to min(original, 3 GHz)), kept while Strata serves and lifted
+by `restore` from the same snapshot or by a reboot. It is not persisted, so
+after a reboot `restart: always` starts Strata uncapped until it is applied
+again.
+
 API: `/v1/models` names the config's `model_name`; `/health` says `ok` before
 the engine is up (`loaded: true` is the ready signal);
 `chat_template_kwargs.enable_thinking` and `reasoning_effort: none` work;
 `tool_choice` auto, forced and `required` return tool calls; `json_schema`
 and `json_object` return JSON (checked only as one object without the
-`jsonschema` package); `logprobs` is ignored; `stream_options.include_usage`
+`jsonschema` package); `logprobs` is ignored (a client asking for it gets none); `tool_choice: "none"` offers no tool; `stream_options.include_usage`
 adds a usage chunk.
 
 ## Fixed inputs

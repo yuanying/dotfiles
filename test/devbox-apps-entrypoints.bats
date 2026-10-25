@@ -116,6 +116,74 @@ model.gguf
     [[ ${output} == *LLAMA_SERVER* ]]
 }
 
+# --- strata ----------------------------------------------------------------
+
+# A Strata checkout as the entrypoint expects to find it: the engine, and a venv
+# whose python runs the inline config writer for real and records how the server
+# was started.
+strata_checkout() {
+    mkdir -p build-halo .venv/bin sdk
+    touch build-halo/strata
+    chmod +x build-halo/strata
+    cat > .venv/bin/python <<'SH'
+#!/bin/bash
+if [[ $1 == - ]]; then exec python3 "$@"; fi
+printf '%s\n' "$@" > "${STUB_DIR}/python.args"
+echo "${PWD} ${LD_LIBRARY_PATH} ${STRATA_PF_FUSED:-}" > "${STUB_DIR}/python.env"
+config=$(sed -n '/^--config$/{n;p}' "${STUB_DIR}/python.args")
+cp "${config}" "${STUB_DIR}/config.json"
+SH
+    chmod +x .venv/bin/python
+    export STRATA_ROOT="${WORK}" STRATA_SDK="${WORK}/sdk" STRATA_TOKENIZER=/packs/p/tokenizer \
+        STRATA_MODEL_NAME=qwen3.8-flash-next STRATA_LOG="${WORK}/log/engine.log" \
+        STRATA_VISION_MMPROJ=/m/mmproj.gguf STRATA_VISION_MODEL=/m/model.gguf STRATA_PF_FUSED=1
+}
+
+@test "strata starts the server on 8082 with a run config holding the engine's arguments" {
+    require jq
+    strata_checkout
+    run "${APPS}/strata/entrypoint.sh" --pack /packs/p --expert-cache 24576
+    [ "${status}" -eq 0 ]
+    [ "$(sed -n '1,4p' "${STUB_DIR}/python.args")" = "-m
+serve.server
+--engine
+strata" ]
+    [[ $(tr '\n' ' ' < "${STUB_DIR}/python.args") == *"--host 0.0.0.0 --port 8082 --no-api-key "* ]]
+    local c="${STUB_DIR}/config.json"
+    [ "$(jq -r '.args | join(" ")' "${c}")" = "--pack /packs/p --expert-cache 24576" ]
+    [ "$(jq -r .exe "${c}")" = "${WORK}/build-halo/strata" ]
+    [ "$(jq -r '[.tokenizer, .model_name, .host, .port] | join(" ")' "${c}")" = "/packs/p/tokenizer qwen3.8-flash-next 0.0.0.0 8082" ]
+    [ "$(jq -r '[.vision.mmproj, .vision.model, .vision.gpu] | join(" ")' "${c}")" = "/m/mmproj.gguf /m/model.gguf false" ]
+    [ -d "${WORK}/log" ]
+}
+
+@test "strata puts its own ROCm first and passes the engine switches through" {
+    strata_checkout
+    run "${APPS}/strata/entrypoint.sh" --pack /packs/p
+    [ "${status}" -eq 0 ]
+    [ "$(cat "${STUB_DIR}/python.env")" = "${WORK} ${WORK}/sdk/lib:${WORK}/sdk/lib/rocm_sysdeps/lib:${WORK}/sdk/lib/llvm/lib 1" ]
+}
+
+@test "strata without vision writes no vision section" {
+    require jq
+    strata_checkout
+    run env -u STRATA_VISION_MMPROJ "${APPS}/strata/entrypoint.sh" --pack /packs/p
+    [ "${status}" -eq 0 ]
+    [ "$(jq 'has("vision")' "${STUB_DIR}/config.json")" = "false" ]
+}
+
+@test "strata without its settings or its engine fails" {
+    strata_checkout
+    run env -u STRATA_SDK "${APPS}/strata/entrypoint.sh" --pack /packs/p
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *STRATA_SDK* ]]
+    rm build-halo/strata
+    run "${APPS}/strata/entrypoint.sh" --pack /packs/p
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *"${WORK}/build-halo/strata"* ]]
+    [ ! -e "${STUB_DIR}/python.args" ]
+}
+
 # --- kyojin ----------------------------------------------------------------
 
 # A Kyojin checkout as the entrypoint expects to find it: the strix_halo env.sh,

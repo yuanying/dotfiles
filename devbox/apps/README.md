@@ -19,65 +19,64 @@ On anietta:
 
 | Container | Port | Source | After editing the source |
 |---|---|---|---|
-| `llama-server` | 8082 | `~/opt/kyojin/src` (Kyojin, with `~/opt/kyojin/venv`) | `docker restart llama-server` after a rebuild |
+| `llama-server` | 8082 | `~/src/github.com/Niko1221/Strata` (Strata, with its `.venv` and `~/opt/strata-rocm`) | `docker restart llama-server` after a rebuild |
 
-It serves Qwen3.8-Flash-Next as `qwen3.8-flash-next`, from the EXL3 pack in
-`~/models/qwen3.8-flash-next-exl3-heretic2-4bpw-207cd22c`, with Kyojin
-(`github.com/Yamz-Labs/kyojin`), Yamz Labs' engine built on ExLlamaV3 for
-Strix Halo. The pack was converted on this machine from the decensored BF16
-weights `trohrbaugh/Qwen3.8-Flash-Next-heretic-2` (revision `207cd22c`):
-4.05 bpw, `lm_head` 6, MTP 8, n-gram table 6, vision 6, 108.8 GB; how, and
-`conversion.json` in the pack, are in
-[llama-server/KYOJIN-INFER.md](llama-server/KYOJIN-INFER.md). The checkout is at `e09322da`;
-its extension (`exllamav3_ext.*.so`) is built in the devbox, and the venv
-holds the ROCm torch and SDK wheels it was built against. The image is the
-ROCm base the devbox is built on; the devices are `/dev/kfd` and `/dev/dri`,
-with simone's `video` and `render` GIDs. Where it is published is not in this
-repository: the `qwen38` entry in `~/.config/devbox-proxy/services.local.yaml`
-(`docs/adr/0009`) forwards to `llama-server:8082`. The container keeps the
-name it had when it ran llama.cpp, so that entry and the clients did not
-change.
+It serves Qwen3.8-Flash-Next as `qwen3.8-flash-next` with Strata
+(`github.com/Niko1221/Strata`, v0.2.4), from the abliterated IQ4_XS GGUF
+llama.cpp served (`~/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-Uncensored.i1-IQ4_XS.gguf`,
+mradermacher's i1 quant of `orcarouter/Qwen3.8-Flash-Next-Uncensored`) and a
+pack made from it in `~/models/strata-packs/orca-mradermacher-i1-iq4_xs`, with
+the original model's MTP head in `~/models/strata-mtp/rt`. The engine is built
+in the devbox for gfx1151 against AMD's TheRock ROCm 7.14.1 in
+`~/opt/strata-rocm/install`, which the entrypoint puts ahead of the image's;
+the image is the ROCm base Kyojin's used. How it was built, packed and
+measured is in [llama-server/STRATA.md](llama-server/STRATA.md). Where it is
+published is not in this repository: the `qwen38` entry in
+`~/.config/devbox-proxy/services.local.yaml` (`docs/adr/0009`) forwards to
+`llama-server:8082`. The container keeps the name it had when it ran
+llama.cpp, so that entry and the clients did not change.
 
-The settings are the ones it was measured with: 256K of context in one pool
-of KV pages that two sessions share, an fp16 cache, MTP and n-gram drafting,
-no runtime uncensor preset (`EXL3_ABLIT_RUNTIME=off`: the weights themselves
-are decensored), and the n-gram embedding table read from its file rather
-than held in RAM. Thinking is on unless a request turns
-it off with `chat_template_kwargs.enable_thinking: false` (or
-`reasoning_effort: "none"`), at the template's default effort, `xhigh`. A
-request without `max_tokens` or `max_completion_tokens` may answer until the
-context is full.
+The settings are the ones measured in STRATA.md: 256K of context with an int8
+KV cache, every expert (61 GiB) in the GPU's cache and read from the GGUF
+through the file cache, 16,384-token prompt chunks, MTP and lookup drafting,
+and docs/STRIX_HALO.md's fast switches, several of which round differently
+from the engine's default path. Thinking is on unless a request turns it off
+with `chat_template_kwargs.enable_thinking: false` or `reasoning_effort:
+"none"`. Pictures go through the CPU reader.
+
+**The CPU is capped.** It was measured, and runs, with every CPU's maximum
+frequency lowered to 3 GHz (a sysfs write, not persisted: a reboot lifts it,
+and `restart: always` then starts Strata uncapped). With a partial expert
+cache and no cap its CPU pool drove the CPU to 98 °C within minutes. The cap
+and its snapshot are kept outside this repository; restoring it is
+`evox2-cpu-limit.py restore --snapshot <snapshot> --confirm-host-change`.
 
 It is not llama.cpp's server, and clients written for that one may miss:
 
-- `tool_choice` is ignored: the model decides whether to call a tool, and a
-  forced or named choice is not enforced. `response_format` is ignored too.
-- There is no `/v1/embeddings`, `/props`, `/metrics` or `/v1/messages`.
-- The llama.cpp-style `/completion` answers 128 tokens when not given
-  `n_predict`.
-- `cache_prompt: false` is refused while there is more than one session.
+- `logprobs` is ignored.
+- `response_format` with a JSON schema is checked only as one JSON object
+  (the `jsonschema` package is not in the venv).
+- `/health` answers `ok` before the model is up; `loaded: true` says it is.
 
-What it does have: `/health` (503 with the load progress until it is ready),
-`/v1/models`, `/v1/chat/completions` (streaming, tools, images,
-`logprobs` with up to 20 `top_logprobs`), `/v1/completions`, `/completion`,
-`/tokenize`, `/apply-template` and `/slots`.
+What it does have: `/v1/models`, `/v1/chat/completions` (streaming with
+usage, tools with `tool_choice` auto, `required`, named or `none`, images),
+`/v1/messages`, `/v1/responses`, `/props` and `/slots`.
 
-A start takes about a minute when the weights are in the page cache, most
-of it reading them, and longer from a cold disk. When it is up, `docker logs llama-server` shows the table as
-`[ngram] table mode trellis_disk` and no `ablit runtime: spec` line. The pack
-has no `draft2s.st` or `hc_gs_sidecar.safetensors`, so the log also says
-"full head" and "plain rounding"; that is expected.
+A start takes under a minute when the GGUF is in the page cache, most of it
+filling the expert cache (`pre-filled 24576 of 24576 slots` in
+`~/.cache/strata/engine.log`).
 
-For a while it served an abliterated EXL3 pack instead
-(`Lygodactylus/Qwen3.8-Flash-Next-Uncensored-exl3-4bpw`, revision
-`9c715c0b`, with `EXL3_ABLIT_RUNTIME=off`; `f0cc086`). That pack has been
-deleted from `~/models`, so its compose definition no longer runs. The
-scripts that fetched and tried it, and its manifest, are in
+Before Strata it served Kyojin: the decensored `trohrbaugh/Qwen3.8-Flash-Next-heretic-2`
+converted here to EXL3 (`f396390`, pack since deleted), and for a while the
+abliterated `Lygodactylus/Qwen3.8-Flash-Next-Uncensored-exl3-4bpw` (`f0cc086`,
+deleted too). Kyojin's image is still `kyojin/`, built as
+`devbox-apps-kyojin`, and its checkout is in `~/opt/kyojin`; how those packs
+were fetched, converted and tried is in
 [llama-server/KYOJIN-INFER.md](llama-server/KYOJIN-INFER.md).
 
 ### Going back to the Yamz pack
 
-Before this pack it served `yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz`
+Kyojin also served `yamz-labs/Qwen3.8-Flash-Next-EXL3-Yamz`
 (revision `247ef39b`) with that pack's runtime uncensor preset, and the pack
 is still in `~/models/qwen3.8-flash-next-exl3-yamz-247ef39b`. Its compose
 definition is the one in `ef00aa7`; to run it again without touching the
@@ -88,8 +87,9 @@ git -C ~/dotfiles show ef00aa7:devbox/apps/compose.anietta.yaml |
     docker compose -f - --project-directory ~/dotfiles/devbox/apps up -d --no-build llama-server
 ```
 
-The image is the same, so nothing is built. To keep it, revert this change
-through a pull request.
+Kyojin's image is still there, so nothing is built. Restore the CPU's
+maximum frequency as well (above) if Strata is not coming back. To keep it,
+revert this change through a pull request.
 
 ### Going back to llama.cpp
 
@@ -126,15 +126,6 @@ too, so from the devbox the apps are `http://sd-webui:7860`,
 `http://sd-viewer:8189` and `http://tageditor:5173`. That is also how proxyd,
 which runs in the devbox, forwards to them, and `SDCTL_URL` in
 `~/.zshrc.boucherie` points `sdctl` at the first one.
-
-### Strata (trial only)
-
-Strata (`github.com/Niko1221/Strata`) was built here and tried with the
-llama.cpp IQ4_XS GGUF in `~/models/qwen3.8-flash-next`. It answered, but the
-CPU reached 98 °C within minutes of decoding with its default placement; with
-every expert in the GPU's cache and the CPU capped it ran through. It does not
-serve yet. The tooling and the results are in
-[llama-server/STRATA.md](llama-server/STRATA.md).
 
 ## Before the first start
 
