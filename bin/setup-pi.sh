@@ -7,6 +7,10 @@
 # web-search.json は pi-web-access が (curator の切り替えを) 書き戻すので、
 # symlink にはせず Claude Code の settings.json と同じく jq でマージする。
 # 優先順は 手元 < 共通 < ホスト別。
+#
+# 値の中の __PI_DIR__ はこのチェックアウトの pi/ に置き換える。models.json の
+# apiKey は pi/secrets.enc.yaml を sops で復号するコマンドで、チェックアウトの
+# 場所はホストごとに違うため。
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 PI_DIR=${ROOT}/pi
@@ -22,7 +26,10 @@ merge_json() { # <ファイル名 (拡張子なし)>
     # 該当ホストが無ければ共通ファイルをもう一度重ねる (Claude と同じ落とし方)。
     [[ -f ${host} ]] || host=${common}
     [[ -f ${target} ]] || echo '{}' > "${target}"
-    jq -s '.[0] * .[1] * .[2]' "${target}" "${common}" "${host}" \
+    jq -s --arg dir "${PI_DIR}" '
+        .[0] * .[1] * .[2] |
+        walk(if type == "string" then split("__PI_DIR__") | join($dir) else . end)
+    ' "${target}" "${common}" "${host}" \
         > "${target}.tmp" && mv -f "${target}.tmp" "${target}"
 }
 
@@ -103,6 +110,7 @@ else
     merge_json keybindings
     merge_json web-search
     merge_json subscription-usage
+    merge_json models
 fi
 
 # Validates the worktree destination before invoking git; agents use ~/bin.

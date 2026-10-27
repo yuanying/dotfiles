@@ -8,6 +8,7 @@
 | 設定 | `settings.json`、ホスト別は `settings.<hostname>.json` | 手元 < 共通 < ホスト別 の順に jq でマージ。pi が書き戻すので symlink にしない |
 | キーバインド | `keybindings.json`、ホスト別は `keybindings.<hostname>.json` | 設定と同じ順でマージ |
 | Web 検索 (pi-web-access) | `web-search.json`、ホスト別は `web-search.<hostname>.json` | 同上。pi-web-access も書き戻す |
+| モデル (自前のプロバイダー) | `models.json`、ホスト別は `models.<hostname>.json` | 同上。値の `__PI_DIR__` はこのチェックアウトの `pi/` に置き換える。詳細は下記 |
 | auto mode (pi-automode) | `config/pi-automode.json`、ホスト別は `config/pi-automode.<hostname>.json` | `~/.pi/agent/extensions/pi-automode/config.json` へコピーしてマージ。詳細は下記 |
 | サンドボックス | `config/sandbox.json`、ホスト別は `config/sandbox.<hostname>.json` | `~/.pi/agent/extensions/sandbox.json` へコピーしてマージ。詳細は下記 |
 | パッケージ (他人の extension) | `settings.json` の `packages` に `npm:<名前>@<版>` で書く | マージの後に `pi install` で入れる。版は Renovate が追う。詳細は下記 |
@@ -95,6 +96,31 @@
 - `extensions/` を丸ごと symlink にしないのは、`herdr integration install pi` と
   `moshi-hook install` が同じディレクトリに自分のファイルを置くため。
 - `auth.json` とセッションはホストごとのまま。ログインは各ホストで `/login` を 1 回。
+
+## qwen38
+
+`models.json` の `qwen38` は anietta の Strata (`devbox/apps/README.md`) を
+`https://qwen38.oeilvert.dev/v1` 越しに使う。そこへ通るためのトークンは
+`secrets.enc.yaml` に sops で暗号化して置き、`apiKey` の `!sops -d ...` で pi が
+読む。コマンドが走るのはキーが初めて要るときに 1 回で、出力はプロセスが
+終わるまで使い回される。平文はディスクに残らない。
+
+受信者はリポジトリ直下の `.sops.yaml` にある各ホストの `~/.ssh/id_ed25519.pub` で、
+sops はその秘密鍵で復号する。鍵はホストごとに別にして、手放すホストを
+そのホストだけ外せるようにしてある。pi は対話できないので、
+パスフレーズの無い鍵にする。復号できないホストでは `qwen38` を選んでも認証に
+失敗するだけで、他のプロバイダーには響かない。
+
+- ホストを足す: そのホストの公開鍵を `.sops.yaml` の `age:` にカンマ区切りで足し、
+  復号できるホストで `sops updatekeys pi/secrets.enc.yaml`。鍵が無ければ先に
+  `ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519`。
+- ホストを外す: `age:` から消して `updatekeys` と
+  `sops rotate -i pi/secrets.enc.yaml`。外したホストはそれまでの版を git の履歴から
+  開けるので、トークンも替える。
+- トークンを替える: `sops pi/secrets.enc.yaml` で `qwen38_token` を書き換え、各ホストで
+  pull して pi を起動し直す。
+
+`.sops.yaml` と暗号文の受信者が揃っていることは `test/setup-pi.bats` が確かめる。
 - 本体の版は `devbox/Dockerfile` の `ARG PI_VERSION`。Mac では
   `bin/mac/setup-packages.sh` がそれを読んで同じ版を npm で入れる。
 
