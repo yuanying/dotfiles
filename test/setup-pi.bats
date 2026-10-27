@@ -177,6 +177,16 @@ EOF
     [ "$(jq -r .theme "${AGENT}/settings.json")" = "dark" ]
 }
 
+@test "__PI_DIR__ becomes this checkout's pi/, keeping local providers" {
+    mkdir -p "${AGENT}"
+    echo '{ "providers": { "local": { "baseUrl": "http://localhost:8080/v1" } } }' > "${AGENT}/models.json"
+    echo '{ "providers": { "remote": { "apiKey": "!cat __PI_DIR__/a __PI_DIR__/b" } } }' > "${FAKE}/pi/models.json"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .providers.remote.apiKey "${AGENT}/models.json")" = "!cat ${FAKE}/pi/a ${FAKE}/pi/b" ]
+    [ "$(jq -r .providers.local.baseUrl "${AGENT}/models.json")" = "http://localhost:8080/v1" ]
+}
+
 @test "PI_CODING_AGENT_DIR moves the agent directory, as it does for pi" {
     export PI_CODING_AGENT_DIR="${BATS_TEST_TMPDIR}/agent"
     run bash "${SETUP}"
@@ -411,6 +421,39 @@ resources() {
 @test "fetching falls back from a local fetch to Jina Reader only" {
     jq -e '.fetchRouting.providers == ["http", "jina"]' "${REPO}/pi/web-search.json"
     jq -e '.fetchRouting.allowRemoteHostedProviders == true' "${REPO}/pi/web-search.json"
+}
+
+# --- qwen38 ---
+
+@test "qwen38's key is decrypted from the checkout with sops" {
+    # pi runs the command through a shell; a fake sops shows what it is given.
+    printf '#!/bin/bash\nprintf "%%s\\n" "$@"\n' > "${FAKE_BIN}/sops"
+    chmod +x "${FAKE_BIN}/sops"
+    cp "${REPO}/pi/models.json" "${FAKE}/pi/models.json"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    key=$(jq -r .providers.qwen38.apiKey "${AGENT}/models.json")
+    [[ ${key} == '!'* ]]
+    run bash -c "${key#!}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "$(printf '%s\n' -d --extract '["qwen38_token"]' "${FAKE}/pi/secrets.enc.yaml")" ]
+}
+
+@test "qwen38's token is in the repository only encrypted" {
+    require yq
+    local f="${REPO}/pi/secrets.enc.yaml"
+    [[ $(yq -r .qwen38_token "$f") == ENC\[* ]]
+    [ "$(yq -r '.sops.age | length' "$f")" -gt 0 ]
+}
+
+@test "the token is encrypted to every recipient .sops.yaml names, and no other" {
+    require yq
+    # Forgetting `sops updatekeys` after editing .sops.yaml leaves a host out.
+    wanted=$(yq -r '.creation_rules[] | select(.path_regex | test("secrets")) | .age' "${REPO}/.sops.yaml" |
+        tr ',' '\n' | sed 's/^ *//; s/ *$//' | LC_ALL=C sort)
+    actual=$(yq -r '.sops.age[].recipient' "${REPO}/pi/secrets.enc.yaml" | LC_ALL=C sort)
+    [ -n "${wanted}" ]
+    [ "${wanted}" = "${actual}" ]
 }
 
 @test "setup.sh runs setup-pi.sh and wires pi into herdr" {

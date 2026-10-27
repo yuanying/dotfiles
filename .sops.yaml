@@ -1,0 +1,13 @@
+# pi/secrets.enc.yaml は sops で暗号化して置く。受信者は pi を使う各ホストの
+# ~/.ssh/id_ed25519.pub で、復号は sops がその秘密鍵で行う。
+# パスフレーズの無い鍵にすること: pi が起動中に復号するので、問われても答えられない。
+#
+# ホストを足す・外すときは age: を書き換えたうえで、復号できるホストで
+# `sops updatekeys pi/secrets.enc.yaml` を走らせる。詳しくは pi/README.md。
+creation_rules:
+  - path_regex: (^|/)pi/secrets\.enc\.yaml$
+    age: >-
+      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMyFbkd1OfTIrywD1BSpfb6GJyvK6JaqSSOKwhukYs96 yuanying@boucherie,
+      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG+V0JiHPawLuGINcqedADXI24XiJf/Yh0n8+5tGkxZH yuanying@anietta,
+      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMT0w9VI5huZyN8jBfPwqHoPVMTEr2ACzckv22A3sYNB yuanying@aemilia,
+      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK04yTjGTs1C6MCtjEDYJs6B/trrVgIEhgIXSXMUdvHI yuanying@augusta

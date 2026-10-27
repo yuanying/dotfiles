@@ -1,0 +1,25 @@
+{
+  "providers": {
+    "qwen38": {
+      "baseUrl": "https://qwen38.oeilvert.dev/v1",
+      "api": "openai-completions",
+      "apiKey": "!sops -d --extract '[\"qwen38_token\"]' '__PI_DIR__/secrets.enc.yaml'",
+      "models": [
+        {
+          "id": "qwen3.8-flash-next",
+          "name": "Qwen3.8 Flash Next",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 262144,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        }
+      ]
+    }
+  }
+}
