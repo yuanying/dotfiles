@@ -3,7 +3,7 @@
 # checkout compose mounts from $HOME with the venv uv made there; the image is
 # only uv and git, which the app calls to read the repository.
 
-FROM ghcr.io/astral-sh/uv:0.13.5 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.6 AS uv
 
 # The venv's Python is not in the image: uv keeps it under $HOME.
 FROM debian:bookworm-slim
