@@ -1,11 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    ":semanticCommitTypeAll(chore)"
+    "github>yuanying/renovate-config",
+    "github>yuanying/renovate-config:automerge-patch"
   ],
-  "timezone": "Asia/Tokyo",
-  "dependencyDashboard": true,
   "customDatasources": {
     "moshi-hook": {
       "description": "moshi-hook は GitHub リリースを持たず、CDN の version.txt が最新版の正",
