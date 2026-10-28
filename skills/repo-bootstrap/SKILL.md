@@ -46,7 +46,7 @@ gated・cnidaria-cni・fraction-agents・porkadot で使ってきた形をまと
 | CI | `.github/workflows/ci.yml` | push to main と全 PR。paths フィルタは付けない (自動マージの前提) |
 | タグでのリリース | `.github/workflows/release.yml` | `v*.*.*` の push で、成果物を GitHub Release に、イメージを ghcr.io に |
 | 週次の自動リリース | `.github/workflows/weekly-release.yml` と `.github/scripts/plan-release.sh` | Renovate のコミットだけなら毎週月曜にパッチ版を出す |
-| 依存の更新 | `renovate.json` | patch と digest は自動マージ、Actions は 1 つの PR にまとめる |
+| 依存の更新 | `renovate.json` | 共通の preset `yuanying/renovate-config` を extends する。patch と digest の自動マージ、Actions を 1 つの PR にまとめるのは preset が持つ |
 | GitHub の設定 | `gh repo edit` | マージ後にブランチを消す。Renovate App がそのリポジトリで有効か |
 
 ## 雛形
@@ -105,6 +105,11 @@ templates/
   `.github/`・`renovate.json`・`docs/`・`*.md` を除く。テストのフィクスチャや `hack/` などを
   除きたければ、`weekly-release.yml` の `plan` ステップで `env: RELEASE_IGNORE` を設定する。
 - **デフォルトブランチが `main` でない**なら、`ci.yml` の `branches` を合わせる。
+- **Renovate の共通の設定は `yuanying/renovate-config` の preset にある。** 雛形の `renovate.json` は
+  それを extends するだけ。リポジトリだけのルール (`node` グループ、`pinDigests` など) は、
+  そのリポジトリの `packageRules` に足す。preset のルールより後に当たるので、preset の値も上書きできる。
+  人がマージするまで待たせたいリポジトリは、`:automerge-patch` を extends から外す。
+  preset を変えると全リポジトリに効くので、リポジトリ一つのための変更は preset に入れない。
 
 ### 4. 言語ごとの作業
 
@@ -178,5 +183,5 @@ npx --yes --package renovate -- renovate-config-validator
 - `GITHUB_TOKEN` で push したタグは他のワークフローを起動しないので、`release.yml` を
   `workflow_call` で直接呼ぶ。`release.yml` はビルドとイメージの push がすべて済んでから
   タグを打つので、途中で失敗してもタグは残らない。
-- Renovate の自動マージ (patch と digest) と組み合わせて、依存の更新は人の手を介さずにリリースまで届く。
+- Renovate の自動マージ (preset の `automerge-patch`。patch と digest) と組み合わせて、依存の更新は人の手を介さずにリリースまで届く。
   minor と major は PR が開くだけで、マージは人が行う。
