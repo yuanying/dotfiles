@@ -1,0 +1,79 @@
+# Every job calls a Makefile target, so there is nothing here that can be run
+# in CI but not on a laptop.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  # No paths filter: Renovate merges a patch update once these checks pass,
+  # so every pull request has to be tested whatever it changes.
+  pull_request:
+
+# Deciding whether a pull request is good writes nothing. Work that writes
+# lives in release.yml, with the permission on the job that needs it.
+permissions:
+  contents: read
+
+# A pull request that gets pushed to again drops its earlier run. Pushes to
+# main are not cancelled: every commit on main should have its own result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: fmt, vet, unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: make fmt-check
+      - run: make vet
+      - run: make test
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    # On a cold runner golangci-lint is built from source first.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: make lint
+
+  # `go mod tidy` has to be something anyone can run, and Renovate runs it
+  # after every update (postUpdateOptions: gomodTidy).
+  tidy:
+    name: go.mod is tidy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: make tidy
+      - name: go.mod and go.sum are unchanged
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git diff
+            echo "::error::tidying changed the working tree. Run \`make tidy\` and commit the result."
+            exit 1
+          fi
+
+  vuln:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: make vuln
