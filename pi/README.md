@@ -49,6 +49,11 @@
   `herdr agent wait` を置いて worker の完了を待つのに使う。全文のログは
   `$TMPDIR/pi-background-bash-*/` に残る。ジョブはセッションの終了や `/reload` で
   止まり、結果は届かない。`bg_run` の呼び出しも pi-automode の判定を通る。
+- 自作の `extensions/gofmt.ts` は、`write` / `edit` で `.go` を書いた後に `gofmt -w` をかける。
+  整形するとモデルが覚えている中身とずれて次の `edit` が合わなくなるので、整形したときは
+  ツールの結果に「読み直すこと」と書き足す。構文エラーで整形できなければ gofmt の
+  メッセージを書き足す。gofmt が無いホストでは何もしない。Claude Code では
+  `claude/hooks/gofmt.sh` が PostToolUse フックとして同じことをする (`claude/settings.json` で登録)。
 - 自作の `extensions/sandbox/` はサンドボックス。共通の設定で既定で有効にしている。有効な間は
   `bash` と `bg_run` のコマンドを OS のサンドボックス (Linux は bubblewrap、Mac は
   sandbox-runtime) で包み、`write` / `edit` の書き込み先を検査する。書き込めるのは

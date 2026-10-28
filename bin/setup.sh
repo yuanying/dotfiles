@@ -157,6 +157,13 @@ done
 # settings.json がこのパスを直接指しているため、名前は変えない。
 ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 
+# settings.json の hooks が呼ぶスクリプト。statusline と同じく、settings.json が
+# ~/.claude/hooks/ のパスを直接指しているので、名前は変えない。
+mkdir -p ~/.claude/hooks
+for hook in ${ROOT}/../claude/hooks/*.sh; do
+    ln -sfn ${hook} ~/.claude/hooks/$(basename ${hook})
+done
+
 # settings.json は Claude Code 自身が /model や /theme や auto モードの初回
 # ダイアログで書き戻すので、symlink にするとリポジトリが常に汚れる。かわりに
 # リポジトリ側の値をマージして流し込む。jq の * は再帰的に重ねるので、
@@ -164,6 +171,7 @@ ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 # hooks など) は手元の値がそのまま残る。
 # 引数の順に後ろが勝つ: 手元 < 共通 < ホスト別。model は追跡しないので
 # /model での切り替えがここで巻き戻ることはない。
+# hooks だけは配列を置き換えずに足し合わせる (merge-claude-settings.jq を参照)。
 CLAUDE_SETTINGS=~/.claude/settings.json
 CLAUDE_HOST_SETTINGS=${ROOT}/../claude/settings.$(hostname -s).json
 if [[ ! -f ${CLAUDE_HOST_SETTINGS} ]]; then
@@ -175,7 +183,7 @@ if ! command -v jq > /dev/null; then
     echo "jq が無いので ${CLAUDE_SETTINGS} のマージをスキップした" >&2
 else
     [[ -f ${CLAUDE_SETTINGS} ]] || echo '{}' > ${CLAUDE_SETTINGS}
-    jq -s '.[0] * .[1] * .[2]' \
+    jq -s -f ${ROOT}/merge-claude-settings.jq \
         ${CLAUDE_SETTINGS} \
         ${ROOT}/../claude/settings.json \
         ${CLAUDE_HOST_SETTINGS} \
