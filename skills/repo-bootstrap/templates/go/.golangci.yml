@@ -1,0 +1,11 @@
+# Kept minimal on purpose: the standard linter set plus gofmt. Add a linter
+# here when a class of mistake has actually shown up, not ahead of it, and
+# leave the reason beside it.
+version: "2"
+
+linters:
+  default: standard
+
+formatters:
+  enable:
+    - gofmt

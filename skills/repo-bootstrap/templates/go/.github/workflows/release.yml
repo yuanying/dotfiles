@@ -1,0 +1,107 @@
+# Releasing __APP__
+#
+# Pushing a vX.Y.Z tag by hand releases that tag. weekly-release.yml calls
+# this with a version instead: a tag pushed with the run's GITHUB_TOKEN starts
+# no workflow, so the tag does not exist yet when this runs, and is pushed by
+# the last job, on the commit everything was built from (github.sha is the
+# same in every job of the run). A failed build leaves no tag behind.
+#
+# The archives go to the GitHub Release, the image to ghcr.io under the tag.
+# Delete the image job, and `image` from the release job's needs, when the
+# repository has no Dockerfile.
+name: release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_call:
+    inputs:
+      version:
+        description: The version to release (v1.2.3). The tag does not exist yet.
+        type: string
+        required: true
+      message:
+        description: The annotation of the tag.
+        type: string
+        required: true
+
+permissions: {}
+
+env:
+  VERSION: ${{ inputs.version || github.ref_name }}
+
+jobs:
+  dist:
+    name: archives
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # A weekly release is made from commits nobody looked at, so the tests
+      # run once more on exactly what is released.
+      - run: make test
+      - run: make dist VERSION="${VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  image:
+    name: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          build-args: VERSION=${{ env.VERSION }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+
+  release:
+    name: GitHub Release
+    needs: [dist, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      # An annotated tag, as the tags pushed by hand are.
+      - name: Push the tag
+        if: inputs.version != ''
+        env:
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          object="$(gh api "repos/${GH_REPO}/git/tags" -f tag="${VERSION}" -f message="${MESSAGE}" \
+            -f object="${GITHUB_SHA}" -f type=commit \
+            -f 'tagger[name]=github-actions[bot]' \
+            -f 'tagger[email]=41898282+github-actions[bot]@users.noreply.github.com' --jq .sha)"
+          gh api "repos/${GH_REPO}/git/refs" -f ref="refs/tags/${VERSION}" -f sha="${object}"
+      - run: gh release create "${VERSION}" --verify-tag --generate-notes dist/*
