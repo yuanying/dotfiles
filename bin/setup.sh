@@ -164,6 +164,7 @@ ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 # hooks など) は手元の値がそのまま残る。
 # 引数の順に後ろが勝つ: 手元 < 共通 < ホスト別。model は追跡しないので
 # /model での切り替えがここで巻き戻ることはない。
+# hooks だけは配列を置き換えずに足し合わせる (merge-claude-settings.jq を参照)。
 CLAUDE_SETTINGS=~/.claude/settings.json
 CLAUDE_HOST_SETTINGS=${ROOT}/../claude/settings.$(hostname -s).json
 if [[ ! -f ${CLAUDE_HOST_SETTINGS} ]]; then
@@ -175,7 +176,7 @@ if ! command -v jq > /dev/null; then
     echo "jq が無いので ${CLAUDE_SETTINGS} のマージをスキップした" >&2
 else
     [[ -f ${CLAUDE_SETTINGS} ]] || echo '{}' > ${CLAUDE_SETTINGS}
-    jq -s '.[0] * .[1] * .[2]' \
+    jq -s -f ${ROOT}/merge-claude-settings.jq \
         ${CLAUDE_SETTINGS} \
         ${ROOT}/../claude/settings.json \
         ${CLAUDE_HOST_SETTINGS} \
