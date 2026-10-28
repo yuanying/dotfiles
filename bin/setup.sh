@@ -157,6 +157,13 @@ done
 # settings.json がこのパスを直接指しているため、名前は変えない。
 ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 
+# settings.json の hooks が呼ぶスクリプト。statusline と同じく、settings.json が
+# ~/.claude/hooks/ のパスを直接指しているので、名前は変えない。
+mkdir -p ~/.claude/hooks
+for hook in ${ROOT}/../claude/hooks/*.sh; do
+    ln -sfn ${hook} ~/.claude/hooks/$(basename ${hook})
+done
+
 # settings.json は Claude Code 自身が /model や /theme や auto モードの初回
 # ダイアログで書き戻すので、symlink にするとリポジトリが常に汚れる。かわりに
 # リポジトリ側の値をマージして流し込む。jq の * は再帰的に重ねるので、
