@@ -96,6 +96,13 @@
   fraction-agents スキルと同じ SA (`system:serviceaccount:fraction-agents:claude`) の token で通る。
   token は同じファイル `~/.config/fraction-agents/tokens/claude` から読み、0600 でなければ使わない。
   401 / 403 は token の期限切れなので、そのホストで発行し直す。テストは `test/pi-release-lag.bats`。
+- 自作の `extensions/vuln-tracker/` は、`https://vuln-tracker.fraction.jp` (yuanying/vuln-tracker) から
+  本番で動くイメージの脆弱性の発見を読む `vuln_tracker_findings` を足す。発見ごとに、ソース側
+  (`source.state`) とマニフェスト側 (`manifest.state`) の対応の進み具合、結び付いた PR、VEX の注釈
+  (`vex.state`) が入る。codemode のスクリプトからだけ呼べる (`exposure: "codemode"`、
+  namespace `vuln_tracker`)。返り値は `GET /api/findings` の JSON そのもので (形は vuln-tracker の ADR)、
+  スクリプトの中で絞り込める。起動直後でスキャンが揃っていないと API は 503 を返すので、少し待って呼び直す。
+  token の扱いは release-lag と同じ。テストは `test/pi-vuln-tracker.bats`。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由で届く。
 - pi 専用の `AGENTS.md` でユーザー指示を管理する。`herdr-tasks` 使用時は、
