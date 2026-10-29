@@ -1,6 +1,7 @@
 {
   "theme": "solarized",
   "tuiMode": "regular",
+  "defaultTools": ["+codemode"],
   "packages": [
     "npm:pi-web-access@0.45.0",
     "npm:@czottmann/pi-automode@1.17.0",
