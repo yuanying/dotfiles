@@ -85,6 +85,17 @@
     `&&`、`$` を含まないとき) サンドボックスの外で実行する。ソケットを全部開けるなら
     `allowAllUnixSockets: true`。
   - 設計の経緯と限界は `docs/adr/0013`。テストは `test/pi-sandbox.bats`。
+- codemode を共通の設定で有効にしている (`settings.json` の `defaultTools: ["+codemode"]`)。
+  モデルが JavaScript のスクリプトを書いてツールをまとめて呼び、結果を絞り込んでから受け取る。
+  `codemode.mode` は既定の `on` のままで、ほかのツールも今までどおり直接呼べる。
+- 自作の `extensions/release-lag/` は、`https://release-lag.fraction.jp` (yuanying/release-lag) から
+  リポジトリごとのリリースの遅れを読む `release_lag_repos` と、集計をやり直させる
+  `release_lag_refresh` を足す。どちらも codemode のスクリプトからだけ呼べる
+  (`exposure: "codemode"`、namespace `release_lag`)。返り値は API の JSON そのもので
+  (形は release-lag の ADR 0004)、スクリプトの中で絞り込める。gated は
+  fraction-agents スキルと同じ SA (`system:serviceaccount:fraction-agents:claude`) の token で通る。
+  token は同じファイル `~/.config/fraction-agents/tokens/claude` から読み、0600 でなければ使わない。
+  401 / 403 は token の期限切れなので、そのホストで発行し直す。テストは `test/pi-release-lag.bats`。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由で届く。
 - pi 専用の `AGENTS.md` でユーザー指示を管理する。`herdr-tasks` 使用時は、
