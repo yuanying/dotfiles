@@ -94,6 +94,23 @@ test("the namespace instructions tell the caller what the API does not", () => {
 	assert.match(instructions, /error\.code|\.code/);
 });
 
+// vmapi v0.2.0 (ADR 0002 の改訂): 誰でもすべての VM を見られ、操作だけが持ち主と管理者に限られる。
+test("the instructions and descriptions say every VM is visible and only owners and admins operate one", () => {
+	const { instructions } = tools.get("vm_create").namespace;
+	assert.match(instructions, /every VM/);
+	assert.match(instructions, /permission_denied/);
+	assert.match(instructions, /vm_whoami/);
+	assert.doesNotMatch(instructions, /not found/);
+	assert.doesNotMatch(instructions, /only your own/);
+
+	const owner = tools.get("vm_list").parameters.properties.owner;
+	assert.doesNotMatch(owner.description, /permission_denied|admin/);
+	assert.doesNotMatch(tools.get("vm_list").description, /your VMs/);
+	for (const name of ["vm_get", "vm_snapshots"]) {
+		assert.doesNotMatch(tools.get(name).description, /your/, name);
+	}
+});
+
 test("vm_whoami and vm_images read the caller and the images", async () => {
 	const who = await run("vm_whoami", {}, 200, { user: "pi", admin: false });
 	assert.deepEqual(who.requests.map((r) => [r.method, r.url]), [["GET", `${API}/whoami`]]);

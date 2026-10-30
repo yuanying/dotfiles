@@ -14,7 +14,7 @@ const NAMESPACE = {
 	description: "VMs on boucherie's libvirt: create, list, start, stop, delete and snapshot them through vmapi",
 	instructions: [
 		"The API is https://vm.poissonnerie.dev (yuanying/vmapi), a thin per-VM layer over libvirt on one host. It only knows VMs it created itself.",
-		"Every VM has an owner, the user that created it. You see and operate only your own VMs; another user's VM is reported as not found. vm_whoami tells your user name and whether you are an admin, who sees every VM.",
+		"Every VM has an owner, the user that created it. Anyone sees every VM and its snapshots, but only the owner or an admin can start, stop, delete, snapshot or revert it; anyone else gets permission_denied (403). vm_whoami tells your user name and whether you are an admin. To work on your own VMs only, pass that name as owner to vm_list, or pick VMs by their owner.",
 		"VM and snapshot names are DNS labels (lowercase letter first, then lowercase letters, digits and hyphens). A VM name is unique on the whole host, whoever owns it, and is also its hostname.",
 		"vm_create is synchronous: it returns once the VM is defined and started, with the IP it was given (the lowest free one unless you pass ip). It does not wait for the guest: check readiness yourself, for example by retrying ssh to that IP until it answers. The first VM from an image also waits for the image download, which can take minutes.",
 		"user_data is put into the cloud-init seed exactly as given, usually a document starting with #cloud-config (ssh keys, users, packages). Network and hostname are written by the server. Without user_data the VM gets an empty #cloud-config, so nobody can log in: pass at least an ssh key.",
@@ -88,7 +88,7 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_whoami",
 		label: "vm whoami",
-		description: "Who you are to vmapi: your user name (the owner of the VMs you create) and whether you are an admin.",
+		description: "Who you are to vmapi: your user name (the owner of the VMs you create) and whether you are an admin, who can operate anyone's VM.",
 		parameters: Type.Object({}),
 		outputSchema: Type.Object({ user: Type.String(), admin: Type.Boolean() }),
 		annotations: READ,
@@ -110,10 +110,10 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_list",
 		label: "vm list",
-		description: "List your VMs, ordered by name. An admin gets every VM, or those of one owner.",
+		description: "List the VMs, ordered by name: every VM, or those of one owner.",
 		parameters: Type.Object({
 			owner: Type.Optional(
-				Type.String({ minLength: 1, description: "Only this owner's VMs. Anyone but an admin gets permission_denied for another owner" }),
+				Type.String({ minLength: 1, description: "Only this owner's VMs, such as your own name from vm_whoami. An owner with no VMs gives an empty list" }),
 			),
 		}),
 		outputSchema: Type.Object({ vms: Type.Array(VM) }),
@@ -124,7 +124,7 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_get",
 		label: "vm get",
-		description: "Get one of your VMs, with its IP and current state.",
+		description: "Get a VM, with its owner, IP and current state.",
 		parameters: Type.Object({ name: VM_NAME }),
 		outputSchema: VM,
 		annotations: READ,
@@ -157,7 +157,7 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_start",
 		label: "vm start",
-		description: "Start one of your VMs. Succeeds when it is already running.",
+		description: "Start a VM. Succeeds when it is already running.",
 		parameters: Type.Object({ name: VM_NAME }),
 		outputSchema: VM,
 		annotations: CHANGE,
@@ -168,7 +168,7 @@ export default function (pi: ExtensionAPI) {
 		name: "vm_stop",
 		label: "vm stop",
 		description:
-			"Stop one of your VMs. Without force the guest is only asked to shut down and the VM returned may still be running: poll vm_get until shut_off. With force it is turned off at once.",
+			"Stop a VM. Without force the guest is only asked to shut down and the VM returned may still be running: poll vm_get until shut_off. With force it is turned off at once.",
 		parameters: Type.Object({
 			name: VM_NAME,
 			force: Type.Optional(Type.Boolean({ description: "Turn it off at once instead of asking the guest. Default false" })),
@@ -186,7 +186,7 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_delete",
 		label: "vm delete",
-		description: "Delete one of your VMs with its disk and snapshots, forcing it off first. Cannot be undone.",
+		description: "Delete a VM with its disk and snapshots, forcing it off first. Cannot be undone.",
 		parameters: Type.Object({ name: VM_NAME }),
 		outputSchema: Type.Object({ name: Type.String(), deleted: Type.Boolean() }),
 		annotations: DESTROY,
@@ -199,7 +199,7 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_snapshots",
 		label: "vm snapshots",
-		description: "List the snapshots of one of your VMs, oldest first.",
+		description: "List the snapshots of a VM, oldest first.",
 		parameters: Type.Object({ name: VM_NAME }),
 		outputSchema: Type.Object({ snapshots: Type.Array(SNAPSHOT) }),
 		annotations: READ,
@@ -209,7 +209,7 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_snapshot_create",
 		label: "vm snapshot create",
-		description: "Take a snapshot of one of your VMs. A running VM is paused while it is taken, and memory is included.",
+		description: "Take a snapshot of a VM. A running VM is paused while it is taken, and memory is included.",
 		parameters: Type.Object({ name: VM_NAME, snapshot: SNAPSHOT_NAME }),
 		outputSchema: SNAPSHOT,
 		annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
@@ -220,7 +220,7 @@ export default function (pi: ExtensionAPI) {
 	tool({
 		name: "vm_snapshot_delete",
 		label: "vm snapshot delete",
-		description: "Delete a snapshot of one of your VMs.",
+		description: "Delete a snapshot of a VM.",
 		parameters: Type.Object({ name: VM_NAME, snapshot: SNAPSHOT_NAME }),
 		outputSchema: Type.Object({ name: Type.String(), snapshot: Type.String(), deleted: Type.Boolean() }),
 		annotations: DESTROY,
@@ -234,7 +234,7 @@ export default function (pi: ExtensionAPI) {
 		name: "vm_snapshot_revert",
 		label: "vm snapshot revert",
 		description:
-			"Return one of your VMs to a snapshot: running or off as it was then. What was written since is lost.",
+			"Return a VM to a snapshot: running or off as it was then. What was written since is lost.",
 		parameters: Type.Object({ name: VM_NAME, snapshot: SNAPSHOT_NAME }),
 		outputSchema: VM,
 		annotations: DESTROY,
