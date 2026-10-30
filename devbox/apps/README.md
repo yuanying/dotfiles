@@ -14,6 +14,7 @@ On boucherie:
 | `tageditor` | 5173 | `~/src/github.com/iwaco/tageditor` | nothing — uvicorn and vite reload on their own |
 | `lora-compare` | 8080 | `~/src/github.com/kohya-ss/sd-scripts/outputs/images` | nothing — nginx serves the files as they are |
 | `lora-datasets` | 8765 | `~/src/github.com/yuanying/lora_datasets` | `docker restart lora-datasets` |
+| `vmapi` | 8080 | the released image `ghcr.io/yuanying/vmapi` | — see [vmapi](#vmapi) |
 
 On anietta:
 
@@ -198,3 +199,75 @@ the `sd-webui` container rather than `localhost`.
 
 tageditor is given `TAGEDITOR_ALLOWED_HOSTS` so that vite accepts requests
 addressed to its public name, which proxyd passes through unchanged.
+
+## vmapi
+
+`vmapi` (`github.com/yuanying/vmapi`) is the VM API on boucherie's
+`qemu:///system`, published as `https://vm.poissonnerie.dev` behind a login.
+It differs from the other apps in two ways, both on purpose.
+
+- **It is not built here.** It runs the image vmapi releases,
+  `ghcr.io/yuanying/vmapi:<tag>`, pinned in the compose file. Renovate's
+  compose manager proposes new tags as pull requests.
+- **It does not see `$HOME` or `/mnt`.** Whatever can write to libvirt's socket
+  can do anything root can on the host (vmapi's `docs/adr/0008`), so the
+  container gets only libvirt's socket directory (`/var/run/libvirt`), the
+  disk directory `/mnt/data/vmapi` at the same path (the paths in the domain
+  definitions are the host's, and the host's libvirt opens them), and
+  `~/.config/vmapi`, read only. It runs as `501:50` with boucherie's `libvirt`
+  group (GID 112) added, which is what lets it write to the socket.
+
+None of the three is made for it: they are mounted with `create_host_path:
+false`, so when one is missing the container fails to start instead of Docker
+making a root-owned directory in its place.
+
+### Before the first start
+
+- The disk directory exists and belongs to the devbox user. `/mnt/data` is
+  root's, so this is done once on the host:
+
+  ```bash
+  sudo install -d -o 501 -g 50 -m 0755 /mnt/data/vmapi
+  ```
+
+  vmapi keeps the cloud images in `images/` and each VM's disk and seed ISO in
+  `vms/<name>/` under it. libvirt hands a disk to its QEMU user while the VM
+  runs, so the directory only has to be the devbox user's for vmapi to make
+  and remove the files.
+- The settings are in `~/.config/vmapi/config.yaml`. They are not in this
+  repository, nor in vmapi's: the address range and the network are the
+  LAN's. The keys, how they are checked and boucherie's values are in vmapi's
+  `docs/config.md`. vmapi reads the file only when it starts, so a change is
+  followed by `docker restart vmapi`.
+- The devbox user is in the host's `libvirt` group — the GID in the compose
+  file is that group's on boucherie (`getent group libvirt`). If libvirt is
+  ever reinstalled with another GID, change `group_add` to match.
+
+### Who can use it
+
+The proxy lets in what its `vm` entry in `devbox/proxy/services.boucherie.yaml`
+allows and passes the user on as `X-Devbox-User`; vmapi keeps each user's VMs
+apart by that name, and the names in `admins` in its settings see them all.
+
+- People log in with GitHub, so they are added to the entry's `viewers`.
+- Agents and scripts use a bearer token, which is not a viewer (`docs/adr/0010`):
+
+  ```bash
+  devbox-proxy token --service vm --user <name>
+  ```
+
+  The name is whose VMs that token makes and sees. `vmctl` reads it from
+  `~/.config/vmctl/token` (vmapi's `README.md`); keep the file at `chmod 600`.
+
+### Upgrading
+
+Merge Renovate's pull request for the image tag (or change the tag by hand in
+one), then from the merged checkout:
+
+```bash
+docker compose -f ~/dotfiles/devbox/apps/compose.boucherie.yaml up -d vmapi
+```
+
+`up` pulls the new tag and replaces the container. The VMs keep running:
+their state is in libvirt, not in the container. vmapi's release notes say
+when a release needs something new in the settings.
