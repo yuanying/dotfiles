@@ -5,7 +5,8 @@
 # The project name is fixed so that whichever checkout runs `docker compose`
 # manages the same containers. Nothing below points into the checkout at run
 # time: the entrypoints are baked into the images, and the only mounts are
-# $HOME and /mnt, at the same paths the devbox sees them.
+# $HOME and /mnt, at the same paths the devbox sees them -- except for vmapi,
+# which says why below.
 
 name: devbox-apps
 
@@ -86,6 +87,59 @@ services:
     build:
       context: lora-datasets
     working_dir: /home/yuanying/src/github.com/yuanying/lora_datasets
+
+  # The VM API on qemu:///system (github.com/yuanying/vmapi). It is shaped
+  # unlike the apps above on purpose:
+  #
+  # - It is not built here. vmapi releases its own image, and Renovate's
+  #   compose manager moves the tag below; the apps above are built because
+  #   they run checkouts under $HOME, which vmapi does not have.
+  # - It does not take x-app's mounts. Whatever can write to libvirt's socket
+  #   is root on the host (vmapi's docs/adr/0008), so it sees only what it
+  #   uses: the socket, the disk directory at the path libvirt opens it by,
+  #   and its settings, read only. Not $HOME, not the rest of /mnt. It is
+  #   written out rather than merged from x-app for the same reason.
+  vmapi:
+    container_name: vmapi
+    image: ghcr.io/yuanying/vmapi:v0.1.0
+    restart: always
+    init: true
+    # yuanying:staff, who owns /mnt/data/vmapi, plus boucherie's libvirt
+    # group, which owns the socket (root:libvirt 0660). A GID, not a name:
+    # the image has no group by that name.
+    user: "501:50"
+    group_add:
+      - "112"
+    # The long form, to keep Docker from making a missing source as root:
+    # the container then fails to start instead of writing where it cannot.
+    volumes:
+      # The directory rather than the socket: a socket bound by itself is
+      # left behind when libvirtd makes it again.
+      - type: bind
+        source: /var/run/libvirt
+        target: /var/run/libvirt
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /mnt/data/vmapi
+        target: /mnt/data/vmapi
+        bind:
+          create_host_path: false
+      # Not in this repository (vmapi's docs/adr/0009); README.md says what
+      # goes in it.
+      - type: bind
+        source: /home/yuanying/.config/vmapi
+        target: /home/yuanying/.config/vmapi
+        read_only: true
+        bind:
+          create_host_path: false
+    command:
+      - --config
+      - /home/yuanying/.config/vmapi/config.yaml
+    # No ports: proxyd reaches it as vmapi:8080, after the login, and passes
+    # who it is as X-Devbox-User.
+    networks:
+      v6net: {}
 
 networks:
   # Created on poissonnerie's regied bridge by net-fraction-private, not by
