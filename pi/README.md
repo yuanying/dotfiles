@@ -103,6 +103,16 @@
   namespace `vuln_tracker`)。返り値は `GET /api/findings` の JSON そのもので (形は vuln-tracker の ADR)、
   スクリプトの中で絞り込める。起動直後でスキャンが揃っていないと API は 503 を返すので、少し待って呼び直す。
   token の扱いは release-lag と同じ。テストは `test/pi-vuln-tracker.bats`。
+- 自作の `extensions/vmapi/` は、`https://vm.poissonnerie.dev` (yuanying/vmapi) で boucherie の VM を
+  作る・一覧する・起動する・止める・消す、スナップショットを取る・一覧する・消す・戻すツールを足す
+  (`vm_create`・`vm_list`・`vm_snapshot_create` など、API の操作と 1 対 1)。codemode のスクリプトから
+  だけ呼べる (`exposure: "codemode"`、namespace `vm`)。返り値は API の JSON そのもので (形は vmapi の
+  `api/openapi.yaml`)、API のエラーは `code` と `status` を持つ例外になる。作成は同期で IP を返すが、
+  使えるようになったかは ssh などで確かめる、といった呼ぶ側の注意は namespace の instructions に書いてある。
+  ツールの粒度と instructions は、Penelope の宣言したツールへそのまま写す前提で決めている。
+  devbox proxy の Bearer token で通り、その名前 (`pi`) が VM の持ち主になる。token は
+  `~/.config/vmapi/tokens/pi` から読み、0600 でなければ使わない。401 は token の期限切れなので、
+  boucherie で `devbox-proxy token --service vm --user pi` を実行して発行し直す。テストは `test/pi-vmapi.bats`。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由で届く。
 - pi 専用の `AGENTS.md` でユーザー指示を管理する。`herdr-tasks` 使用時は、
