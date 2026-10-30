@@ -117,7 +117,7 @@ test("call refuses names that are not DNS labels before sending anything", async
 test("call throws the API's error code and message, with the status, without showing the token", async () => {
 	for (const [status, code, message] of [
 		[400, "invalid_argument", 'unknown field "memory"'],
-		[403, "permission_denied", "only an admin can list other owners' VMs"],
+		[403, "permission_denied", 'vm "k8s-test-cp1" is "penelope"\'s: only its owner or an admin can operate it'],
 		[404, "not_found", 'vm "k8s-test-cp1" not found'],
 		[409, "ip_in_use", "192.168.40.10 is used by another VM"],
 		[503, "unavailable", "libvirt is not reachable"],
