@@ -246,8 +246,10 @@ making a root-owned directory in its place.
 ### Who can use it
 
 The proxy lets in what its `vm` entry in `devbox/proxy/services.boucherie.yaml`
-allows and passes the user on as `X-Devbox-User`; vmapi keeps each user's VMs
-apart by that name, and the names in `admins` in its settings see them all.
+allows and passes the user on as `X-Devbox-User`. Everyone it lets in sees
+every VM; vmapi records that name as the owner of the VMs it creates, and only
+the owner and the names in `admins` in its settings can operate a VM — anyone
+else gets `permission_denied` (vmapi's `docs/adr/0002`).
 
 - People log in with GitHub, so they are added to the entry's `viewers`.
 - Agents and scripts use a bearer token, which is not a viewer (`docs/adr/0010`):
@@ -256,8 +258,9 @@ apart by that name, and the names in `admins` in its settings see them all.
   devbox-proxy token --service vm --user <name>
   ```
 
-  The name is whose VMs that token makes and sees. `vmctl` reads it from
-  `~/.config/vmctl/token` (vmapi's `README.md`); keep the file at `chmod 600`.
+  The name owns the VMs that token makes, and only those it can operate.
+  `vmctl` reads it from `~/.config/vmctl/token` (vmapi's `README.md`); keep
+  the file at `chmod 600`.
 
 ### Upgrading
 

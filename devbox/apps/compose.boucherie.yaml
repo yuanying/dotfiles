@@ -101,7 +101,7 @@ services:
   #   written out rather than merged from x-app for the same reason.
   vmapi:
     container_name: vmapi
-    image: ghcr.io/yuanying/vmapi:v0.1.0
+    image: ghcr.io/yuanying/vmapi:v0.2.0
     restart: always
     init: true
     # yuanying:staff, who owns /mnt/data/vmapi, plus boucherie's libvirt
