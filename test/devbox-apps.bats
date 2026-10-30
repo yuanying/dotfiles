@@ -5,6 +5,10 @@
 # container names, the containers write files as the devbox user, the source
 # and models are at the same paths as in the devbox, and nothing at run time
 # points back into this checkout.
+#
+# vmapi is the exception to the mounts and the build: it is a released image,
+# and it is root on the host through libvirt, so it sees only what it needs
+# (vmapi's docs/adr/0008).
 
 bats_require_minimum_version 1.5.0
 
@@ -23,12 +27,18 @@ q() {
     yq -r "explode(.) | $1" "${COMPOSE}"
 }
 
+# built lists the services whose image is built from a directory next to the
+# compose file.
+built() {
+    q '.services | to_entries | .[] | select(.value.build != null) | .key'
+}
+
 @test "the project name is fixed, so any checkout manages the same containers" {
     [ "$(q '.name')" = "devbox-apps" ]
 }
 
-@test "boucherie runs sd-webui, sd-viewer, tageditor, lora-compare and lora-datasets" {
-    [ "$(q '.services | keys | sort | join(" ")')" = "lora-compare lora-datasets sd-viewer sd-webui tageditor" ]
+@test "boucherie runs sd-webui, sd-viewer, tageditor, lora-compare, lora-datasets and vmapi" {
+    [ "$(q '.services | keys | sort | join(" ")')" = "lora-compare lora-datasets sd-viewer sd-webui tageditor vmapi" ]
 }
 
 @test "every service is named after itself, restarts always and runs as the devbox user" {
@@ -41,16 +51,16 @@ q() {
     done
 }
 
-@test "every service sees \$HOME and /mnt at the same paths as the devbox" {
+@test "every service built here sees \$HOME and /mnt at the same paths as the devbox" {
     local s
-    for s in $(q '.services | keys | .[]'); do
+    for s in $(built); do
         q ".services.\"${s}\".volumes[]" | grep -qx '/home/yuanying:/home/yuanying' || { echo "${s}: home"; return 1; }
         q ".services.\"${s}\".volumes[]" | grep -qx '/mnt:/mnt' || { echo "${s}: mnt"; return 1; }
     done
 }
 
 @test "nothing is mounted from this checkout" {
-    run bash -c "yq -r 'explode(.) | .services[].volumes[]' '${COMPOSE}' 2> /dev/null | grep -v '^/'"
+    run bash -c "yq -r 'explode(.) | .services[].volumes[] | (.source // .)' '${COMPOSE}' 2> /dev/null | grep -v '^/'"
     [ "${status}" -eq 1 ]
     [ -z "${output}" ]
 }
@@ -68,9 +78,18 @@ q() {
     ! grep -qiE 'ipv6|ip6|sysctl|driver_opts' "${COMPOSE}"
 }
 
-@test "every service builds from a directory whose image carries its entrypoint" {
-    local s context
+@test "every service either builds here or runs a released image" {
+    local s
     for s in $(q '.services | keys | .[]'); do
+        if [ "$(q ".services.\"${s}\".build")" = "null" ]; then
+            [ "${s}" = "vmapi" ] || { echo "${s}"; return 1; }
+        fi
+    done
+}
+
+@test "every service built here builds from a directory whose image carries its entrypoint" {
+    local s context
+    for s in $(built); do
         context="${REPO}/devbox/apps/$(q ".services.\"${s}\".build.context")"
         [ -f "${context}/Dockerfile" ] || { echo "${s}: Dockerfile"; return 1; }
         [ -x "${context}/entrypoint.sh" ] || { echo "${s}: entrypoint"; return 1; }
@@ -80,7 +99,7 @@ q() {
 
 @test "every image builds on the default bridge, which reaches the network on a regied host" {
     local s
-    for s in $(q '.services | keys | .[]'); do
+    for s in $(built); do
         [ "$(q ".services.\"${s}\".build.network")" = "null" ] || { echo "${s}"; return 1; }
     done
 }
@@ -130,6 +149,46 @@ q() {
             [[ ${image} == *:* && ${image} != *:latest ]] || { echo "${f}: ${image}"; exit 1; }
         done || return 1
     done
+}
+
+@test "vmapi runs the released image at a pinned version, which renovate's compose manager follows" {
+    [ "$(q '.services.vmapi.build')" = "null" ]
+    [[ $(q '.services.vmapi.image') =~ ^ghcr\.io/yuanying/vmapi:v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+    # config:recommended reads compose files; nothing here narrows the managers.
+    jq -e '.enabledManagers == null' "${REPO}/renovate.json"
+    [[ $(basename "${COMPOSE}") =~ ^compose[^/]*\.ya?ml$ ]]
+}
+
+@test "vmapi can write to libvirt's socket as the devbox user in the host's libvirt group" {
+    [ "$(q '.services.vmapi.user')" = "501:50" ]
+    [ "$(q '.services.vmapi.group_add | join(" ")')" = "112" ]
+}
+
+@test "vmapi mounts libvirt's sockets, the disk directory at its host path and its settings read only, and nothing else" {
+    [ "$(q '[.services.vmapi.volumes[] | .source + ":" + .target + (if .read_only then ":ro" else "" end)] | sort | join(" ")')" = \
+        "/home/yuanying/.config/vmapi:/home/yuanying/.config/vmapi:ro /mnt/data/vmapi:/mnt/data/vmapi /var/run/libvirt:/var/run/libvirt" ]
+    [ "$(q '[.services.vmapi.volumes[] | .type] | unique | join(" ")')" = "bind" ]
+}
+
+@test "vmapi does not start when a mount is missing, rather than have Docker make it owned by root" {
+    [ "$(q '[.services.vmapi.volumes[] | .bind.create_host_path] | unique | join(" ")')" = "false" ]
+}
+
+@test "vmapi reads the mounted settings" {
+    [ "$(q '.services.vmapi.command | join(" ")')" = "--config /home/yuanying/.config/vmapi/config.yaml" ]
+}
+
+@test "vmapi publishes no port on the host" {
+    [ "$(q '.services.vmapi.ports')" = "null" ]
+    [ "$(q '.services.vmapi.network_mode')" = "null" ]
+}
+
+@test "proxyd publishes vmapi as vm, behind a login" {
+    local services="${REPO}/devbox/proxy/services.boucherie.yaml"
+    [ "$(yq -r '.services[] | select(.name == "vm") | .host' "${services}")" = "vmapi" ]
+    [ "$(yq -r '.services[] | select(.name == "vm") | .port' "${services}")" = "8080" ]
+    [ "$(yq -r '.services[] | select(.name == "vm") | .auth' "${services}")" = "required" ]
+    [ "$(yq -r '.services[] | select(.name == "vm") | .viewers.logins | join(" ")' "${services}")" = "yuanying" ]
 }
 
 @test "renovate reads the apps' Dockerfiles" {

@@ -61,3 +61,13 @@ services:
     viewers:
       logins:
         - yuanying
+  # vmapi (devbox/apps). Agents are not viewers: they use bearer tokens,
+  # `devbox-proxy token --service vm --user <name>`, and the name is whose
+  # VMs they are (docs/adr/0010).
+  - name: vm
+    host: vmapi
+    port: 8080
+    auth: required
+    viewers:
+      logins:
+        - yuanying
