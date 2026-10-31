@@ -103,6 +103,13 @@ auto_switch = false
 panel_bg = "reset"
 sidebar_bg = "#222436"
 
+# tokyo-night の既定の active_row_bg (#232636) は上の sidebar_bg とほぼ同じ色で、
+# サイドバーで今いる workspace の行が見分けられない。Tokyo Night Moon の
+# fg_gutter を当てて浮かせる。workspace を選んでいる間のカーソル
+# (selection_bg) はそれより目立つように bg_visual にする。
+active_row_bg = "#3b4261"
+selection_bg = "#2d3f76"
+
 [ui]
 # zenburn の colour109 相当。
 accent = "#87afaf"
