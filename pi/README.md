@@ -113,6 +113,17 @@
   devbox proxy の Bearer token で通り、その名前 (`pi`) が VM の持ち主になる。token は
   `~/.config/vmapi/tokens/pi` から読み、0600 でなければ使わない。401 は token の期限切れなので、
   boucherie で `devbox-proxy token --service vm --user pi` を実行して発行し直す。テストは `test/pi-vmapi.bats`。
+- 自作の `extensions/imagegen/` は `pi_imagegen` を足す。Claude など会話モデルを
+  変えずに、画像生成だけ Pi の ChatGPT 認証 (`openai-codex`) で実行する。
+  新規生成・参照画像付き編集・透過指定に対応し、PNG を作業ディレクトリの
+  `output/imagegen/` (または指定先) に保存して画像を会話へ返す。既存ファイルは上書きしない。
+  各ホストで `/login openai-codex` が必要。認証の保存先と更新は Pi に任せ、
+  API キーや Codex CLI、追加パッケージは不要。プロンプト作成は
+  `skills/pi-imagegen/` にある。ChatGPT の画像生成枠を使い、参照画像は OpenAI に送信する。
+  Codex のバックエンド API を使うため、将来の変更時はスキルの `references/api.md` を確認する。
+  初回は Pi 外で `bin/setup-pi.sh` と `bin/setup-skills.sh` を実行し、Pi を再起動する
+  (通常の `bin/setup.sh` でも両方反映される)。既存リンクの更新は `/reload`。
+  テストは `test/pi-imagegen.bats`。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由で届く。
 - pi 専用の `AGENTS.md` でユーザー指示を管理する。`herdr-tasks` 使用時は、
