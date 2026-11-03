@@ -55,6 +55,7 @@ EOF
 EOF
     echo '{ "provider": "searxng", "fetch": { "timeout": 30 } }' > "${FAKE}/pi/web-search.json"
     echo '{ "displayMode": "used" }' > "${FAKE}/pi/subscription-usage.json"
+    echo '{ "provider": { "plan": "max" } }' > "${FAKE}/pi/claude-bridge.json"
     echo '{ "tui.editor.historyPrevious": "ctrl+p", "tui.editor.historyNext": "ctrl+n", "tui.select.up": ["up", "ctrl+p"], "tui.select.down": ["down", "ctrl+n"] }' > "${FAKE}/pi/keybindings.json"
     cp "${REPO}/pi/AGENTS.md" "${FAKE}/pi/AGENTS.md"
     SETUP="${FAKE}/bin/setup-pi.sh"
@@ -78,6 +79,14 @@ pi_calls() {
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
     jq -e '.displayMode == "used" and .localSetting == true' "${AGENT}/subscription-usage.json"
+}
+
+@test "claude-bridge config is merged while keeping the notice dates the bridge writes" {
+    mkdir -p "${AGENT}"
+    echo '{ "startupNoticeShown": "2026-10-11", "provider": { "plan": "pro" } }' > "${AGENT}/claude-bridge.json"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    jq -e '.provider.plan == "max" and .startupNoticeShown == "2026-10-11"' "${AGENT}/claude-bridge.json"
 }
 
 @test "sandbox settings are copied next to the extensions, not linked, keeping local entries" {

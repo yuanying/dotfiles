@@ -33,7 +33,15 @@
   モデルは `openai` のままでよい。プラン全体とアプリ別の制限は別々に表示する。
   非公開 API のため提供元の変更で取得できなくなる可能性がある。
   リセットクレジット消費は `/usage` の明示的な確認操作が必要。
-- `claude-bridge` / `anthropic` の利用率は上のパッケージが対応していないので、
+- `claude-bridge` の利用率も上のパッケージが出す。`pi-claude-bridge` が
+  Claude Code の報告する利用率を応答ヘッダーとして pi に渡すので、最初の応答の
+  後から表示される。
+- `claude-bridge` は `pi-claude-bridge`。Claude Code を子プロセスとして動かし、
+  認証は Claude Code 自身のログイン (`claude` の `/login`) を使う。pi の
+  `/login anthropic` は使わない。設定 `claude-bridge.json` は他の JSON と同じく
+  マージする (拡張がお知らせを出した日付を書き戻すため)。`provider.plan` は
+  既定が `pro` なので、Max プランの `max` を入れて Opus の 1M context を有効にしている。
+- `anthropic` の利用率は上のパッケージが対応していないので、
   自作の `extensions/claude-usage.ts` がフッターに `5h` / `1w` を出す。
   Claude Code の statusline と同じく、消費率で色を変えたバーで表示する。
   `displayMode` も `subscription-usage.json` に揃える。認証は `/login anthropic`

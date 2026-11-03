@@ -110,6 +110,7 @@ else
     merge_json keybindings
     merge_json web-search
     merge_json subscription-usage
+    merge_json claude-bridge
     merge_json models
 fi
 

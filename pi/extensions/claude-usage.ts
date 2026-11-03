@@ -1,11 +1,12 @@
-// claude-bridge (pi-claude-agent-sdk) と anthropic で Claude サブスクリプションの
-// 5 時間・週間の利用率をフッターに出す。@specode/pi-subscription-usage が
-// Anthropic に対応していないための補完で、displayMode はそちらに揃える。
+// anthropic で Claude サブスクリプションの 5 時間・週間の利用率をフッターに出す。
+// @specode/pi-subscription-usage が anthropic に対応していないための補完で、
+// displayMode はそちらに揃える。claude-bridge (pi-claude-bridge) は Claude Code が
+// 返す利用率をあちらが表示するので、ここでは扱わない。
 // 利用率は Claude Code の statusline (claude/statusline-command.sh) と同じく
 // 色付きのバーで出す。
 //
-// 取得先は Claude Code の /usage と同じ非公開エンドポイント。認証は claude-bridge と
-// 同じく pi の anthropic 認証 (/login anthropic) だけを使い、~/.claude は読まない。
+// 取得先は Claude Code の /usage と同じ非公開エンドポイント。認証は pi の
+// anthropic 認証 (/login anthropic) だけを使い、~/.claude は読まない。
 //
 // このエンドポイントはレート制限が厳しく、数秒おきに叩くと 429 が返る。herdr の
 // worker など複数のセッションが同じアカウントで叩くので、取得結果と 429 の後の
@@ -16,7 +17,7 @@ import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 
-const PROVIDERS = new Set(["claude-bridge", "anthropic"]);
+const PROVIDERS = new Set(["anthropic"]);
 const USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
 const STATUS_KEY = "claude-usage";
 const CACHE_FILE = "claude-usage-cache.json";
@@ -188,7 +189,7 @@ function writeCache(cache: Cache): void {
 	}
 }
 
-// pi-claude-agent-sdk の buildClaudeChildEnv と同じ読み方で OAuth トークンを取り出す。
+// pi の anthropic 認証から OAuth トークンを取り出す。
 // API キーには利用率がないので undefined を返す。
 async function resolveOAuthToken(ctx: ExtensionContext): Promise<string | undefined> {
 	const resolved = await ctx.modelRegistry.getProviderAuth("anthropic");
