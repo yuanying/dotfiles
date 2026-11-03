@@ -71,3 +71,12 @@ services:
     viewers:
       logins:
         - yuanying
+  - name: natsumi-live2d
+    host: natsumi-live2d
+    port: 8080
+    auth: required
+    viewers:
+      logins:
+        - yuanying
+        - atoato88
+        - masayukig

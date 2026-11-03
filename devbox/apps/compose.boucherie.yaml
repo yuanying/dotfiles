@@ -78,6 +78,16 @@ services:
       context: lora-compare
     working_dir: /home/yuanying/src/github.com/kohya-ss/sd-scripts/outputs/images
 
+  # The test viewer of natsumi-live2d (a Live2D-like model and its runtime).
+  # Static files, so it is lora-compare's nginx image serving another
+  # directory.
+  natsumi-live2d:
+    <<: *app
+    container_name: natsumi-live2d
+    build:
+      context: lora-compare
+    working_dir: /home/yuanying/src/github.com/yuanying/natsumi-live2d/web
+
   # Picks LoRA training images out of the lora_datasets repository and
   # generates sd-scripts settings. It writes datasets into the checkout but
   # never commits.

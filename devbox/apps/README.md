@@ -13,6 +13,7 @@ On boucherie:
 | `sd-viewer` | 8189 | `~/src/github.com/yuanying/sd-viewer` | `docker restart sd-viewer` — it is built again at every start |
 | `tageditor` | 5173 | `~/src/github.com/iwaco/tageditor` | nothing — uvicorn and vite reload on their own |
 | `lora-compare` | 8080 | `~/src/github.com/kohya-ss/sd-scripts/outputs/images` | nothing — nginx serves the files as they are |
+| `natsumi-live2d` | 8080 | `~/src/github.com/yuanying/natsumi-live2d/web` (lora-compare's image) | nothing — nginx serves the files as they are |
 | `lora-datasets` | 8765 | `~/src/github.com/yuanying/lora_datasets` | `docker restart lora-datasets` |
 | `vmapi` | 8080 | the released image `ghcr.io/yuanying/vmapi` | — see [vmapi](#vmapi) |
 
