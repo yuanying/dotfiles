@@ -109,7 +109,8 @@ else
     merge_json settings
     merge_json keybindings
     merge_json web-search
-    merge_json subscription-usage
+    merge_json usage
+    merge_json claude-bridge
     merge_json models
 fi
 

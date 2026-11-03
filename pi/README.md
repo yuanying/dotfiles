@@ -25,23 +25,29 @@
   `/scoped-models` のプロバイダー一括切替を `Alt+p` に変更している。
 - 入力欄の履歴は `Ctrl+p` / `Ctrl+n` で前 / 次へ移動する。
   `Ctrl+[` も選択画面のキャンセルと生成中の中断に使える (`Esc` はそのまま)。
-- 利用率表示は `@specode/pi-subscription-usage`。フッターの `1w` が週間使用率。
-  `subscription-usage.json` の `displayMode: "used"` で消費した割合を表示する。
-  設定は他の JSON と同じ順でマージし、`/usage` で詳細表示・再取得する。
-  `openai` の ChatGPT サブスクリプションでは、同じアカウント・ワークスペースで
-  `/login openai-codex` も一度行う。Codex 認証は Usage の取得だけに使い、
-  モデルは `openai` のままでよい。プラン全体とアプリ別の制限は別々に表示する。
-  非公開 API のため提供元の変更で取得できなくなる可能性がある。
-  リセットクレジット消費は `/usage` の明示的な確認操作が必要。
-- `claude-bridge` / `anthropic` の利用率は上のパッケージが対応していないので、
-  自作の `extensions/claude-usage.ts` がフッターに `5h` / `1w` を出す。
-  Claude Code の statusline と同じく、消費率で色を変えたバーで表示する。
-  `displayMode` も `subscription-usage.json` に揃える。認証は `/login anthropic`
-  だけを使い、Claude Code の `/usage` と同じ非公開 API を読む。
-  `/claude-usage` で再取得し、Opus / Sonnet の週間枠も表示する。
-  この API はレート制限が厳しいので、取得は 5 分おきだけにして、結果は
-  `~/.pi/agent/claude-usage-cache.json` に置いて全セッションで共有する。429 が返ると
-  2 分から最大 15 分まで待つ時間を倍々に延ばし、その間は前回の値を出し続ける。
+- サブスクリプションの利用率は自作の `extensions/usage/` がフッターに出す。
+  Claude Code の statusline と同じく、消費率で色を変えたバーで表示する
+  (`5h ▰▰▱▱▱▱▱▱▱▱ 23% ↻2h10m · 1w …`)。`usage.json` の `displayMode: "used"` で
+  消費した割合を出す。設定は他の JSON と同じ順でマージする。`/usage` で取り直して
+  詳細 (Claude の Opus / Sonnet の週間枠、ChatGPT のモデル別の枠など) を表示する。
+  どれも非公開 API なので、提供元の変更で取れなくなる可能性がある。
+  - Claude (`anthropic` / `claude-bridge`): Claude Code の `/usage` と同じ API を
+    `/login anthropic` の認証で読む。応答に付く `anthropic-ratelimit-unified-*`
+    ヘッダーでも更新する。`pi-claude-bridge` は Claude Code の報告をこのヘッダーに
+    して渡すので、`/login anthropic` の無いホストでも最初の応答の後から出る。
+  - ChatGPT (`openai` / `openai-codex`): ChatGPT の API を `/login openai-codex` の
+    認証で読む。`openai` の認証はこの API に拒まれるので、同じアカウント・
+    ワークスペースで `/login openai-codex` も一度行う (モデルは `openai` のままでよい)。
+    フッターはプラン全体の枠を出す。アプリ別の枠とリセットクレジットは扱わない。
+  - API はレート制限が厳しいので、取りに行くのは 5 分おきだけにして、結果は
+    `~/.pi/agent/usage-cache-<claude|codex>.json` に置いて全セッションで共有する。
+    429 が返ると 2 分から最大 15 分まで待つ時間を倍々に延ばし、その間は前回の値を出す。
+    リセット時刻を過ぎた枠は、次に取れるまで 0% として出す。
+- `claude-bridge` は `pi-claude-bridge`。Claude Code を子プロセスとして動かし、
+  認証は Claude Code 自身のログイン (`claude` の `/login`) を使う。pi の
+  `/login anthropic` は使わない。設定 `claude-bridge.json` は他の JSON と同じく
+  マージする (拡張がお知らせを出した日付を書き戻すため)。`provider.plan` は
+  既定が `pro` なので、Max プランの `max` を入れて Opus の 1M context を有効にしている。
 - pi 本体にはコマンドをバックグラウンドで走らせる機能が無いので、自作の
   `extensions/background-bash.ts` が `bg_run` / `bg_list` / `bg_kill` ツールを足す。
   `bg_run` はすぐに戻り、コマンドが終了すると exit code と出力の末尾を会話へ
