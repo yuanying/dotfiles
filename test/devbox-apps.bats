@@ -37,8 +37,8 @@ built() {
     [ "$(q '.name')" = "devbox-apps" ]
 }
 
-@test "boucherie runs sd-webui, sd-viewer, tageditor, lora-compare, lora-datasets and vmapi" {
-    [ "$(q '.services | keys | sort | join(" ")')" = "lora-compare lora-datasets sd-viewer sd-webui tageditor vmapi" ]
+@test "boucherie runs sd-webui, sd-viewer, tageditor, lora-compare, natsumi-live2d, lora-datasets and vmapi" {
+    [ "$(q '.services | keys | sort | join(" ")')" = "lora-compare lora-datasets natsumi-live2d sd-viewer sd-webui tageditor vmapi" ]
 }
 
 @test "every service is named after itself, restarts always and runs as the devbox user" {
