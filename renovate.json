@@ -54,6 +54,11 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ubuntu"],
       "enabled": false
+    },
+    {
+      "description": "moshi-hook's version.txt carries no release time, so the shared two-day minimumReleaseAge would hold every update back for good. The CDN also drops older versions soon after a release, so a pin left behind stops the devbox build; take a new version as soon as it appears",
+      "matchDatasources": ["custom.moshi-hook"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
     }
   ]
 }
