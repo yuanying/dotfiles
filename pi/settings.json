@@ -3,7 +3,7 @@
   "tuiMode": "regular",
   "defaultTools": ["+codemode"],
   "packages": [
-    "npm:pi-web-access@0.46.0",
+    "npm:pi-web-access@0.47.0",
     "npm:@czottmann/pi-automode@1.17.0",
     "npm:pi-claude-bridge@0.9.3"
   ]
