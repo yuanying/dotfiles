@@ -47,7 +47,8 @@ jobs:
       - run: make lint
 
   # `go mod tidy` has to be something anyone can run, and Renovate runs it
-  # after every update (postUpdateOptions: gomodTidy).
+  # after every update (postUpdateOptions: gomodTidy, next to
+  # gomodUpdateImportPaths, which rewrites imports on a major update).
   tidy:
     name: go.mod is tidy
     runs-on: ubuntu-latest
