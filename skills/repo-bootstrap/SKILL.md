@@ -123,8 +123,11 @@ go get -tool golang.org/x/vuln/cmd/govulncheck@latest
 
 - エントリポイントは `cmd/<app>/main.go`。`make build` と `make dist` は
   `-X main.version=$(VERSION)` を渡すので、`main` パッケージに `var version = "dev"` を置く。
-- `renovate.json` に `"postUpdateOptions": ["gomodTidy"]` を足す。CI の `tidy` ジョブは、
-  これがあることを前提にしている。
+- `renovate.json` に `"postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"]` を足し、
+  理由を `description` に書き足す。`gomodTidy` は更新のたびに `go mod tidy` を走らせる。
+  CI の `tidy` ジョブは、これがあることを前提にしている。`gomodUpdateImportPaths` は、
+  メジャー版が上がってモジュールのパスが変わったとき (`/v2` → `/v3`) に、ソースの import を
+  書き換える。これが無いと、メジャー更新の PR は go.mod だけが変わってビルドが通らない。
 - Kubernetes のライブラリ (`k8s.io/*`、controller-runtime、controller-tools) を使うなら、
   gated の `renovate.json` と同じように `kubernetes monorepo` グループにまとめる。
 - コンテナイメージを出すなら Dockerfile は multi-stage にし、`ARG VERSION` を受けて
