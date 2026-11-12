@@ -4,9 +4,10 @@
 #
 # The project name is fixed so that whichever checkout runs `docker compose`
 # manages the same containers. Nothing below points into the checkout at run
-# time: the entrypoints are baked into the images, and the only mounts are
-# $HOME and /mnt, at the same paths the devbox sees them -- except for vmapi,
-# which says why below.
+# time: the entrypoints are baked into the images, settings that live here
+# are written out under configs, and the only mounts are $HOME and /mnt, at
+# the same paths the devbox sees them -- except for vmapi, which says why
+# below.
 
 name: devbox-apps
 
@@ -68,6 +69,10 @@ services:
     working_dir: /home/yuanying/src/github.com/iwaco/tageditor
     environment:
       TAGEDITOR_ALLOWED_HOSTS: tageditor.poissonnerie.dev
+      TAGEDITOR_CONFIG: /etc/tageditor/config.toml
+    configs:
+      - source: tageditor
+        target: /etc/tageditor/config.toml
 
   # Static pages comparing LoRA versions, written by sd-scripts'
   # outputs/compare/build.py.
@@ -150,6 +155,15 @@ services:
     # who it is as X-Devbox-User.
     networks:
       v6net: {}
+
+# Settings written out here rather than kept in a file: compose copies the
+# content into the container when it is created, so nothing points back into
+# the checkout and nothing has to be made by hand.
+configs:
+  # The one directory tageditor opens; it has no way to open another.
+  tageditor:
+    content: |
+      dataset_root = "/home/yuanying/src/github.com/yuanying/lora_datasets"
 
 networks:
   # Created on poissonnerie's regied bridge by net-fraction-private, not by

@@ -141,6 +141,16 @@ built() {
     q '.services.tageditor.environment.TAGEDITOR_ALLOWED_HOSTS' | tr ',' '\n' | grep -qx 'tageditor.poissonnerie.dev'
 }
 
+@test "tageditor opens the dataset root its settings name, from a file compose writes" {
+    [ "$(q '.services.tageditor.environment.TAGEDITOR_CONFIG')" = "/etc/tageditor/config.toml" ]
+    [ "$(q '.services.tageditor.configs[] | select(.target == "/etc/tageditor/config.toml") | .source')" = "tageditor" ]
+    [ "$(q '.configs.tageditor.content' | yq -p toml -r '.dataset_root')" = "/home/yuanying/src/github.com/yuanying/lora_datasets" ]
+}
+
+@test "no config is read from this checkout: each is written out in the compose file" {
+    [ "$(q '[.configs[] | select(.content == null)] | length')" = "0" ]
+}
+
 @test "no base image floats on latest or goes untagged" {
     local f
     [ "$(ls "${REPO}"/devbox/apps/*/Dockerfile | wc -l)" -eq 8 ]
