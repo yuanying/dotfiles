@@ -11,7 +11,7 @@ On boucherie:
 |---|---|---|---|
 | `sd-webui` | 7860 | `~/src/github.com/yuanying/sd-webui-forge-neo` | `docker restart sd-webui` |
 | `sd-viewer` | 8189 | `~/src/github.com/yuanying/sd-viewer` | `docker restart sd-viewer` — it is built again at every start |
-| `tageditor` | 5173 | `~/src/github.com/iwaco/tageditor` | nothing — uvicorn and vite reload on their own |
+| `tageditor` | 5173 | `~/src/github.com/iwaco/tageditor`, opening `~/src/github.com/yuanying/lora_datasets` | nothing — uvicorn and vite reload on their own |
 | `lora-compare` | 8080 | `~/src/github.com/kohya-ss/sd-scripts/outputs/images` | nothing — nginx serves the files as they are |
 | `natsumi-live2d` | 8080 | `~/src/github.com/yuanying/natsumi-live2d/web` (lora-compare's image) | nothing — nginx serves the files as they are |
 | `lora-datasets` | 8765 | `~/src/github.com/yuanying/lora_datasets` | `docker restart lora-datasets` |
@@ -200,6 +200,16 @@ the `sd-webui` container rather than `localhost`.
 
 tageditor is given `TAGEDITOR_ALLOWED_HOSTS` so that vite accepts requests
 addressed to its public name, which proxyd passes through unchanged.
+
+tageditor opens the one directory its settings name (`dataset_root`), and
+without them its page does not open. The settings are not in the checkout nor
+under `~/.config`: they are written out in the compose file's `configs`, which
+compose copies to `/etc/tageditor/config.toml` in the container when it
+creates it, and `TAGEDITOR_CONFIG` points there. To open another directory,
+change `dataset_root` there and make the container again with
+`up -d --force-recreate tageditor`. A plain `up -d` does not see a change to
+`configs` and leaves the container as it is, and `docker restart` keeps the
+old copy too.
 
 ## vmapi
 
