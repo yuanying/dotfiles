@@ -80,3 +80,9 @@ services:
         - yuanying
         - atoato88
         - masayukig
+  - name: faceswap
+    port: 8790
+    auth: required
+    viewers:
+      logins:
+        - yuanying
