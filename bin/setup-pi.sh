@@ -154,14 +154,16 @@ else
     done
 fi
 
-# pi 専用のユーザー指示。手書きのファイルや他所へのリンクは上書きしない。
-# 以前の setup が張った Claude Code の指示へのリンクだけは片付ける。
+# ユーザー指示。Claude Code と共通の agents/AGENTS.md を張る (Claude Code 側は
+# bin/setup.sh)。手書きのファイルや他所へのリンクは上書きしない。以前の setup が
+# 張った Claude Code の指示へのリンクは片付け、pi/AGENTS.md へのリンクは張り直す。
 if [[ -L ${AGENT_DIR}/CLAUDE.md && $(readlink "${AGENT_DIR}/CLAUDE.md") == "${HOME}/.claude/CLAUDE.md" ]]; then
     rm -f "${AGENT_DIR}/CLAUDE.md"
 fi
 if [[ ! -e ${AGENT_DIR}/AGENTS.md && ! -L ${AGENT_DIR}/AGENTS.md ]] || \
+        [[ -L ${AGENT_DIR}/AGENTS.md && $(readlink "${AGENT_DIR}/AGENTS.md") == "${ROOT}/agents/AGENTS.md" ]] || \
         [[ -L ${AGENT_DIR}/AGENTS.md && $(readlink "${AGENT_DIR}/AGENTS.md") == "${PI_DIR}/AGENTS.md" ]]; then
-    ln -sfn "${PI_DIR}/AGENTS.md" "${AGENT_DIR}/AGENTS.md"
+    ln -sfn "${ROOT}/agents/AGENTS.md" "${AGENT_DIR}/AGENTS.md"
 else
     echo "${AGENT_DIR}/AGENTS.md は既存のユーザー指示なのでリンクをスキップした" >&2
 fi

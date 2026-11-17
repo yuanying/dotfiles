@@ -15,7 +15,7 @@
 | 自作の extension | `extensions/` に単体の `.ts` か、`index.ts` を持つディレクトリ | 1 つずつ symlink。`package-lock.json` を持つものには `npm ci` |
 | テーマ | `themes/<名前>.json` (`name` はファイル名と同じ) | 1 つずつ symlink。どれを使うかは各ホストの `settings` の `theme` |
 | プロンプトテンプレート | `prompts/*.md` | 1 つずつ symlink |
-| ユーザー指示 | `AGENTS.md` | `~/.pi/agent/AGENTS.md` へ symlink (既存の手書きファイルや他所へのリンクは上書きしない) |
+| ユーザー指示 | リポジトリ直下の `agents/AGENTS.md` (Claude Code と共通) | `~/.pi/agent/AGENTS.md` へ symlink (既存の手書きファイルや他所へのリンクは上書きしない) |
 
 - TUI は `regular` モード。会話を端末のスクロールバックに残し、herdr の
   コピーモードや `prefix+e` で読み返せる。
@@ -132,10 +132,11 @@
   テストは `test/pi-imagegen.bats`。
 - スキルはここに置かない。pi は `~/.agents/skills` も読むので、リポジトリ直下の
   `skills/` が `bin/setup-skills.sh` 経由で届く。
-- pi 専用の `AGENTS.md` でユーザー指示を管理する。`herdr-tasks` 使用時は、
-  特に指示がなければ worker を `claude` で起動する。
-  以前の setup が張った `~/.claude/CLAUDE.md` へのリンクは削除するが、
-  手書きの `CLAUDE.md` や他所へのリンクは残す。
+- ユーザー指示は Claude Code と共通の `agents/AGENTS.md` で管理する。
+  Claude Code の `~/.claude/CLAUDE.md` へは `bin/setup.sh` が同じファイルを張る。
+  以前の setup が張った `pi/AGENTS.md` へのリンクは張り直し、
+  `~/.pi/agent/CLAUDE.md` から `~/.claude/CLAUDE.md` へのリンクは削除するが、
+  手書きのファイルや他所へのリンクは残す。
 - `PI_CODING_AGENT_DIR` があれば設定・リンク先を変更する。ただし pi-automode は
   現在この変数を参照しないため、その設定だけは固定の `~/.pi/agent` 配下へ置く。
 - マージは配列を丸ごと置き換えるので、手元で `pi install` しただけのパッケージ宣言は

@@ -42,7 +42,7 @@ EOF
     # The script finds pi/ from where it sits, so a copy in a temporary tree is
     # the real script working on settings the test controls.
     FAKE="${BATS_TEST_TMPDIR}/checkout"
-    mkdir -p "${FAKE}/bin" "${FAKE}/pi"
+    mkdir -p "${FAKE}/bin" "${FAKE}/pi" "${FAKE}/agents"
     cp "${REPO}/bin/setup-pi.sh" "${FAKE}/bin/setup-pi.sh"
     cat > "${FAKE}/pi/settings.json" <<'EOF'
 {
@@ -57,7 +57,7 @@ EOF
     echo '{ "displayMode": "used" }' > "${FAKE}/pi/usage.json"
     echo '{ "provider": { "plan": "max" } }' > "${FAKE}/pi/claude-bridge.json"
     echo '{ "tui.editor.historyPrevious": "ctrl+p", "tui.editor.historyNext": "ctrl+n", "tui.select.up": ["up", "ctrl+p"], "tui.select.down": ["down", "ctrl+n"] }' > "${FAKE}/pi/keybindings.json"
-    cp "${REPO}/pi/AGENTS.md" "${FAKE}/pi/AGENTS.md"
+    cp "${REPO}/agents/AGENTS.md" "${FAKE}/agents/AGENTS.md"
     SETUP="${FAKE}/bin/setup-pi.sh"
 }
 
@@ -316,7 +316,7 @@ resources() {
     bash "${SETUP}"
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
-    [ "$(readlink "${AGENT}/AGENTS.md")" = "${FAKE}/pi/AGENTS.md" ]
+    [ "$(readlink "${AGENT}/AGENTS.md")" = "${FAKE}/agents/AGENTS.md" ]
     [ ! -e "${AGENT}/CLAUDE.md" ] && [ ! -L "${AGENT}/CLAUDE.md" ]
 }
 
@@ -324,7 +324,7 @@ resources() {
     export PI_CODING_AGENT_DIR="${BATS_TEST_TMPDIR}/agent"
     run bash "${SETUP}"
     [ "$status" -eq 0 ]
-    [ "$(readlink "${PI_CODING_AGENT_DIR}/AGENTS.md")" = "${FAKE}/pi/AGENTS.md" ]
+    [ "$(readlink "${PI_CODING_AGENT_DIR}/AGENTS.md")" = "${FAKE}/agents/AGENTS.md" ]
     [ ! -L "${AGENT}/AGENTS.md" ]
 }
 
@@ -347,8 +347,12 @@ resources() {
     [ "$(readlink "${AGENT}/CLAUDE.md")" = "${BATS_TEST_TMPDIR}/other-claude.md" ]
 }
 
-@test "the repository instructions default herdr workers to claude" {
-    grep -q 'herdr-tasks.*特に指示がない場合.*worker.*claude' "${REPO}/pi/AGENTS.md"
+@test "a link left by an older setup to pi/AGENTS.md is moved to agents/AGENTS.md" {
+    mkdir -p "${AGENT}"
+    ln -s "${FAKE}/pi/AGENTS.md" "${AGENT}/AGENTS.md"
+    run bash "${SETUP}"
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${AGENT}/AGENTS.md")" = "${FAKE}/agents/AGENTS.md" ]
 }
 
 @test "instructions written for pi itself are left alone" {
