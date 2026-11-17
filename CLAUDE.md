@@ -4,8 +4,8 @@
 
 **このリポジトリのデフォルトブランチは `lua`。**
 
-グローバル設定 (`~/.claude/CLAUDE.md`) の Branch Strategy は `main` を前提に
-しているが、このリポジトリではそれを `lua` に読み替えること。
+`pr-create` などのスキルは `main` を前提にしているが、このリポジトリではそれを
+`lua` に読み替えること。
 
 - 新しくブランチを切るときは `origin/lua` を起点にする
 - Pull Request のベースブランチは `lua`

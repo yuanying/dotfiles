@@ -157,6 +157,15 @@ done
 # settings.json がこのパスを直接指しているため、名前は変えない。
 ln -sfn ${ROOT}/../claude/statusline-command.sh ~/.claude/statusline-command.sh
 
+# ユーザー指示。pi と共通の agents/AGENTS.md を張る (pi 側は bin/setup-pi.sh)。
+# 手書きのファイルや他所へのリンクは上書きしない。
+if [[ ! -e ~/.claude/CLAUDE.md && ! -L ~/.claude/CLAUDE.md ]] || \
+        [[ -L ~/.claude/CLAUDE.md && $(readlink ~/.claude/CLAUDE.md) == "${ROOT}/../agents/AGENTS.md" ]]; then
+    ln -sfn ${ROOT}/../agents/AGENTS.md ~/.claude/CLAUDE.md
+else
+    echo "~/.claude/CLAUDE.md は既存のユーザー指示なのでリンクをスキップした" >&2
+fi
+
 # settings.json の hooks が呼ぶスクリプト。statusline と同じく、settings.json が
 # ~/.claude/hooks/ のパスを直接指しているので、名前は変えない。
 mkdir -p ~/.claude/hooks
