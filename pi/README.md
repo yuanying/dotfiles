@@ -172,6 +172,24 @@ sops はその秘密鍵で復号する。鍵はホストごとに別にして、
   pull して pi を起動し直す。
 
 `.sops.yaml` と暗号文の受信者が揃っていることは `test/setup-pi.bats` が確かめる。
+
+## sakura-ai
+
+`models.json` の `sakura-ai` は [さくらのAI Engine](https://manual.sakura.ad.jp/cloud/ai-engine/02-howto.html) の
+OpenAI 互換 API (`https://api.ai.sakura.ad.jp/v1`) を使う。モデルの仕様は
+[チャット生成モデルの仕様](https://manual.sakura.ad.jp/cloud/ai-engine/chat-models.html) を写している。
+`preview/` のモデルは予告なく変わる・無くなることがあるので、そのときは合わせて直す。
+
+- アカウントトークン (`<UUID>:<シークレット>`) は qwen38 と同じく `secrets.enc.yaml` の
+  `sakura_ai_token` に置く。入れる・替えるときは、平文をコマンドラインに出さないよう
+  `sops set --value-stdin pi/secrets.enc.yaml '["sakura_ai_token"]'` に JSON 文字列
+  (`"<UUID>:<シークレット>"`) を標準入力から渡す。
+- さくらのAI Engine は `max_completion_tokens` を無視するので、`compat.maxTokensField` で
+  `max_tokens` を送らせている。プロンプトキャッシュには対応していない。
+- DeepSeek V4.1 は effort を `chat_template_kwargs.reasoning_effort` で受け取り、値は
+  `low` / `high` / `xhigh` / `max` か 1〜100 の整数に限られる (`medium` は 400 になる)。
+  そのため `thinkingFormat: "chat-template"` で送り、`thinkingLevelMap` で pi の level を
+  この値に寄せている (`minimal` は `low`、`medium` は `high`)。
 - 本体の版は `devbox/Dockerfile` の `ARG PI_VERSION`。Mac では
   `bin/mac/setup-packages.sh` がそれを読んで同じ版を npm で入れる。
 

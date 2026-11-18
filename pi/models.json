@@ -20,6 +20,58 @@
           }
         }
       ]
+    },
+    "sakura-ai": {
+      "baseUrl": "https://api.ai.sakura.ad.jp/v1",
+      "api": "openai-completions",
+      "apiKey": "!sops -d --extract '[\"sakura_ai_token\"]' '__PI_DIR__/secrets.enc.yaml'",
+      "compat": {
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "preview/DeepSeek-V4.1-Flash-1017",
+          "name": "DeepSeek V4.1 Flash (Sakura)",
+          "reasoning": true,
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          },
+          "compat": {
+            "thinkingFormat": "chat-template",
+            "chatTemplateKwargs": {
+              "reasoning_effort": { "$var": "thinking.effort", "omitWhenOff": true }
+            }
+          },
+          "input": ["text", "image"],
+          "contextWindow": 1048575,
+          "maxTokens": 32000,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "id": "preview/GLM-5.3-Flash",
+          "name": "GLM-5.3 Flash (Sakura)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1048575,
+          "maxTokens": 32000,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        }
+      ]
     }
   }
 }
