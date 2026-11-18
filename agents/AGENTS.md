@@ -22,7 +22,9 @@
 
 ## herdr-tasks
 
-- `herdr-tasks` スキルを使用している際は、特に指示がない場合、coodinatorは`pi`、worker を `claude` で起動すること。
+- `herdr-tasks` スキルを使用している際は、特に指示がない場合、coodinatorは`pi`、worker は `pi` を
+  モデル `openai/gpt-6.2-sol` で起動すること
+  (`herdr agent start <name> --kind pi --pane <pane-id> -- --model openai/gpt-6.2-sol`)。
 - `herdr-tasks` の worktree 作成には `git worktree add` の代わりに
   `~/bin/herdr-task-worktree --repo <repo> --path <task-dir>/worktrees/<branch> --branch <branch> --base <base-sha>`
   を使う。tab はスキルの手順どおり別途作成する。
