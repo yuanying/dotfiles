@@ -86,3 +86,10 @@ services:
     viewers:
       logins:
         - yuanying
+  - name: gemma-ara
+    host: gemma-ara
+    port: 8080
+    auth: required
+    viewers:
+      logins:
+        - yuanying

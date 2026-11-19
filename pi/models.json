@@ -21,6 +21,34 @@
         }
       ]
     },
+    "gemma-ara": {
+      "baseUrl": "https://gemma-ara.poissonnerie.dev/v1",
+      "api": "openai-completions",
+      "apiKey": "!sops -d --extract '[\"gemma_ara_token\"]' '__PI_DIR__/secrets.enc.yaml'",
+      "models": [
+        {
+          "id": "gemma-4-31b-it-ara-heretic",
+          "name": "Gemma 4 31B IT ARA Heretic",
+          "reasoning": true,
+          "compat": {
+            "thinkingFormat": "chat-template",
+            "thinkingTokenBudgetField": "thinking_budget_tokens",
+            "chatTemplateKwargs": {
+              "enable_thinking": { "$var": "thinking.enabled" }
+            }
+          },
+          "input": ["text"],
+          "contextWindow": 262144,
+          "maxTokens": 16384,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        }
+      ]
+    },
     "sakura-ai": {
       "baseUrl": "https://api.ai.sakura.ad.jp/v1",
       "api": "openai-completions",
