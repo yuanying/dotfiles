@@ -175,6 +175,34 @@ sops はその秘密鍵で復号する。鍵はホストごとに別にして、
 
 `.sops.yaml` と暗号文の受信者が揃っていることは `test/setup-pi.bats` が確かめる。
 
+## gemma-ara
+
+`models.json` の `gemma-ara` は boucherie の llama.cpp
+([運用手順](../devbox/apps/README.md#gemma-ara)) を
+`https://gemma-ara.poissonnerie.dev/v1` 経由で使う。GGUF 単体のため入力は
+テキストのみ。Pi の thinking のオン・オフは `enable_thinking` に渡す。
+`minimal` / `low` / `medium` / `high` の違いは llama.cpp の思考トークン上限
+(`thinking_budget_tokens`) であって、モデル固有の `reasoning_effort` ではない。
+上限は Pi の `thinkingBudgets` で調整できる。
+
+資格情報は `qwen38` と同様に `secrets.enc.yaml` に暗号化して置く。
+`gemma_ara_token` はこのサービスだけの無期限 Bearer で、発行は boucherie の
+運用者が行う。値を端末や引数に出さずに入れ替えるには、運用チェックアウトで
+次を実行する (`bash`、トレース無効):
+
+```bash
+set +x
+set -eo pipefail
+devbox/proxy/bin/devbox-proxy token --service gemma-ara --user yuanying --ttl 0 |
+  jq -Rse 'rtrimstr("\n") | select(length > 0)' |
+  sops set --value-stdin pi/secrets.enc.yaml '["gemma_ara_token"]'
+```
+
+**新規発行は旧トークンを失効させない。** 漏えい時の失効は
+[プロキシの鍵ローテーション](../devbox/proxy/README.md#reaching-a-service-from-something-that-is-not-a-browser) が必要で、
+同じプロキシの全サービスの Bearer に影響する。GitHub のブラウザセッションは
+別の鍵を使う。
+
 ## sakura-ai
 
 `models.json` の `sakura-ai` は [さくらのAI Engine](https://manual.sakura.ad.jp/cloud/ai-engine/02-howto.html) の

@@ -16,6 +16,7 @@ On boucherie:
 | `natsumi-live2d` | 8080 | `~/src/github.com/yuanying/natsumi-live2d/web` (lora-compare's image) | nothing — nginx serves the files as they are |
 | `lora-datasets` | 8765 | `~/src/github.com/yuanying/lora_datasets` | `docker restart lora-datasets` |
 | `vmapi` | 8080 | the released image `ghcr.io/yuanying/vmapi` | — see [vmapi](#vmapi) |
+| `gemma-ara` | 8080 | upstream llama.cpp CUDA server | — see [gemma-ara](#gemma-ara) |
 
 On anietta:
 
@@ -114,11 +115,11 @@ port. To keep it that way, revert the change that brought Kyojin in, through
 a pull request as usual, and run the usual `up -d --build` once it is merged:
 until then, the next `up -d --build` from `~/dotfiles` brings Kyojin back.
 
-The images hold only runtimes and toolchains. The source, the venvs and the
-languages they were built with are the ones under `$HOME`, mounted at the same
-path as in the devbox, and the containers run as the devbox user (UID 501,
-group `staff`). What the apps write belongs to the same user as everything
-else, and a checkout edited in the devbox is the one the container runs.
+The apps built from local Dockerfiles use the source, venvs and languages
+under `$HOME`, mounted at the same path as in the devbox. All containers run
+as the devbox user (UID 501, group `staff`). What the apps write belongs to the
+same user as everything else, and when an app runs from a checkout, that is
+the same checkout you edit in the devbox.
 
 Each container is on `v6net` only, with IPv4 alone: `v6net` is the host's
 regied bridge, which `net-fraction-private` declares and creates, and nothing
@@ -210,6 +211,62 @@ change `dataset_root` there and make the container again with
 `up -d --force-recreate tageditor`. A plain `up -d` does not see a change to
 `configs` and leaves the container as it is, and `docker restart` keeps the
 old copy too.
+
+## gemma-ara
+
+The server runs the Q4_K_M GGUF of
+[`mradermacher/gemma-4-31B-it-ARA-heretic-GGUF`](https://huggingface.co/mradermacher/gemma-4-31B-it-ARA-heretic-GGUF/tree/1b49bbdcb3dfaa67cc4daced7da7d16552959f97).
+The Docker host must already have the readable GGUF at the `volumes.source`
+path in Compose. Docker mounts only that file, read-only, and fails if it is
+missing. It does not fetch or bake the model into the image.
+
+Compose builds upstream llama.cpp's CUDA `server` target from the Git commit
+and base image digests in `compose.boucherie.yaml`. The build needs GitHub,
+container registries and the upstream package repositories; the image pins
+do not freeze upstream apt packages. It targets boucherie's RTX PRO 5000
+Blackwell only. The server puts all layers on the GPU, with one 262144-token
+slot and a Q8 KV cache. Allow about 32 GiB of free VRAM before starting it. A
+short smoke test verifies slot allocation, not throughput with a full prompt.
+
+From `devbox/apps`, build and start only this service; do not bring up or
+recreate the other apps to test it:
+
+```bash
+compose=(docker compose -f compose.boucherie.yaml)
+"${compose[@]}" config --quiet
+"${compose[@]}" build gemma-ara
+"${compose[@]}" up -d --no-deps --no-build --wait --wait-timeout 180 gemma-ara
+```
+
+Check the server internally and from the devbox container that runs proxyd:
+
+```bash
+docker exec gemma-ara curl -fsS http://127.0.0.1:8080/health
+docker exec gemma-ara curl -fsS --max-time 60 \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"gemma-4-31b-it-ara-heretic","messages":[{"role":"user","content":"Reply with OK."}],"chat_template_kwargs":{"enable_thinking":false},"max_tokens":32}' \
+  http://127.0.0.1:8080/v1/chat/completions |
+  jq -e '.choices[0].message.content | strings | length > 0'
+docker logs gemma-ara 2>&1 | grep 'n_slots = 1, n_ctx_slot = 262144'
+docker exec devbox curl -fsS --max-time 5 http://gemma-ara:8080/health
+docker port gemma-ara  # expect no host port mappings
+```
+
+Both health checks should return `{"status":"ok"}`. CUDA device and
+layer-offload details are hidden at the default verbosity. To capture them
+before publishing, temporarily recreate just this container with trace
+logging, check for `using device CUDA0` and `offloaded 61/61 layers to GPU`,
+then recreate it with the normal settings:
+
+```bash
+printf 'services:\n  gemma-ara:\n    environment:\n      LLAMA_ARG_LOG_VERBOSITY: "4"\n' |
+  "${compose[@]}" -f - up -d --no-deps --no-build --wait --wait-timeout 180 gemma-ara
+docker logs gemma-ara 2>&1 | grep -E 'using device CUDA|offloaded .* layers|n_slots = 1, n_ctx_slot = 262144'
+"${compose[@]}" up -d --no-deps --no-build --wait --wait-timeout 180 gemma-ara
+```
+
+To remove just this container and free its VRAM, run
+`"${compose[@]}" rm -sf gemma-ara` (not `down`). The GGUF and built image remain.
 
 ## vmapi
 
