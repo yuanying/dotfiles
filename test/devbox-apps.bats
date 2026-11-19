@@ -30,15 +30,15 @@ q() {
 # built lists the services whose image is built from a directory next to the
 # compose file.
 built() {
-    q '.services | to_entries | .[] | select(.value.build != null) | .key'
+    q '.services | to_entries | .[] | select(.value.build.context != null and (.value.build.context | test("^https://") | not)) | .key'
 }
 
 @test "the project name is fixed, so any checkout manages the same containers" {
     [ "$(q '.name')" = "devbox-apps" ]
 }
 
-@test "boucherie runs sd-webui, sd-viewer, tageditor, lora-compare, natsumi-live2d, lora-datasets and vmapi" {
-    [ "$(q '.services | keys | sort | join(" ")')" = "lora-compare lora-datasets natsumi-live2d sd-viewer sd-webui tageditor vmapi" ]
+@test "boucherie runs sd-webui, sd-viewer, tageditor, lora-compare, natsumi-live2d, lora-datasets, vmapi and gemma-ara" {
+    [ "$(q '.services | keys | sort | join(" ")')" = "gemma-ara lora-compare lora-datasets natsumi-live2d sd-viewer sd-webui tageditor vmapi" ]
 }
 
 @test "every service is named after itself, restarts always and runs as the devbox user" {
@@ -78,7 +78,7 @@ built() {
     ! grep -qiE 'ipv6|ip6|sysctl|driver_opts' "${COMPOSE}"
 }
 
-@test "every service either builds here or runs a released image" {
+@test "services without a build run released images" {
     local s
     for s in $(q '.services | keys | .[]'); do
         if [ "$(q ".services.\"${s}\".build")" = "null" ]; then

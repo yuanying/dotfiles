@@ -4,10 +4,10 @@
 #
 # The project name is fixed so that whichever checkout runs `docker compose`
 # manages the same containers. Nothing below points into the checkout at run
-# time: the entrypoints are baked into the images, settings that live here
-# are written out under configs, and the only mounts are $HOME and /mnt, at
-# the same paths the devbox sees them -- except for vmapi, which says why
-# below.
+# time: the entrypoints are baked into the images and settings that live
+# here are written out under configs. Most apps mount $HOME and /mnt at
+# the same paths the devbox sees; vmapi and gemma-ara mount only what they
+# need.
 
 name: devbox-apps
 
@@ -153,6 +153,69 @@ services:
       - /home/yuanying/.config/vmapi/config.yaml
     # No ports: proxyd reaches it as vmapi:8080, after the login, and passes
     # who it is as X-Devbox-User.
+    networks:
+      v6net: {}
+
+  gemma-ara:
+    container_name: gemma-ara
+    restart: always
+    init: true
+    user: "501:50"
+    build:
+      # b12535: only the server target, compiled for boucherie's Blackwell GPU.
+      context: https://github.com/ggml-org/llama.cpp.git#573aa89de6b6912b7433c4da20a013f743dd1009
+      dockerfile: .devops/cuda.Dockerfile
+      target: server
+      args:
+        APP_VERSION: b12535
+        APP_REVISION: 573aa89de6b6912b7433c4da20a013f743dd1009
+        CUDA_VERSION: 13.5.0
+        CUDA_DOCKER_ARCH: "120"
+        BASE_CUDA_DEV_CONTAINER: docker.io/nvidia/cuda:13.5.0-devel-ubuntu24.04@sha256:d3fa71793540a2b76ab227ee00016e754da2758b7a51b49bc8a72543af5a8bc2
+        BASE_CUDA_RUN_CONTAINER: docker.io/nvidia/cuda:13.5.0-runtime-ubuntu24.04@sha256:ba4d4e8475ced890fb26f9661daf8dae7cce9827613682eb8b8379c5ecd94eba
+        NODE_VERSION: 24@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - type: bind
+        source: /home/yuanying/model/gemma-4-31B-it-ARA-heretic.Q4_K_M.gguf
+        target: /app/model.gguf
+        read_only: true
+        bind:
+          create_host_path: false
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --model
+      - /app/model.gguf
+      - --alias
+      - gemma-4-31b-it-ara-heretic
+      - -ngl
+      - "999"
+      - -fa
+      - "on"
+      - -c
+      - "262144"
+      - -np
+      - "1"
+      - -ctk
+      - q8_0
+      - -ctv
+      - q8_0
+      - -b
+      - "2048"
+      - -ub
+      - "512"
+      - --fit
+      - "off"
+    # No host port: proxyd reaches it on the shared network.
     networks:
       v6net: {}
 
