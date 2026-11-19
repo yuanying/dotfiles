@@ -172,6 +172,20 @@ export default function sandbox(pi: ExtensionAPI): void {
 	// bash、bg_run、write / edit が同時に問うても、ダイアログは 1 つずつ出す。
 	const oneDialogAtATime = dialogQueue();
 
+	/**
+	 * ダイアログを出している間だけ、herdr に入力待ち (blocked) と知らせる。herdr の pi 連携
+	 * (herdr-agent-state.ts) が herdr:blocked を聞いている。herdr の外では誰も聞いていない。
+	 * 列に並んで待つ間は知らせないよう、oneDialogAtATime に渡す show の中で使う。
+	 */
+	async function whileBlocked<T>(label: string, show: () => Promise<T>): Promise<T> {
+		pi.events.emit("herdr:blocked", { active: true, label });
+		try {
+			return await show();
+		} finally {
+			pi.events.emit("herdr:blocked", { active: false });
+		}
+	}
+
 	pi.registerFlag("sandbox", { description: "サンドボックスを有効にして起動する", type: "boolean", default: false });
 	pi.registerFlag("no-sandbox", { description: "設定に関わらずサンドボックスを無効にして起動する", type: "boolean", default: false });
 
@@ -261,7 +275,10 @@ export default function sandbox(pi: ExtensionAPI): void {
 			command,
 		].join("\n");
 		const choice = await oneDialogAtATime(
-			() => ctx.ui.select(title, [CHOICE_DECLINE, CHOICE_RUN_OUTSIDE], { timeout: PROMPT_TIMEOUT_MS, signal }),
+			() =>
+				whileBlocked("sandbox: 外での実行の確認", () =>
+					ctx.ui.select(title, [CHOICE_DECLINE, CHOICE_RUN_OUTSIDE], { timeout: PROMPT_TIMEOUT_MS, signal }),
+				),
 			signal,
 		);
 		if (signal?.aborted) throw new Error("[sandbox] 中断されたので、サンドボックスの外では実行しなかった。");
@@ -370,7 +387,10 @@ export default function sandbox(pi: ExtensionAPI): void {
 		].join("\n");
 		const signal = ctx.signal;
 		const choice = await oneDialogAtATime(
-			() => ctx.ui.select(title, choices, { timeout: PROMPT_TIMEOUT_MS, signal }),
+			() =>
+				whileBlocked("sandbox: 書き込みの許可", () =>
+					ctx.ui.select(title, choices, { timeout: PROMPT_TIMEOUT_MS, signal }),
+				),
 			signal,
 		);
 		if (choice === undefined || choice === CHOICE_ABORT || signal?.aborted) return false;
