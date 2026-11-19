@@ -72,6 +72,41 @@
           }
         }
       ]
+    },
+    "orcarouter": {
+      "baseUrl": "https://api.orcarouter.ai/v1",
+      "api": "openai-completions",
+      "apiKey": "!sops -d --extract '[\"orcarouter_token\"]' '__PI_DIR__/secrets.enc.yaml'",
+      "compat": {
+        "maxTokensField": "max_tokens",
+        "supportsReasoningEffort": true,
+        "thinkingFormat": "openai"
+      },
+      "models": [
+        {
+          "id": "orca/orcacyber-glm-5.3-flash",
+          "name": "OrcaCyber GLM 5.3 Flash (OrcaRouter)",
+          "reasoning": true,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max",
+            "max": "max"
+          },
+          "input": ["text", "image"],
+          "contextWindow": 1048576,
+          "maxTokens": 131072,
+          "cost": {
+            "input": 0.8,
+            "output": 1.6,
+            "cacheRead": 0.15,
+            "cacheWrite": 0
+          }
+        }
+      ]
     }
   }
 }

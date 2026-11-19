@@ -193,6 +193,21 @@ OpenAI 互換 API (`https://api.ai.sakura.ad.jp/v1`) を使う。モデルの仕
 - 本体の版は `devbox/Dockerfile` の `ARG PI_VERSION`。Mac では
   `bin/mac/setup-packages.sh` がそれを読んで同じ版を npm で入れる。
 
+## orcarouter
+
+`models.json` の `orcarouter` は [OrcaRouter](https://www.orcarouter.ai/) の
+OpenAI 互換 API (`https://api.orcarouter.ai/v1`) を使う。モデルの仕様は
+[モデルカード](https://www.orcarouter.ai/api/public/models/orca/orcacyber-glm-5.3-flash) を写している。
+
+- `orca/orcacyber-glm-5.3-flash` は Security Research ティア (`sec-uncensored`) に
+  限られる。そのティアの無いキーでは選んでも拒まれる。
+- API キーは qwen38 と同じく `secrets.enc.yaml` の `orcarouter_token` に置く。
+  入れる・替えるときは `sops set --value-stdin pi/secrets.enc.yaml '["orcarouter_token"]'` に
+  JSON 文字列 (`"<キー>"`) を標準入力から渡す。
+- 推論は常に有効で、effort は `reasoning_effort` の `low` / `high` / `max` だけを受け取る。
+  そのため `thinkingLevelMap` で `off` を使えなくし、`minimal` は `low`、`medium` は `high`、
+  `xhigh` は `max` に寄せている。
+
 ## auto mode
 
 `@czottmann/pi-automode` を使う。既定では無効 (`autoMode.enabled: false`) で、書き込みの
