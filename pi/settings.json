@@ -4,7 +4,7 @@
   "defaultTools": ["+codemode"],
   "packages": [
     "npm:pi-web-access@0.47.0",
-    "npm:@czottmann/pi-automode@1.17.0",
+    "npm:@czottmann/pi-automode@1.18.0",
     "npm:pi-claude-bridge@0.12.0"
   ]
 }
