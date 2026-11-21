@@ -188,6 +188,12 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      - type: bind
+        source: /home/yuanying/model/gemma-4-31B-it-ARA-heretic.mmproj-Q8_0.gguf
+        target: /app/mmproj.gguf
+        read_only: true
+        bind:
+          create_host_path: false
     command:
       - --host
       - 0.0.0.0
@@ -195,6 +201,8 @@ services:
       - "8080"
       - --model
       - /app/model.gguf
+      - --mmproj
+      - /app/mmproj.gguf
       - --alias
       - gemma-4-31b-it-ara-heretic
       - -ngl
