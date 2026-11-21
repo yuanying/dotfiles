@@ -216,17 +216,21 @@ old copy too.
 
 The server runs the Q4_K_M GGUF of
 [`mradermacher/gemma-4-31B-it-ARA-heretic-GGUF`](https://huggingface.co/mradermacher/gemma-4-31B-it-ARA-heretic-GGUF/tree/1b49bbdcb3dfaa67cc4daced7da7d16552959f97).
-The Docker host must already have the readable GGUF at the `volumes.source`
-path in Compose. Docker mounts only that file, read-only, and fails if it is
-missing. It does not fetch or bake the model into the image.
+The server also loads the Q8_0 multimodal projector
+(`gemma-4-31B-it-ARA-heretic.mmproj-Q8_0.gguf`) from the same revision, so it
+accepts image input. The Docker host must already have both readable GGUFs at
+the `volumes.source` paths in Compose. Docker mounts only those files,
+read-only, and fails if either is missing. It does not fetch or bake the model
+into the image.
 
 Compose builds upstream llama.cpp's CUDA `server` target from the Git commit
 and base image digests in `compose.boucherie.yaml`. The build needs GitHub,
 container registries and the upstream package repositories; the image pins
 do not freeze upstream apt packages. It targets boucherie's RTX PRO 5000
 Blackwell only. The server puts all layers on the GPU, with one 262144-token
-slot and a Q8 KV cache. Allow about 32 GiB of free VRAM before starting it. A
-short smoke test verifies slot allocation, not throughput with a full prompt.
+slot and a Q8 KV cache. Allow about 33 GiB of free VRAM before starting it
+(the projector adds about 1 GiB). A short smoke test verifies slot allocation,
+not throughput with a full prompt.
 
 From `devbox/apps`, build and start only this service; do not bring up or
 recreate the other apps to test it:

@@ -179,8 +179,8 @@ sops はその秘密鍵で復号する。鍵はホストごとに別にして、
 
 `models.json` の `gemma-ara` は boucherie の llama.cpp
 ([運用手順](../devbox/apps/README.md#gemma-ara)) を
-`https://gemma-ara.poissonnerie.dev/v1` 経由で使う。GGUF 単体のため入力は
-テキストのみ。Pi の thinking のオン・オフは `enable_thinking` に渡す。
+`https://gemma-ara.poissonnerie.dev/v1` 経由で使う。サーバーは mmproj も
+読み込むので、入力はテキストと画像。Pi の thinking のオン・オフは `enable_thinking` に渡す。
 `minimal` / `low` / `medium` / `high` の違いは llama.cpp の思考トークン上限
 (`thinking_budget_tokens`) であって、モデル固有の `reasoning_effort` ではない。
 上限は Pi の `thinkingBudgets` で調整できる。
