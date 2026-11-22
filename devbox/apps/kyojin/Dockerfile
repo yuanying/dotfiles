@@ -6,7 +6,7 @@
 # The base llama-server's image uses (and the devbox is built on). The venv
 # brings its own ROCm, but this is the userland Kyojin was measured with, and
 # the layers are the ones the host already has.
-FROM rocm/dev-ubuntu-24.04:10.1.0-full
+FROM rocm/dev-ubuntu-24.04:10.2.0-full
 
 # As in devbox/Dockerfile, so that the libraries resolve as they did in the
 # devbox where Kyojin was built and measured.
