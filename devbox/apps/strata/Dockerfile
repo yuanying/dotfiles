@@ -5,7 +5,7 @@
 
 # kyojin's base, whose layers the host already has. The engine does not use
 # its ROCm: the entrypoint puts the one under $HOME first.
-FROM rocm/dev-ubuntu-24.04:10.1.0-full
+FROM rocm/dev-ubuntu-24.04:10.2.0-full
 
 # The devbox user, so that paths under $HOME resolve and files stay theirs.
 # GID 50 is staff, which Ubuntu already has.
