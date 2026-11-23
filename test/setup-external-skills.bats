@@ -4,13 +4,13 @@ load helpers
 
 setup() {
     export HOME="${BATS_TEST_TMPDIR}/home"
-    export XDG_DATA_HOME="${HOME}/data"
+    export GHQ_ROOT="${HOME}/src"
     export PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
     export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.invalid
     export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.invalid
     export UPSTREAM="${BATS_TEST_TMPDIR}/upstream"
     repo=github.com/example/skills
-    clone="${XDG_DATA_HOME}/dotfiles/skill-repos/${repo}"
+    clone="${GHQ_ROOT}/${repo}"
     checkout="${BATS_TEST_TMPDIR}/dotfiles"
     manifest="${checkout}/skills/external.txt"
     setup_skills="${checkout}/bin/setup-skills.sh"
@@ -30,8 +30,11 @@ setup() {
 
     cat > "${BATS_TEST_TMPDIR}/bin/ghq" <<'EOF'
 #!/bin/sh
-[ "$1 $2" = 'get -u' ] || exit 2
-exec git clone -q "$UPSTREAM" "$GHQ_ROOT/$3"
+case "$1 $2" in
+    'root --all') printf '%s\n' "$GHQ_ROOT" | tr ':' '\n' ;;
+    'get -u') exec git clone -q "$UPSTREAM" "${GHQ_ROOT%%:*}/$3" ;;
+    *) exit 2 ;;
+esac
 EOF
     chmod +x "${BATS_TEST_TMPDIR}/bin/ghq"
 }
@@ -66,7 +69,7 @@ EOF
 }
 
 @test "a failed pull still links the cached clone" {
-    GHQ_ROOT="${XDG_DATA_HOME}/dotfiles/skill-repos" ghq get -u "${repo}"
+    ghq get -u "${repo}"
     mv "${UPSTREAM}" "${UPSTREAM}.offline"
 
     run bash "${setup_skills}"
@@ -76,7 +79,7 @@ EOF
 }
 
 @test "a divergent clone is not merged or rebased" {
-    GHQ_ROOT="${XDG_DATA_HOME}/dotfiles/skill-repos" ghq get -u "${repo}"
+    ghq get -u "${repo}"
     printf 'local\n' > "${clone}/skills/listed/SKILL.md"
     git -C "${clone}" commit -qam local
     before=$(git -C "${clone}" rev-parse HEAD)
@@ -91,7 +94,7 @@ EOF
 }
 
 @test "an existing clone with local changes is left untouched" {
-    GHQ_ROOT="${XDG_DATA_HOME}/dotfiles/skill-repos" ghq get -u "${repo}"
+    ghq get -u "${repo}"
     touch "${clone}/untracked"
     printf 'second\n' > "${UPSTREAM}/skills/listed/SKILL.md"
     git -C "${UPSTREAM}" commit -qam second
@@ -104,7 +107,7 @@ EOF
 }
 
 @test "a ref on an existing clone uses a fetched tag instead of the latest content" {
-    GHQ_ROOT="${XDG_DATA_HOME}/dotfiles/skill-repos" ghq get -u "${repo}"
+    ghq get -u "${repo}"
     git -C "${UPSTREAM}" tag pinned
     printf 'second\n' > "${UPSTREAM}/skills/listed/SKILL.md"
     git -C "${UPSTREAM}" commit -qam second
@@ -115,6 +118,29 @@ EOF
     [ "$(cat "${agents}/listed/SKILL.md")" = first ]
     [ "$(git -C "${clone}" rev-parse refs/tags/pinned)" = "$(git -C "${clone}" rev-parse HEAD)" ]
     ! git -C "${clone}" symbolic-ref -q HEAD
+}
+
+@test "a pin does not change a clone on a different local branch" {
+    git -C "${UPSTREAM}" tag pinned
+    ghq get -u "${repo}"
+    git -C "${clone}" switch -qc my-work
+    printf '%s skills/listed pinned\n' "${repo}" > "${manifest}"
+
+    run bash "${setup_skills}"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *warning:* ]]
+    [ "$(git -C "${clone}" branch --show-current)" = my-work ]
+    [ "$(readlink "${agents}/listed")" = "${clone}/skills/listed" ]
+}
+
+@test "an existing clone in a secondary ghq root is reused" {
+    ghq get -u "${repo}"
+    export GHQ_ROOT="${HOME}/new-root:${GHQ_ROOT}"
+
+    run bash "${setup_skills}"
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${agents}/listed")" = "${clone}/skills/listed" ]
+    [ ! -e "${HOME}/new-root/${repo}" ]
 }
 
 @test "removing a pin resumes tracking the default branch" {
@@ -128,6 +154,16 @@ EOF
     run bash "${setup_skills}"
     [ "$status" -eq 0 ]
     [ "$(cat "${agents}/listed/SKILL.md")" = second ]
+}
+
+@test "a failure to query ghq roots still links a clone from the configured root" {
+    ghq get -u "${repo}"
+    printf '#!/bin/sh\nexit 1\n' > "${BATS_TEST_TMPDIR}/bin/ghq"
+
+    run bash "${setup_skills}"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *warning:* ]]
+    [ "$(readlink "${agents}/listed")" = "${clone}/skills/listed" ]
 }
 
 @test "a missing external clone that cannot be obtained does not block local skills" {

@@ -36,52 +36,62 @@ warn() {
   echo "warning: $*" >&2
 }
 
+find_external_clone() {
+  local root
+  while IFS= read -r root; do
+    [[ -n "${root}" && -e "${root}/$1/.git" ]] || continue
+    printf '%s\n' "${root}/$1"
+    return 0
+  done <<< "${external_roots}"
+  return 1
+}
+
 refresh_external_repo() {
   local repo="$1" clone="$2" ref="$3" dirty branch current original commit
-  if ! command -v ghq >/dev/null; then
-    warn "ghq is unavailable: cannot refresh ${repo}"
-    return
-  fi
-  if [[ ! -d "${clone}/.git" ]]; then
-    if ! GHQ_ROOT="${external_root}" ghq get -u "${repo}"; then
+  [[ "${ghq_ready}" == true ]] || return 0
+  if [[ -z "${clone}" ]]; then
+    if ! ghq get -u "${repo}"; then
       warn "could not obtain ${repo}"
       return
     fi
-    [[ -n "${ref}" ]] || return 0
+    [[ -n "${ref}" ]] && clone=$(find_external_clone "${repo}") || return 0
   fi
-  if ! dirty=$(git -C "${clone}" status --porcelain --untracked-files=all) || [[ -n "${dirty}" ]]; then
+  if ! dirty=$(git -C "${clone}" status --porcelain --untracked-files=all --ignore-submodules=none) || [[ -n "${dirty}" ]]; then
     warn "cannot refresh ${repo}: checkout is dirty or unreadable; keeping it as is"
     return
   fi
-
-  if [[ -n "${ref}" ]]; then
-    if ! git -C "${clone}" fetch --tags --no-recurse-submodules origin ||
-       ! commit=$(git -C "${clone}" rev-parse --verify --end-of-options "${ref}^{commit}") ||
-       ! git -C "${clone}" switch --detach "${commit}"; then
-      warn "could not check out ${repo} at ${ref}; keeping the current checkout"
-    fi
-    return
-  fi
-
   if ! branch=$(git -C "${clone}" symbolic-ref --short refs/remotes/origin/HEAD); then
     warn "cannot determine the default branch of ${repo}; keeping the current checkout"
     return
   fi
   branch="${branch#origin/}"
   current=$(git -C "${clone}" symbolic-ref --quiet --short HEAD) || current=""
+  if [[ -n "${current}" && "${current}" != "${branch}" ]]; then
+    warn "cannot refresh ${repo} on local branch ${current}; keeping it as is"
+    return
+  fi
+
+  if [[ -n "${ref}" ]]; then
+    if ! git -C "${clone}" fetch --tags --no-recurse-submodules origin ||
+       ! commit=$(git -C "${clone}" rev-parse --verify --end-of-options "${ref}^{commit}") ||
+       ! git -C "${clone}" switch --no-recurse-submodules --detach "${commit}"; then
+      warn "could not check out ${repo} at ${ref}; keeping the current checkout"
+    fi
+    return
+  fi
+
   original=""
-  if [[ "${current}" != "${branch}" ]]; then
-    # Removing a pin resumes tracking the default branch. Do not move a checkout
-    # on another local branch, and restore a detached checkout if the pull fails.
-    if [[ -n "${current}" ]] ||
-       ! original=$(git -C "${clone}" rev-parse HEAD) ||
-       ! git -C "${clone}" switch "${branch}"; then
+  if [[ -z "${current}" ]]; then
+    # Removing a pin resumes tracking the default branch. Restore the detached
+    # checkout if the pull fails.
+    if ! original=$(git -C "${clone}" rev-parse HEAD) ||
+       ! git -C "${clone}" switch --no-recurse-submodules "${branch}"; then
       warn "cannot switch ${repo} to ${branch}; keeping the current checkout"
       return
     fi
   fi
   if ! git -C "${clone}" pull --ff-only --no-rebase --no-recurse-submodules origin "${branch}"; then
-    if [[ -n "${original}" ]] && ! git -C "${clone}" switch --detach "${original}"; then
+    if [[ -n "${original}" ]] && ! git -C "${clone}" switch --no-recurse-submodules --detach "${original}"; then
       warn "could not restore ${repo} to ${original}"
     fi
     warn "could not fast-forward ${repo}; using the existing clone"
@@ -90,8 +100,7 @@ refresh_external_repo() {
 
 add_external_skills() {
   local manifest="${skills_dir}/external.txt"
-  local external_root="${XDG_DATA_HOME:-${HOME}/.local/share}/dotfiles/skill-repos"
-  local line repo path ref extra i j clone skill_path
+  local line repo path ref extra i j clone skill_path external_roots ghq_ready=true
   local -a repos=() paths=() refs=() first=()
   [[ -f "${manifest}" ]] || return 0
 
@@ -119,14 +128,28 @@ add_external_skills() {
     first+=("${j}")
   done < "${manifest}"
 
+  [[ ${#repos[@]} -gt 0 ]] || return 0
+  if ! external_roots=$(ghq root --all) || [[ -z "${external_roots}" ]]; then
+    ghq_ready=false
+    warn "cannot query ghq roots; using existing clones without refreshing"
+    if [[ -n "${GHQ_ROOT:-}" ]]; then
+      external_roots="${GHQ_ROOT//:/$'\n'}"
+    else
+      external_roots=$(git config --path --get-all ghq.root) || external_roots="${HOME}/ghq"
+    fi
+  fi
+
   for ((i = 0; i < ${#repos[@]}; i++)); do
     repo="${repos[i]}"
-    clone="${external_root}/${repo}"
+    clone=$(find_external_clone "${repo}") || clone=""
     if [[ "${first[i]}" == "${i}" ]]; then
       refresh_external_repo "${repo}" "${clone}" "${refs[i]}"
+      if [[ -z "${clone}" ]]; then
+        clone=$(find_external_clone "${repo}") || clone=""
+      fi
     fi
     skill_path="${clone}/${paths[i]}"
-    if [[ ! -d "${clone}/.git" || ! -f "${skill_path}/SKILL.md" ]]; then
+    if [[ -z "${clone}" || ! -f "${skill_path}/SKILL.md" ]]; then
       warn "skipping ${repo}/${paths[i]}: SKILL.md not available"
       continue
     fi

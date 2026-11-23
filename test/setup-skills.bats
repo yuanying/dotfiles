@@ -14,7 +14,7 @@ load helpers
 setup() {
     SETUP="${REPO}/bin/setup-skills.sh"
     export HOME="${BATS_TEST_TMPDIR}/home"
-    export XDG_DATA_HOME="${HOME}/data"
+    export GHQ_ROOT="${HOME}/src"
     export PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
     mkdir -p "${HOME}" "${BATS_TEST_TMPDIR}/bin"
     # These tests cover local skills; never fetch the actual external sources.
