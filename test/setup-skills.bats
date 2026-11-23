@@ -14,7 +14,12 @@ load helpers
 setup() {
     SETUP="${REPO}/bin/setup-skills.sh"
     export HOME="${BATS_TEST_TMPDIR}/home"
-    mkdir -p "${HOME}"
+    export GHQ_ROOT="${HOME}/src"
+    export PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
+    mkdir -p "${HOME}" "${BATS_TEST_TMPDIR}/bin"
+    # These tests cover local skills; never fetch the actual external sources.
+    printf '#!/bin/sh\nexit 1\n' > "${BATS_TEST_TMPDIR}/bin/ghq"
+    chmod +x "${BATS_TEST_TMPDIR}/bin/ghq"
     AGENTS="${HOME}/.agents/skills"
     CLAUDE="${HOME}/.claude/skills"
 
