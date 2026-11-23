@@ -2,7 +2,7 @@
 #
 # Link skills/ into the two directories agents read skills from.
 #
-#   bin/setup-skills.sh                      # every skill in skills/
+#   bin/setup-skills.sh                      # local and listed external skills
 #   bin/setup-skills.sh skills/devbox-publish   # just that one
 #
 # Same rules as yuanying/skills' install-skills.sh, because a machine usually
@@ -32,6 +32,108 @@ if [[ ! -d "${skills_dir}" ]]; then
   exit 1
 fi
 
+warn() {
+  echo "warning: $*" >&2
+}
+
+refresh_external_repo() {
+  local repo="$1" clone="$2" ref="$3" dirty branch current original commit
+  if ! command -v ghq >/dev/null; then
+    warn "ghq is unavailable: cannot refresh ${repo}"
+    return
+  fi
+  if [[ ! -d "${clone}/.git" ]]; then
+    if ! GHQ_ROOT="${external_root}" ghq get -u "${repo}"; then
+      warn "could not obtain ${repo}"
+      return
+    fi
+    [[ -n "${ref}" ]] || return 0
+  fi
+  if ! dirty=$(git -C "${clone}" status --porcelain --untracked-files=all) || [[ -n "${dirty}" ]]; then
+    warn "cannot refresh ${repo}: checkout is dirty or unreadable; keeping it as is"
+    return
+  fi
+
+  if [[ -n "${ref}" ]]; then
+    if ! git -C "${clone}" fetch --tags --no-recurse-submodules origin ||
+       ! commit=$(git -C "${clone}" rev-parse --verify --end-of-options "${ref}^{commit}") ||
+       ! git -C "${clone}" switch --detach "${commit}"; then
+      warn "could not check out ${repo} at ${ref}; keeping the current checkout"
+    fi
+    return
+  fi
+
+  if ! branch=$(git -C "${clone}" symbolic-ref --short refs/remotes/origin/HEAD); then
+    warn "cannot determine the default branch of ${repo}; keeping the current checkout"
+    return
+  fi
+  branch="${branch#origin/}"
+  current=$(git -C "${clone}" symbolic-ref --quiet --short HEAD) || current=""
+  original=""
+  if [[ "${current}" != "${branch}" ]]; then
+    # Removing a pin resumes tracking the default branch. Do not move a checkout
+    # on another local branch, and restore a detached checkout if the pull fails.
+    if [[ -n "${current}" ]] ||
+       ! original=$(git -C "${clone}" rev-parse HEAD) ||
+       ! git -C "${clone}" switch "${branch}"; then
+      warn "cannot switch ${repo} to ${branch}; keeping the current checkout"
+      return
+    fi
+  fi
+  if ! git -C "${clone}" pull --ff-only --no-rebase --no-recurse-submodules origin "${branch}"; then
+    if [[ -n "${original}" ]] && ! git -C "${clone}" switch --detach "${original}"; then
+      warn "could not restore ${repo} to ${original}"
+    fi
+    warn "could not fast-forward ${repo}; using the existing clone"
+  fi
+}
+
+add_external_skills() {
+  local manifest="${skills_dir}/external.txt"
+  local external_root="${XDG_DATA_HOME:-${HOME}/.local/share}/dotfiles/skill-repos"
+  local line repo path ref extra i j clone skill_path
+  local -a repos=() paths=() refs=() first=()
+  [[ -f "${manifest}" ]] || return 0
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    read -r repo path ref extra <<< "${line}"
+    [[ -n "${repo}" && "${repo}" != \#* ]] || continue
+    if [[ ! "${repo}" =~ ^[[:alnum:]][[:alnum:].-]*/[[:alnum:]][[:alnum:]_.-]*/[[:alnum:]][[:alnum:]_.-]*$ ||
+          "${repo}" == *.git || ! "${path}" =~ ^[[:alnum:]_.-]+(/[[:alnum:]_.-]+)*$ ||
+          "/${path}/" == *'/../'* || "/${path}/" == *'/./'* || -n "${extra}" ]]; then
+      echo "invalid external skill entry in ${manifest}: ${line}" >&2
+      return 1
+    fi
+    i=${#repos[@]}
+    for ((j = 0; j < i; j++)); do
+      [[ "${repos[j]}" == "${repo}" ]] || continue
+      if [[ "${refs[j]}" != "${ref}" ]]; then
+        echo "conflicting refs for ${repo} in ${manifest}" >&2
+        return 1
+      fi
+      break
+    done
+    repos+=("${repo}")
+    paths+=("${path}")
+    refs+=("${ref}")
+    first+=("${j}")
+  done < "${manifest}"
+
+  for ((i = 0; i < ${#repos[@]}; i++)); do
+    repo="${repos[i]}"
+    clone="${external_root}/${repo}"
+    if [[ "${first[i]}" == "${i}" ]]; then
+      refresh_external_repo "${repo}" "${clone}" "${refs[i]}"
+    fi
+    skill_path="${clone}/${paths[i]}"
+    if [[ ! -d "${clone}/.git" || ! -f "${skill_path}/SKILL.md" ]]; then
+      warn "skipping ${repo}/${paths[i]}: SKILL.md not available"
+      continue
+    fi
+    skill_paths+=("${skill_path}")
+  done
+}
+
 skill_paths=()
 if [[ $# -gt 0 ]]; then
   for arg in "$@"; do
@@ -52,6 +154,7 @@ else
     [[ -f "${skill_path}/SKILL.md" ]] || continue
     skill_paths+=("${skill_path}")
   done
+  add_external_skills
 fi
 
 if [[ ${#skill_paths[@]} -eq 0 ]]; then
@@ -60,6 +163,17 @@ if [[ ${#skill_paths[@]} -eq 0 ]]; then
 fi
 
 has_conflict=0
+
+# Two sources with the same name would also collide when the targets are empty.
+for ((i = 0; i < ${#skill_paths[@]}; i++)); do
+  for ((j = 0; j < i; j++)); do
+    if [[ "${skill_paths[i]##*/}" == "${skill_paths[j]##*/}" &&
+          "${skill_paths[i]}" != "${skill_paths[j]}" ]]; then
+      echo "conflict: ${skill_paths[i]} and ${skill_paths[j]} have the same skill name" >&2
+      has_conflict=1
+    fi
+  done
+done
 
 for target_dir in "${targets[@]}"; do
   for skill_path in "${skill_paths[@]}"; do
