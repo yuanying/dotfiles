@@ -112,4 +112,10 @@ if [[ -d "${HOME}/.antigravity/antigravity/bin" ]]; then
     export PATH=${HOME}/.antigravity/antigravity/bin:${PATH}
 fi
 
-# vim: set ft=zsh :
+# >>> grok installer >>>
+if [[ -d "$HOME/.grok/bin" ]]; then
+    export PATH="$HOME/.grok/bin:$PATH"
+    fpath=(~/.grok/completions/zsh $fpath)
+    autoload -Uz compinit && compinit -C
+fi
+# <<< grok installer <<<
