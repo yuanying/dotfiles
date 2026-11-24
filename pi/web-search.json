@@ -1,6 +1,7 @@
 {
   "provider": "searxng",
   "searxngBaseUrl": "http://searxng.searxng.svc.fraction.cluster",
+  "xaiSearchTools": ["x_search"],
   "ssrf": {
     "allowRanges": ["10.254.0.0/24"]
   },
