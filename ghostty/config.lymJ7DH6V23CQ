@@ -13,3 +13,9 @@ font-size = 12
 font-thicken = false
 
 adjust-cell-height = 5%
+
+# ssh 先に xterm-ghostty の terminfo が無いと、行編集やプロンプトの再描画が
+# 壊れる (Delete が効かない、プロンプトが何度も出る)。ssh-terminfo は初回の
+# 接続時に terminfo を ssh 先へ入れ、ssh-env は入れられないときに TERM を
+# xterm-256color に落として渡す。ここに書かない機能は既定のまま。
+shell-integration-features = ssh-terminfo,ssh-env
